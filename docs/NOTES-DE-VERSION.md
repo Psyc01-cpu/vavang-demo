@@ -29,7 +29,7 @@ Objectif : mettre en ligne une démo gratuite, hébergée dans l’UE, et vérif
 ### Évolutions
 - **Démo en ligne** : https://psyc01-cpu.github.io/vavang-demo/ (GitHub Pages, HTTPS, HSTS) ; base, authentification et fichiers sur Supabase, offre gratuite, région eu-west-1 (Irlande). Organisme fictif « Agglo Démo ». Comptes de démonstration documentés dans `README.md`. Remise à zéro chaque nuit à 3 h (heure de La Réunion).
 - **Sécurité côté serveur** : règles d’accès par ligne ; double authentification de l’administrateur exigée par le serveur (session aal2) ; verrouillage et déverrouillage des comptes ; fermeture des sessions à distance ; règle empêchant de retirer le dernier administrateur.
-- **Connexion par un fournisseur externe** : OAuth GitHub de test (association dans « Ma sécurité », refus d’un compte non associé). Aller-retour réel avec GitHub à vérifier.
+- **Connexion par un fournisseur externe** : OAuth GitHub de test (association dans « Ma sécurité », refus d’un compte non associé). Aller-retour réel vérifié le 19/11/2026 (capture 77) ; identités externes des comptes de démo purgées chaque nuit.
 - **Sauvegarde** toutes les 3 h par action GitHub, export complet avec empreintes SHA-256, chiffrement possible par secret ; **restauration** vérifiée table par table et fichier par fichier.
 - **Supervision** toutes les 15 minutes, page d’état publique `statut.html`, modèle de rapport mensuel.
 - **API REST** documentée : `docs/API.md` et `docs/openapi.json` (51 chemins).

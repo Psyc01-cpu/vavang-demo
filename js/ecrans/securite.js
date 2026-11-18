@@ -102,6 +102,7 @@
     const liees = fournisseurs.length ? await D.identitesSso().catch(() => []) : [];
     const carteSso = fournisseurs.length ? U.carte('Connexion unique (SSO)', [
       h('p.aide', 'Associez un compte externe pour vous connecter sans mot de passe vavang. Vos droits restent ceux de votre profil ; la double authentification exigée pour votre profil s\'applique toujours.'),
+      /@demo\.example$/i.test(D.utilisateur.email || '') ? h('p.note-info.alerte', h('b', 'Compte de démonstration partagé : '), 'n\'y associez pas votre compte personnel, son identité serait visible des autres visiteurs. Les associations sont supprimées chaque nuit.') : null,
       U.definition(fournisseurs.map(p => { const i = liees.find(x => x.provider === p);
         return [NOMS_SSO[p] || p, i ? U.badge('Associé' + (i.identity_data && (i.identity_data.user_name || i.identity_data.email) ? ' : ' + (i.identity_data.user_name || i.identity_data.email) : ''), 'ok') : U.badge('Non associé', 'neutre')]; }))],
       fournisseurs.map(p => liees.find(x => x.provider === p)
