@@ -1,17 +1,17 @@
 {
  "cible": "https://psyc01-cpu.github.io/vavang-demo/",
- "debut": "2026-11-18T22:27:55.643Z",
- "fin": "2026-11-18T22:30:22.151Z",
+ "debut": "2026-11-18T22:40:34.022Z",
+ "fin": "2026-11-18T22:42:28.080Z",
  "bilan": {
-  "conforme": 82,
-  "NON CONFORME": 9,
+  "conforme": 90,
+  "NON CONFORME": 1,
   "limite": 2,
   "non vérifié": 0
  },
  "comptes_jetables": [
   {
-   "id": "9e293964-67de-4878-9bb9-5b2d6edd4127",
-   "email": "jetable-mwmp0495@exemple-test.invalid",
+   "id": "a11077c7-537f-4045-a85b-b19d455ecc14",
+   "email": "jetable-mwmpg69a@exemple-test.invalid",
    "desactive": true
   }
  ],
@@ -189,15 +189,15 @@
    "section": "2. Cloisonnement par les règles d'accès du serveur",
    "test": "support : téléchargement direct de c1/demo-o1-0.txt",
    "attendu": "refusé",
-   "obtenu": "autorisé (159 octets)",
-   "statut": "NON CONFORME"
+   "obtenu": "refusé : Object not found",
+   "statut": "conforme"
   },
   {
    "section": "2. Cloisonnement par les règles d'accès du serveur",
    "test": "support : liste du dossier c1 du compartiment",
    "attendu": "0 fichier",
-   "obtenu": "14 fichier(s)",
-   "statut": "NON CONFORME"
+   "obtenu": "0 fichier(s)",
+   "statut": "conforme"
   },
   {
    "section": "2. Cloisonnement par les règles d'accès du serveur",
@@ -301,15 +301,15 @@
    "section": "2. Cloisonnement par les règles d'accès du serveur",
    "test": "prescripteur : dépôt d'un fichier dans le dossier c2 (consultation qu'il ne voit pas)",
    "attendu": "refusé",
-   "obtenu": "ACCEPTÉ",
-   "statut": "NON CONFORME"
+   "obtenu": "refusé : new row violates row-level security policy",
+   "statut": "conforme"
   },
   {
    "section": "2. Cloisonnement par les règles d'accès du serveur",
    "test": "support : marches (données sans dossier de consultation)",
    "attendu": "0 ligne (le support éditeur n'a aucun droit métier)",
-   "obtenu": "3 ligne(s) sur 3",
-   "statut": "NON CONFORME"
+   "obtenu": "0 ligne(s) sur 3",
+   "statut": "conforme"
   },
   {
    "section": "2. Cloisonnement par les règles d'accès du serveur",
@@ -322,29 +322,29 @@
    "section": "2. Cloisonnement par les règles d'accès du serveur",
    "test": "support : fournisseurs (données sans dossier de consultation)",
    "attendu": "0 ligne (le support éditeur n'a aucun droit métier)",
-   "obtenu": "6 ligne(s) sur 6",
-   "statut": "NON CONFORME"
+   "obtenu": "0 ligne(s) sur 6",
+   "statut": "conforme"
   },
   {
    "section": "2. Cloisonnement par les règles d'accès du serveur",
    "test": "support : evaluations (données sans dossier de consultation)",
    "attendu": "0 ligne (le support éditeur n'a aucun droit métier)",
-   "obtenu": "1 ligne(s) sur 1",
-   "statut": "NON CONFORME"
+   "obtenu": "0 ligne(s) sur 1",
+   "statut": "conforme"
   },
   {
    "section": "2. Cloisonnement par les règles d'accès du serveur",
    "test": "support : evenements (données sans dossier de consultation)",
    "attendu": "0 ligne (le support éditeur n'a aucun droit métier)",
-   "obtenu": "9 ligne(s) sur 9",
-   "statut": "NON CONFORME"
+   "obtenu": "0 ligne(s) sur 9",
+   "statut": "conforme"
   },
   {
    "section": "2. Cloisonnement par les règles d'accès du serveur",
    "test": "support : liste de la racine du compartiment « pieces »",
    "attendu": "aucun dossier de consultation ni de marché",
-   "obtenu": "[c1]",
-   "statut": "NON CONFORME"
+   "obtenu": "[]",
+   "statut": "conforme"
   },
   {
    "section": "2. Cloisonnement par les règles d'accès du serveur",
@@ -497,7 +497,7 @@
    "section": "5. Verrouillage après échecs de connexion",
    "test": "Création par l'administrateur d'un compte jetable (D.creerCompte → creer_compte)",
    "attendu": "identifiant renvoyé",
-   "obtenu": "9e293964-67de-4878-9bb9-5b2d6edd4127",
+   "obtenu": "a11077c7-537f-4045-a85b-b19d455ecc14",
    "statut": "conforme"
   },
   {
