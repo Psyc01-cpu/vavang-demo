@@ -1,0 +1,101 @@
+# Supervision de la démo vavang — zéro euro, sans compte tiers.
+# Toutes les 15 minutes (planification GitHub « au mieux » : des retards de plusieurs minutes sont normaux),
+# l'Action vérifie la page publique, l'API REST et le service d'authentification Supabase, mesure les temps de réponse,
+# ajoute une ligne à statut/historique.json (30 derniers jours conservés) et la commite dans le dépôt.
+# En cas d'échec, la ligne est enregistrée puis l'Action échoue : GitHub prévient le propriétaire du dépôt par courriel
+# (réglage du compte : Settings > Notifications > Actions, « Only notify for failed workflows »).
+# Les appels réguliers à l'API maintiennent aussi le projet Supabase gratuit actif (pas de mise en pause pour inactivité).
+# Aucun secret : la clé « publishable » est publique par nature ; le commit utilise le GITHUB_TOKEN fourni par GitHub.
+name: Supervision
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: supervision
+  cancel-in-progress: false
+
+jobs:
+  controle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Contrôler la page, l'API REST et l'authentification
+        id: controle
+        env:
+          PAGE_URL: https://psyc01-cpu.github.io/vavang-demo/
+          SUPABASE_URL: https://talremuridyehynsnfzv.supabase.co
+          SUPABASE_CLE: sb_publishable_ATRXpDWTix3eGwKSKTBhHw_PkvFfC5W
+          HISTORIQUE: statut/historique.json
+        run: |
+          node --input-type=module <<'SCRIPT'
+          // --- debut du script de controle ---
+          import fs from 'node:fs';
+          const { PAGE_URL, SUPABASE_URL, SUPABASE_CLE, HISTORIQUE } = process.env;
+          const JOURS = 30, DELAI_MS = 20000;
+          const cibles = {
+            page: { url: PAGE_URL, entetes: {} },
+            rest: { url: SUPABASE_URL + '/rest/v1/annonces?select=id&limit=1', entetes: { apikey: SUPABASE_CLE } },
+            auth: { url: SUPABASE_URL + '/auth/v1/health', entetes: { apikey: SUPABASE_CLE } }
+          };
+          async function mesurer(c) {
+            const t0 = performance.now();
+            try {
+              const r = await fetch(c.url, { headers: c.entetes, signal: AbortSignal.timeout(DELAI_MS), redirect: 'follow', cache: 'no-store' });
+              await r.arrayBuffer();
+              return { code: r.status, ms: Math.round(performance.now() - t0), ok: r.status === 200 };
+            } catch (e) {
+              return { code: 0, ms: Math.round(performance.now() - t0), ok: false, erreur: String(e && (e.name === 'TimeoutError' ? 'délai dépassé (' + DELAI_MS / 1000 + ' s)' : e.message)).slice(0, 120) };
+            }
+          }
+          // Un service en échec est recontrôlé une fois après 10 s : une coupure réseau d'une seconde ne compte pas comme incident.
+          async function controler(c) {
+            const a = await mesurer(c); if (a.ok) return a;
+            await new Promise(r => setTimeout(r, 10000));
+            const b = await mesurer(c); return b.ok ? Object.assign(b, { reessai: true }) : b;
+          }
+          const ligne = { t: new Date().toISOString(), ok: true };
+          for (const [nom, c] of Object.entries(cibles)) { ligne[nom] = await controler(c); if (!ligne[nom].ok) ligne.ok = false; }
+          let h = [];
+          try { h = JSON.parse(fs.readFileSync(HISTORIQUE, 'utf8')); if (!Array.isArray(h)) h = []; } catch { h = []; }
+          h.push(ligne);
+          const limite = Date.now() - JOURS * 864e5;
+          h = h.filter(l => l && Date.parse(l.t) >= limite).sort((x, y) => x.t < y.t ? -1 : 1);
+          fs.mkdirSync(HISTORIQUE.replace(/\/[^/]*$/, ''), { recursive: true });
+          // Une ligne par contrôle : diff lisible, fichier compact (environ 2 900 lignes pour 30 jours).
+          fs.writeFileSync(HISTORIQUE, '[\n' + h.map(l => JSON.stringify(l)).join(',\n') + '\n]\n');
+          console.log(JSON.stringify(ligne));
+          console.log('lignes conservées :', h.length);
+          if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, 'ok=' + ligne.ok + '\n');
+          // --- fin du script de controle ---
+          SCRIPT
+
+      - name: Enregistrer l'historique dans le dépôt
+        run: |
+          git config user.name "supervision-vavang"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add statut/historique.json
+          if git diff --cached --quiet; then echo "Rien à enregistrer."; exit 0; fi
+          git commit -m "Supervision : contrôle du $(date -u +'%Y-%m-%d %H:%M') UTC [skip ci]"
+          for essai in 1 2 3; do
+            if git push; then exit 0; fi
+            echo "Envoi refusé (dépôt modifié entre-temps), nouvel essai $essai/3."
+            git pull --rebase --strategy-option=theirs || { git checkout --theirs statut/historique.json 2>/dev/null; git add statut/historique.json; GIT_EDITOR=true git rebase --continue; }
+            sleep 3
+          done
+          echo "Impossible d'enregistrer l'historique."; exit 1
+
+      - name: Échouer si un service est indisponible
+        if: steps.controle.outputs.ok != 'true'
+        run: |
+          echo "::error::Au moins un service est indisponible : voir statut/historique.json (dernière ligne)."
+          exit 1

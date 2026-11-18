@@ -1,4 +1,4 @@
-Scénario joué le 19/11/2026 01:49:21 — mode local
+Scénario joué le 19/11/2026 02:35:23 — mode local
 Navigateur : C:/Program Files/Google/Chrome/Application/chrome.exe
 
 1. page d'accueil : onglets, support, annonces et actualités affichés avant connexion
@@ -51,7 +51,7 @@ Navigateur : C:/Program Files/Google/Chrome/Application/chrome.exe
 48. règle vérifiée : après validation de l'analyse, les notes sont figées
 49. projet de rapport généré, modifié à la main et enregistré
 50. rapport exporté en PDF (46022 octets)
-51. rapport exporté en Word modifiable (13906 octets)
+51. rapport exporté en Word modifiable (13907 octets)
 52. courrier type prérempli avec la note, le rang et l'attributaire pressenti
 53. courrier exporté en Word
 54. règle vérifiée : un rapport validé est figé
@@ -59,8 +59,8 @@ Navigateur : C:/Program Files/Google/Chrome/Application/chrome.exe
 56. le lecteur ne peut pas déposer d'offre
 57. règle vérifiée : écriture refusée au profil lecteur
 58. accès refusé (et tracé) à un dossier non affecté
-59. dossier d'audit restitué en PDF (73562 octets)
-60. archive d'audit avec les pièces sources (497368 octets)
+59. dossier d'audit restitué en PDF (73548 octets)
+60. archive d'audit avec les pièces sources (497339 octets)
 61. journal du dossier : 75 actions horodatées, 3 auteurs, 38 types d'action
 62. règle vérifiée : le journal ne peut pas être modifié
 63. l'analyste habilité sur le lot 2 ne voit pas le lot 1
@@ -87,7 +87,7 @@ Navigateur : C:/Program Files/Google/Chrome/Application/chrome.exe
 84. reprise à blanc d'un CSV : 3 lignes prêtes, 2 anomalies détectées (titulaire manquant, montant et date illisibles)
 85. reprise définitive : 3 marchés créés, fichier source conservé
 86. reprise de documents PDF et DOCX rattachés à un marché repris
-87. export complet généré (487368 octets) : tables JSON et CSV, pièces sources, inventaire, dictionnaire
+87. export complet généré (487960 octets) : tables JSON et CSV, pièces sources, inventaire, dictionnaire
 88. retour arrière : les 3 marchés repris sont supprimés, le rapport de contrôle est conservé
 89. état modifié après la sauvegarde (un besoin ajouté, trois marchés retirés)
 90. archive contrôlée par rapport à son inventaire avant toute écriture
@@ -104,5 +104,25 @@ Navigateur : C:/Program Files/Google/Chrome/Application/chrome.exe
 101. contrôle du contenu des déclarations : nom du candidat absent, clé du SIRET fausse, montant de l’acte d’engagement différent — trois signalements à vérifier
 102. analyse distincte des variantes : classement des seules offres de base, la variante est analysée à part
 103. paquet de publication : pièces validées en PDF et fiche de l’avis (avis.json) à charger sur le profil d’acheteur
-104. fichiers exportés présents sur le disque : 12 fichiers dans captures/exports
-105. aucune erreur JavaScript pendant tout le scénario
+104. assainissement par liste blanche : script, iframe, image, lien javascript, attributs et styles supprimés ; titres, gras et tableaux conservés
+105. éditeur riche (contenteditable, sans bibliothèque) : titre, gras, italique, liste à puces et tableau 2 × 3 appliqués depuis la barre d'outils
+106. collage depuis une source extérieure : HTML assaini avant insertion (aucun script exécuté, aucun attribut conservé)
+107. version 2 enregistrée : HTML assaini (contenu_html) et texte brut dérivé (contenu, lu par les contrôles et le circuit) conservés ensemble, y compris dans l'historique des versions
+108. mise en forme restituée à la réouverture du document
+109. export Word du document mis en forme : titre de niveau 1, liste à puces, paragraphe en italique et tableau Word (11219 octets)
+110. export PDF du document mis en forme (26447 octets ; contenu du PDF non relu automatiquement)
+111. document soumis : éditeur en lecture seule, barre d'outils retirée
+112. circuit de validation inchangé sur un document mis en forme : soumis, relu, visa, validé (4 étapes tracées), mise en forme intacte
+113. onglet « Documents (GED) » de la consultation : toutes les pièces du dossier, non classées au départ
+114. dossiers créés, sous-dossier créé, dossier renommé : arborescence enregistrée dans la consultation et tracée au journal
+115. pièces rangées : une par le sélecteur « Ranger dans », une par glisser-déposer sur le dossier (événements de glisser-déposer simulés dans le navigateur)
+116. suppression d'un dossier : aucune pièce supprimée, la pièce remonte dans « Non classées »
+117. actions de la GED tracées au journal (création, renommage, suppression, rangement)
+118. seuils 2026 appliqués : dispense travaux 100 000 € HT (au-delà, MAPA avec avis BOAMP ou JAL puisque 90 000 € sont dépassés), fournitures et services 40 000 € HT avant le 01/04/2026 puis 60 000 € HT, formalisé 216 000 € (collectivités), 140 000 € (État), 432 000 € (entités adjudicatrices), 5 404 000 € HT (travaux) — 1,3,2,1,3,4,4,3,3,4
+119. allotissement : la valeur totale des lots (290 000 € HT) déclenche la procédure formalisée ; dérogation des petits lots proposée pour le seul lot 3 (30 000 € HT, dans la limite de 20 %) — 4|FFA|30000
+120. entrée de menu « Aide au choix de la procédure »
+121. aide ouverte depuis la consultation : lots et montants estimés repris
+122. écran : procédure formalisée affichée pour 290 000 € HT, justification proposée
+123. seuils affichés avec leur source et leur état (« vérifié » ou « à vérifier »)
+124. fichiers exportés présents sur le disque : 14 fichiers dans captures/exports
+125. aucune erreur JavaScript pendant tout le scénario

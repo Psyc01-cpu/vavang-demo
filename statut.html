@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<title>État du service — vavang</title>
+<link rel="icon" href="img/vavang.svg">
+<style>
+  /* Page autonome : mêmes variables que css/app.css (charte « Case créole »), sans dépendre du reste de l'application. */
+  :root {
+    --noir: #1F5B3F; --creme: #F6F1E4; --braise: #E8871E; --braise-fonce: #A85A07; --papier: #FFFFFF;
+    --encre: #2A2118; --gris: #5B5246; --trait: #DCD3BE; --fond-doux: #EFE7D3;
+    --vert: #2A5C1D; --vert-fond: #E4F0DC; --rouge: #9E2B1E; --rouge-fond: #F6E1DD; --ambre-fond: #FBEBD3;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { font-size: 15px; }
+  body { margin: 0; font-family: var(--sans); color: var(--encre); background: var(--creme); line-height: 1.45; }
+  h1, h2 { font-family: var(--serif); font-weight: 600; margin: 0; line-height: 1.2; }
+  h1 { font-size: 1.75rem; } h1 i { color: var(--braise); font-style: normal; }
+  h2 { font-size: 1.2rem; margin-bottom: 12px; }
+  a { color: var(--braise-fonce); }
+  .tete { background: var(--noir); color: var(--creme); padding: 22px 16px; }
+  .tete .large, main { max-width: 960px; margin: 0 auto; }
+  .tete p { margin: 6px 0 0; color: #E9E1CC; }
+  .tete h1 { color: #fff; }
+  main { padding: 20px 16px 40px; }
+  .carte { background: var(--papier); border: 1px solid var(--trait); border-radius: 8px; padding: 18px 20px; margin-bottom: 18px; }
+  .bandeau { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .pastille { width: 14px; height: 14px; border-radius: 50%; flex: none; background: var(--gris); }
+  .pastille.ok { background: var(--vert); } .pastille.ko { background: var(--rouge); } .pastille.retard { background: var(--braise); }
+  .bandeau strong { font-family: var(--serif); font-size: 1.3rem; }
+  .sous { color: var(--gris); font-size: .9rem; }
+  .indicateurs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .indicateur { background: var(--fond-doux); border-radius: 8px; padding: 12px 14px; }
+  .indicateur b { font-family: var(--serif); font-size: 1.8rem; display: block; line-height: 1.1; }
+  .indicateur span { font-size: .82rem; color: var(--gris); }
+  .tableau { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--trait); vertical-align: top; }
+  th { font-size: .8rem; color: var(--gris); text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .etiquette { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: .8rem; font-weight: 600; }
+  .etiquette.ok { background: var(--vert-fond); color: var(--vert); } .etiquette.ko { background: var(--rouge-fond); color: var(--rouge); }
+  .etiquette.nd { background: var(--fond-doux); color: var(--gris); }
+  .jours { display: flex; gap: 2px; align-items: flex-end; height: 44px; margin-top: 6px; }
+  .jours span { flex: 1; min-width: 3px; height: 100%; border-radius: 2px; background: var(--trait); }
+  .jours span.ok { background: var(--vert); } .jours span.moyen { background: var(--braise); } .jours span.ko { background: var(--rouge); }
+  .legende-jours { display: flex; justify-content: space-between; font-size: .78rem; color: var(--gris); margin-top: 4px; }
+  .note { font-size: .86rem; color: var(--gris); }
+  .alerte { background: var(--ambre-fond); border-left: 4px solid var(--braise); padding: 10px 12px; border-radius: 4px; margin-top: 12px; }
+  .vide { color: var(--gris); font-style: italic; }
+  footer { max-width: 960px; margin: 0 auto; padding: 0 16px 30px; font-size: .84rem; color: var(--gris); }
+  @media (max-width: 600px) { h1 { font-size: 1.45rem; } .carte { padding: 14px; } th, td { padding: 6px; } }
+</style>
+</head>
+<body>
+<header class="tete">
+  <div class="large">
+    <h1>vavang<i>.</i> — état du service</h1>
+    <p>Disponibilité mesurée de la démonstration en ligne : page publique, API de données et service de connexion.</p>
+  </div>
+</header>
+<main id="contenu">
+  <section class="carte" aria-live="polite">
+    <div class="bandeau">
+      <span id="pastille" class="pastille" aria-hidden="true"></span>
+      <div>
+        <strong id="etat-general">Chargement des mesures…</strong>
+        <div id="dernier-controle" class="sous"></div>
+      </div>
+    </div>
+    <div id="alerte-retard"></div>
+  </section>
+
+  <section class="carte">
+    <h2>Disponibilité mesurée</h2>
+    <div class="indicateurs" id="indicateurs"></div>
+    <p class="note">Un contrôle est compté disponible quand les trois services répondent 200. Taux = contrôles réussis ÷ contrôles effectués sur la période (les contrôles non effectués ne sont pas comptés).</p>
+  </section>
+
+  <section class="carte">
+    <h2>30 derniers jours</h2>
+    <div class="jours" id="jours" role="img" aria-label="Disponibilité jour par jour"></div>
+    <div class="legende-jours"><span id="jour-debut"></span><span>aujourd'hui</span></div>
+    <p class="note">Vert : 100 % · orange : de 99 à moins de 100 % · rouge : moins de 99 % · gris : aucune mesure. Survolez une barre pour le détail.</p>
+  </section>
+
+  <section class="carte">
+    <h2>Par service</h2>
+    <div class="tableau"><table>
+      <thead><tr><th>Service</th><th>Dernier état</th><th class="n">Dispo. 24 h</th><th class="n">Dispo. 7 j</th><th class="n">Dispo. 30 j</th><th class="n">Temps moyen 24 h</th><th class="n">Temps moyen 7 j</th></tr></thead>
+      <tbody id="services"></tbody>
+    </table></div>
+  </section>
+
+  <section class="carte">
+    <h2>Incidents (30 derniers jours)</h2>
+    <div class="tableau"><table>
+      <thead><tr><th>Début</th><th>Fin</th><th class="n">Durée observée</th><th>Services touchés</th><th>Détail</th></tr></thead>
+      <tbody id="incidents"></tbody>
+    </table></div>
+    <p class="note">Un incident regroupe les contrôles en échec consécutifs. La durée observée va du premier contrôle en échec au premier contrôle réussi suivant ; la précision dépend de l'intervalle entre contrôles (15 minutes en principe).</p>
+  </section>
+</main>
+<footer>
+  <p>Mesures effectuées toutes les 15 minutes par une tâche planifiée GitHub Actions (planification « au mieux » : des retards de quelques minutes sont normaux), depuis les serveurs de GitHub. Historique brut : <a href="statut/historique.json">statut/historique.json</a>. Démonstration avec données fictives — <a href="./">retour à l'application</a>.</p>
+</footer>
+<script src="js/statut.js"></script>
+</body>
+</html>

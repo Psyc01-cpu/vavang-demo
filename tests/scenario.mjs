@@ -12,7 +12,8 @@ const require = createRequire(import.meta.url); const XLSX = require('xlsx'); co
 const racine = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CAPTURES = path.join(racine, 'captures'), PLIS = path.join(racine, 'demo', 'plis'), EXPORTS = path.join(CAPTURES, 'exports');
 for (const d of [CAPTURES, PLIS, EXPORTS]) fs.mkdirSync(d, { recursive: true });
-for (const f of fs.readdirSync(CAPTURES)) if (f.endsWith('.png')) fs.unlinkSync(path.join(CAPTURES, f));
+// Seules les captures du scénario (01 à 69) sont effacées : les 70 et suivantes viennent d'autres tests (en-ligne.mjs).
+for (const f of fs.readdirSync(CAPTURES)) if (/^(0[1-9]|[1-6]\d)-.*\.png$/.test(f)) fs.unlinkSync(path.join(CAPTURES, f));
 for (const f of fs.readdirSync(EXPORTS)) fs.unlinkSync(path.join(EXPORTS, f));
 const PORT = Number(process.env.PORT_TEST) || 4174, URL = 'http://127.0.0.1:' + PORT + '/';
 const MDP = 'Demonstration-2026';
@@ -466,6 +467,107 @@ try {
   await capture('classement-offres-de-base-et-variantes', { entier: false });
   await aller('/consultation/' + cid + '/dce', 'Paquet de publication'); await clic('Paquet de publication (ZIP)', { attente: 2500 }); t = await telechargement();
   ok(t && t.nom === 'publication-2026-021.zip' && t.taille > 3000, 'paquet de publication : pièces validées en PDF et fiche de l’avis (avis.json) à charger sur le profil d’acheteur');
+
+  /* ---------- Éditeur riche, GED, aide au choix de la procédure (captures 64 à 69 : la numérotation 01 à 63 ne bouge pas) ---------- */
+  titre('Éditeur riche du DCE : titres, gras, italique, listes, tableau, assainissement du HTML, export Word et PDF, circuit de validation inchangé');
+  const assaini = await page.evaluate(() => Editeur.assainir('<h2 style="color:red" onclick="alert(1)">Titre</h2><p>Texte <strong>fort</strong> <span class="x">et</span> <a href="javascript:alert(1)">lien</a><img src="x" onerror="alert(2)"></p><script>alert(3)</script><iframe src="https://example.org"></iframe><table onmouseover="x()"><tr><td>A</td></tr></table>'));
+  ok(!/script|iframe|<img|onclick|onerror|onmouseover|style=|href|<a |<span|class=/i.test(assaini) && assaini.includes('<h2>Titre</h2>') && assaini.includes('<b>fort</b>') && assaini.includes('lien') && assaini.includes('<td>A</td>'),
+    'assainissement par liste blanche : script, iframe, image, lien javascript, attributs et styles supprimés ; titres, gras et tableaux conservés');
+  await aller('/consultation/' + cid + '/dce', 'Contrôle de complétude du dossier');
+  await clic('Nouveau document'); await remplir('Type de document', 'CCTP'); await remplir('Titre', 'CCTP — maintenance des ascenseurs (éditeur riche)'); await valider('Créer'); await attendre('Circuit de validation');
+  const didRiche = await page.evaluate(() => location.hash.split('/')[4]);
+  await page.click('.editeur-zone');
+  for (const [i, l] of ['Objet du marché', 'Le présent cahier décrit la maintenance des ascenseurs de la consultation 2026-021.', 'La sécurité des usagers prime sur toute autre considération.', 'Visites mensuelles', 'Dépannage sous deux heures', 'Rapport annuel d\'activité'].entries()) { if (i) await page.keyboard.press('Enter'); await page.keyboard.type(l); }
+  // Sélection d'un passage du texte (de « debut » à « fin » inclus), comme à la souris.
+  const selectionner = (debut, fin) => page.evaluate((a, b) => {
+    const z = document.querySelector('.editeur-zone'); const w = document.createTreeWalker(z, NodeFilter.SHOW_TEXT); const noeuds = []; while (w.nextNode()) noeuds.push(w.currentNode);
+    const ou = (t, apres) => { for (const n of noeuds) { const i = n.nodeValue.indexOf(t); if (i >= 0) return [n, apres ? i + t.length : i]; } return null; };
+    const d = ou(a, false), f = ou(b || a, true); const r = document.createRange(); r.setStart(d[0], d[1]); r.setEnd(f[0], f[1]);
+    z.focus(); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }, debut, fin);
+  const outil = async nom => { await pause(150); await page.click('[data-outil="' + nom + '"]'); await pause(250); };
+  await selectionner('Objet du marché'); await outil('Titre 1');
+  await selectionner('maintenance des ascenseurs'); await outil('Gras');
+  await selectionner('La sécurité des usagers', 'considération.'); await outil('Italique');
+  await selectionner('Visites mensuelles', 'activité'); await outil('Liste à puces');
+  await selectionner('consultation 2026-021.'); await page.evaluate(() => getSelection().collapseToEnd()); await outil('Insérer un tableau');
+  await remplir('Nombre de colonnes', 2); await remplir('Nombre de lignes', 3); await valider('Insérer'); await pause(300);
+  const cellules = ['Prestation', 'Fréquence', 'Visite préventive', 'Mensuelle', 'Contrôle réglementaire', 'Annuel'];
+  for (const [i, sel] of ['th:nth-child(1)', 'th:nth-child(2)', 'tbody tr:nth-child(1) td:nth-child(1)', 'tbody tr:nth-child(1) td:nth-child(2)', 'tbody tr:nth-child(2) td:nth-child(1)', 'tbody tr:nth-child(2) td:nth-child(2)'].entries()) {
+    await page.evaluate(s => { const c = document.querySelector('.editeur-zone table ' + s); const r = document.createRange(); r.selectNodeContents(c); const g = getSelection(); g.removeAllRanges(); g.addRange(r); }, sel);
+    await page.keyboard.type(cellules[i]); }
+  // Collage depuis une source extérieure : le HTML est assaini avant insertion.
+  await page.evaluate(() => { const z = document.querySelector('.editeur-zone'); const p = z.querySelector('ul').lastElementChild; const r = document.createRange(); r.selectNodeContents(p); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    const dt = new DataTransfer(); dt.setData('text/html', '<p onclick="alert(1)">Texte collé <script>window.__xss=1<\/script><img src=x onerror="window.__xss=2"><b>en gras</b></p>'); dt.setData('text/plain', 'Texte collé en gras');
+    z.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })); });
+  await pause(300);
+  const edite = await page.evaluate(() => { const z = document.querySelector('.editeur-zone'); return { html: z.innerHTML, xss: window.__xss || 0 }; });
+  ok(/<h1>Objet du marché<\/h1>/.test(edite.html) && /<b>maintenance des ascenseurs<\/b>/.test(edite.html) && /<i>La sécurité des usagers/.test(edite.html) && /<ul><li>Visites mensuelles/.test(edite.html) && /<table>[\s\S]*<th>Prestation<\/th>[\s\S]*<td>Contrôle réglementaire<\/td>/.test(edite.html),
+    'éditeur riche (contenteditable, sans bibliothèque) : titre, gras, italique, liste à puces et tableau 2 × 3 appliqués depuis la barre d\'outils');
+  ok(edite.html.includes('Texte collé') && !/script|<img|onclick|onerror/i.test(edite.html) && edite.xss === 0, 'collage depuis une source extérieure : HTML assaini avant insertion (aucun script exécuté, aucun attribut conservé)');
+  await capture('dce-editeur-riche-mise-en-forme', { entier: false });
+  await clic('Enregistrer (nouvelle version)'); await remplir('Nature des modifications', 'Rédaction du CCTP avec l\'éditeur riche'); await valider(); await attendre('version 2');
+  const stocke = await page.evaluate(async id => { const d = await D.lire('documents_dce', id); const v = (await D.lister('documents_versions', { document_id: id })).find(x => x.version === 2); return { d, v }; }, didRiche);
+  ok(stocke.d.contenu_html.includes('<h1>Objet du marché</h1>') && stocke.d.contenu_html.includes('<table>') && stocke.d.contenu.includes('- Visites mensuelles') && stocke.d.contenu.includes('Prestation | Fréquence') && stocke.d.contenu.includes('2026-021') && stocke.v && stocke.v.contenu_html === stocke.d.contenu_html,
+    'version 2 enregistrée : HTML assaini (contenu_html) et texte brut dérivé (contenu, lu par les contrôles et le circuit) conservés ensemble, y compris dans l\'historique des versions');
+  ok(await page.evaluate(() => /<h1>Objet du marché<\/h1>/.test(document.querySelector('.editeur-zone').innerHTML) && document.querySelector('.editeur-zone table') !== null), 'mise en forme restituée à la réouverture du document');
+  const fichierExporte = async () => { const x = await telechargement(); const f = path.join(EXPORTS, x.nom); for (let i = 0; i < 40 && !fs.existsSync(f); i++) await pause(250); await pause(300); return Object.assign(x, { f }); };
+  await clic('Word'); t = await fichierExporte();
+  const JSZipNode = require('jszip'); const xml = await (await JSZipNode.loadAsync(fs.readFileSync(t.f))).file('word/document.xml').async('string');
+  ok(t.nom.endsWith('-v2.docx') && xml.includes('<w:tbl>') && /Heading1/.test(xml) && xml.includes('Contrôle réglementaire') && xml.includes('Visites mensuelles') && /<w:numPr>/.test(xml) && /<w:i\/>/.test(xml),
+    'export Word du document mis en forme : titre de niveau 1, liste à puces, paragraphe en italique et tableau Word (' + t.taille + ' octets)');
+  await clic('PDF'); t = await fichierExporte(); ok(t.nom.endsWith('-v2.pdf') && t.taille > 3000 && fs.readFileSync(t.f).subarray(0, 5).toString() === '%PDF-', 'export PDF du document mis en forme (' + t.taille + ' octets ; contenu du PDF non relu automatiquement)');
+  await clic('Voir', { pres: 'Rédaction du CCTP', dans: 'tr' }); await attendre('— version 2'); await capture('dce-editeur-riche-version-mise-en-forme', { entier: false }); await fermerModale(); await pause(300);
+  await clic('Soumettre (Relecture)'); await attendre('Soumis à : Relecture');
+  ok(await page.evaluate(() => document.querySelector('.editeur-zone').getAttribute('contenteditable') === 'false' && !document.querySelector('.editeur-barre')), 'document soumis : éditeur en lecture seule, barre d\'outils retirée');
+  await connecter('valideur'); await aller('/consultation/' + cid + '/dce/' + didRiche, 'Approuver (Relecture)'); await clic('Approuver (Relecture)'); await attendre('Relecture : approuvé');
+  await clic('Approuver (Visa juridique)'); await attendre('Visa juridique : approuvé'); await clic('Approuver (Validation)'); await attendre('document validé');
+  ok(await page.evaluate(async (id, html) => { const d = await D.lire('documents_dce', id); return d.statut === 'valide' && d.contenu_html === html && (await D.lister('validations', { objet_id: id })).length === 4; }, didRiche, stocke.d.contenu_html),
+    'circuit de validation inchangé sur un document mis en forme : soumis, relu, visa, validé (4 étapes tracées), mise en forme intacte');
+  await connecter('gestionnaire');
+
+  titre('GED : arborescence libre de dossiers par consultation, rangement des pièces (sélecteur et glisser-déposer)');
+  await aller('/consultation/' + cid + '/ged', 'Arborescence');
+  ok(await present('Documents (GED)') && await present('Non classées'), 'onglet « Documents (GED) » de la consultation : toutes les pièces du dossier, non classées au départ');
+  const nouveauDossier = async (nom, dans) => { await clic(dans ? 'Sous-dossier' : 'Nouveau dossier'); await remplir('Nom du dossier', nom); await valider('Créer'); await attendre(nom); };
+  await nouveauDossier('Pièces administratives'); await nouveauDossier('Plans et annexes');
+  await clic('Pièces administratives', { exact: false }); await attendre('Pièces administratives — 0 pièce(s)'); await nouveauDossier('Assurances', true);
+  await clic('Plans et annexes'); await attendre('Plans et annexes — 0 pièce(s)'); await clic('Renommer ou déplacer'); await remplir('Nouveau nom', 'Plans'); await valider(); await attendre('Plans — 0 pièce(s)');
+  ok(await page.evaluate(async id => { const g = (await D.lire('consultations', id)).ged_dossiers; const adm = g.find(x => x.nom === 'Pièces administratives'); return g.length === 3 && g.some(x => x.nom === 'Assurances' && x.parent_id === adm.id) && g.some(x => x.nom === 'Plans') && !g.some(x => x.nom === 'Plans et annexes'); }, cid),
+    'dossiers créés, sous-dossier créé, dossier renommé : arborescence enregistrée dans la consultation et tracée au journal');
+  await clic('Non classées');  await attendre('Non classées — ');
+  const pDc1 = await page.evaluate(() => { const s = [...document.querySelectorAll('select.ged-ranger')].find(x => x.getAttribute('aria-label').includes('DC1_Jamrosat')); const o = [...s.options].find(x => x.text === 'Pièces administratives › Assurances'); s.value = o.value; s.dispatchEvent(new Event('change', { bubbles: true })); return s.dataset.piece; });
+  await attendre('Pièce rangée.');
+  const pMem = await page.evaluate(() => { const tr = [...document.querySelectorAll('tr.ged-glissable')].find(x => x.innerText.includes('Memoire_technique_Jamrosat')); const cibleNoeud = [...document.querySelectorAll('.ged-noeud')].find(x => x.childNodes[1] && x.childNodes[1].nodeValue === 'Plans');
+    const dt = new DataTransfer(); tr.dispatchEvent(new DragEvent('dragstart', { dataTransfer: dt, bubbles: true })); cibleNoeud.dispatchEvent(new DragEvent('dragenter', { dataTransfer: dt, bubbles: true, cancelable: true }));
+    cibleNoeud.dispatchEvent(new DragEvent('dragover', { dataTransfer: dt, bubbles: true, cancelable: true })); cibleNoeud.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true })); tr.dispatchEvent(new DragEvent('dragend', { dataTransfer: dt, bubbles: true })); return tr.dataset.piece; });
+  await attendre('rangée dans « Plans »');
+  ok(await page.evaluate(async (a, b, id) => { const g = (await D.lire('consultations', id)).ged_dossiers; const pa = await D.lire('pieces', a), pb = await D.lire('pieces', b); return pa.ged_dossier_id === g.find(x => x.nom === 'Assurances').id && pb.ged_dossier_id === g.find(x => x.nom === 'Plans').id; }, pDc1, pMem, cid),
+    'pièces rangées : une par le sélecteur « Ranger dans », une par glisser-déposer sur le dossier (événements de glisser-déposer simulés dans le navigateur)');
+  await clic('Assurances'); await attendre('Pièces administratives › Assurances — 1 pièce(s)'); await capture('ged-arborescence-et-rangement', { entier: false });
+  await clic('Plans'); await attendre('Plans — 1 pièce(s)'); await capture('ged-piece-rangee-par-glisser-deposer', { entier: false });
+  await clic('Supprimer le dossier'); await clic('Supprimer le dossier', { exact: true }); await attendre('Dossier supprimé.');
+  ok(await page.evaluate(async (b, id) => { const g = (await D.lire('consultations', id)).ged_dossiers; const pb = await D.lire('pieces', b); return g.length === 2 && !g.some(x => x.nom === 'Plans') && !pb.ged_dossier_id && !!pb.chemin; }, pMem, cid),
+    'suppression d\'un dossier : aucune pièce supprimée, la pièce remonte dans « Non classées »');
+  ok(await page.evaluate(async id => { const j = (await D.lister('journal', { consultation_id: id })).map(l => l.action); return ['Création d\'un dossier (GED)', 'Renommage d\'un dossier (GED)', 'Suppression d\'un dossier (GED)', 'Rangement d\'une pièce (GED)'].every(a => j.includes(a)); }, cid), 'actions de la GED tracées au journal (création, renommage, suppression, rangement)');
+
+  titre('Aide au choix de la procédure : seuils 2026, type d\'acheteur, date de lancement, petits lots');
+  const cas = await page.evaluate(() => { const f = (nature, lots, o) => Ecrans.aideProcedure2026(Object.assign({ acheteur: 'collectivite', nature, lots, date: '2026-06-01' }, o || {})).niveau;
+    return [f('travaux', [99999]), f('travaux', [100000]), f('fournitures', [50000], { date: '2026-03-15' }), f('fournitures', [50000]), f('services', [215999]), f('services', [216000]), f('services', [140000], { acheteur: 'etat' }), f('services', [431999], { acheteur: 'entite' }), f('travaux', [5403999]), f('travaux', [5404000])].join(','); });
+  ok(cas === '1,3,2,1,3,4,4,3,3,4', 'seuils 2026 appliqués : dispense travaux 100 000 € HT (au-delà, MAPA avec avis BOAMP ou JAL puisque 90 000 € sont dépassés), fournitures et services 40 000 € HT avant le 01/04/2026 puis 60 000 € HT, formalisé 216 000 € (collectivités), 140 000 € (État), 432 000 € (entités adjudicatrices), 5 404 000 € HT (travaux) — ' + cas);
+  const petits = await page.evaluate(() => { const r = Ecrans.aideProcedure2026({ acheteur: 'collectivite', nature: 'services', lots: [200000, 60000, 30000], date: '2026-06-01' }); return r.niveau + '|' + r.lots.map(l => l.procedure.startsWith('Procédure adaptée') ? 'A' : 'F').join('') + '|' + r.cumulPetitsLots; });
+  ok(petits === '4|FFA|30000', 'allotissement : la valeur totale des lots (290 000 € HT) déclenche la procédure formalisée ; dérogation des petits lots proposée pour le seul lot 3 (30 000 € HT, dans la limite de 20 %) — ' + petits);
+  ok(await page.evaluate(() => [...document.querySelectorAll('#menu nav a')].some(a => a.textContent === 'Aide au choix de la procédure')), 'entrée de menu « Aide au choix de la procédure »');
+  await aller('/procedure?consultation=' + cid, 'Seuils en vigueur et sources');
+  ok(await page.evaluate(() => document.querySelectorAll('.proc-lots input').length) === await page.evaluate(async id => (await D.lister('lots', { consultation_id: id })).length, cid), 'aide ouverte depuis la consultation : lots et montants estimés repris');
+  await remplir('Nature', 'Services');
+  await page.evaluate(() => { const z = document.querySelector('.proc-lots'); while (z.children.length < 3) [...document.querySelectorAll('button')].find(b => b.textContent === 'Ajouter un lot').click();
+    [200000, 60000, 30000].forEach((m, i) => { const inp = z.children[i].querySelector('input'); inp.value = m; inp.dispatchEvent(new Event('input', { bubbles: true })); }); });
+  await pause(300);
+  ok(await page.evaluate(() => document.getElementById('proc-verdict').textContent.startsWith('Procédure formalisée') && /290\s000/.test(document.getElementById('proc-justif').value)), 'écran : procédure formalisée affichée pour 290 000 € HT, justification proposée');
+  await capture('aide-procedure-seuils-2026-et-petits-lots', { entier: false });
+  await page.evaluate(() => [...document.querySelectorAll('h2')].find(x => x.textContent.startsWith('Seuils en vigueur')).scrollIntoView());
+  ok(await present('à vérifier') && await present('Décret n° 2025-1386'), 'seuils affichés avec leur source et leur état (« vérifié » ou « à vérifier »)');
+  await capture('aide-procedure-seuils-et-sources', { entier: false });
 
   await pause(1500);
   const fichiers = fs.readdirSync(EXPORTS);

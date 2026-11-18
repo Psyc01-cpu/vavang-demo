@@ -1,0 +1,831 @@
+{
+ "date": "2026-11-18T22:04:27.280Z",
+ "cible": "https://psyc01-cpu.github.io/vavang-demo/",
+ "api": "https://talremuridyehynsnfzv.supabase.co",
+ "nature": "Contrôle passif maison. Scan OWASP ZAP non réalisé (Docker absent du poste), remplacé par ce contrôle passif.",
+ "constats": [
+  {
+   "gravite": "ok",
+   "sujet": "HTTPS",
+   "texte": "http:// redirige vers https:// (301)"
+  },
+  {
+   "gravite": "ok",
+   "sujet": "TLS site",
+   "texte": "TLSv1.3, certificat valide (expire Dec 29 23:44:45 2026 GMT)"
+  },
+  {
+   "gravite": "ok",
+   "sujet": "TLS api",
+   "texte": "TLSv1.3, certificat valide (expire Jan 22 14:22:32 2027 GMT)"
+  },
+  {
+   "gravite": "ok",
+   "sujet": "Page : HSTS",
+   "texte": "max-age=31556952"
+  },
+  {
+   "gravite": "a-corriger",
+   "sujet": "Page : X-Content-Type-Options",
+   "texte": "absent"
+  },
+  {
+   "gravite": "info",
+   "sujet": "Page : CSP (en-tête HTTP)",
+   "texte": "absent"
+  },
+  {
+   "gravite": "a-corriger",
+   "sujet": "Page : X-Frame-Options",
+   "texte": "absent"
+  },
+  {
+   "gravite": "faible",
+   "sujet": "Page : Referrer-Policy",
+   "texte": "absent"
+  },
+  {
+   "gravite": "faible",
+   "sujet": "Page : Permissions-Policy",
+   "texte": "absent"
+  },
+  {
+   "gravite": "ok",
+   "sujet": "CSP (balise meta)",
+   "texte": "présente ; script-src 'self' ; object-src 'none'"
+  },
+  {
+   "gravite": "faible",
+   "sujet": "CSP style-src",
+   "texte": "'unsafe-inline' autorisé pour les styles (attributs style de l'interface)"
+  },
+  {
+   "gravite": "a-corriger",
+   "sujet": "Clickjacking",
+   "texte": "ni X-Frame-Options ni frame-ancestors (ce dernier est sans effet en balise meta) : la page peut être intégrée dans un cadre tiers. GitHub Pages ne permet pas d'ajouter l'en-tête."
+  },
+  {
+   "gravite": "ok",
+   "sujet": "Cookies (page)",
+   "texte": "aucun cookie déposé par le serveur"
+  },
+  {
+   "gravite": "info",
+   "sujet": "Serveur annoncé",
+   "texte": "GitHub.com"
+  },
+  {
+   "gravite": "info",
+   "sujet": "Ressources analysées",
+   "texte": "39 fichiers texte (HTML, JS, CSS), 4 autres"
+  },
+  {
+   "gravite": "ok",
+   "sujet": "Secrets dans le code servi",
+   "texte": "aucun motif de secret trouvé (service_role, clé secrète Supabase (sb_secret_), clé privée PEM, jeton JWT, clé AWS, jeton GitHub, clé Stripe live, clé Google API)"
+  },
+  {
+   "gravite": "info",
+   "sujet": "Valeurs publiques assumées",
+   "texte": "clé publishable Supabase, mot de passe des comptes démo et clé TOTP de l'admin démo (config.js) : publiques par choix, données fictives"
+  },
+  {
+   "gravite": "ok",
+   "sujet": "Contenu mixte",
+   "texte": "aucune ressource chargée en http:// ; la CSP n'autorise que self et Supabase en https/wss"
+  },
+  {
+   "gravite": "info",
+   "sujet": "Cartes de source",
+   "texte": "référencées dans vendor/pdfmake.min.js (code source déjà public, sans enjeu)"
+  },
+  {
+   "gravite": "info",
+   "sujet": "Bibliothèque SheetJS",
+   "texte": "0.20.3 — CVE-2023-30533 et CVE-2024-22363 corrigées à partir de 0.20.2"
+  },
+  {
+   "gravite": "info",
+   "sujet": "Bibliothèque pdf.js",
+   "texte": "3.11.174 — CVE-2024-4367 corrigée en 4.2.67 : version servie antérieure, faille neutralisée par isEvalSupported:false (vérifié dans le code)"
+  },
+  {
+   "gravite": "info",
+   "sujet": "Bibliothèque JSZip",
+   "texte": "3.10.2 — CVE-2022-48285 corrigée à partir de 3.8.0"
+  },
+  {
+   "gravite": "info",
+   "sujet": "Bibliothèque pdfmake",
+   "texte": "0.3.14 — aucune alerte connue relevée (non vérifié dans une base CVE)"
+  },
+  {
+   "gravite": "info",
+   "sujet": "Bibliothèque supabase-js",
+   "texte": "2.119.0 (déduite : fichier identique au paquet npm) — aucune alerte connue relevée (non vérifié dans une base CVE)"
+  },
+  {
+   "gravite": "info",
+   "sujet": "Bibliothèque docx",
+   "texte": "9.15.4 (déduite : fichier identique au paquet npm) — aucune alerte connue relevée (non vérifié dans une base CVE)"
+  },
+  {
+   "gravite": "info",
+   "sujet": "Bibliothèque qrcode-generator",
+   "texte": "1.4.4 (déduite : fichier identique au paquet npm) — aucune alerte connue relevée (non vérifié dans une base CVE)"
+  },
+  {
+   "gravite": "ok",
+   "sujet": "Méthodes HTTP (page)",
+   "texte": "OPTIONS 405, TRACE non testée (méthode refusée par le client Node), PUT 405, DELETE 405, POST 405"
+  },
+  {
+   "gravite": "ok",
+   "sujet": "Fichiers sensibles",
+   "texte": ".git/config 404, .env 404, node_modules/ 404, package.json 200, supabase/schema.sql 200, tests/serveur.mjs 200 (dépôt public : les fichiers en 200 sont déjà publics sur GitHub)"
+  },
+  {
+   "gravite": "ok",
+   "sujet": "API : HSTS",
+   "texte": "max-age=31536000; includeSubDomains; preload"
+  },
+  {
+   "gravite": "ok",
+   "sujet": "API : X-Content-Type-Options",
+   "texte": "nosniff"
+  },
+  {
+   "gravite": "info",
+   "sujet": "API : cookies",
+   "texte": "__cf_bm=ggHLGQMbL86V5w0eiO6lRS3cNfMpMg5uL0_JLbvSwR8-1795039497.5108309-1.0.1.1-SuOfzMVpHcD_c8ap.iH2SO8ViW0y4VPX.mPuHHeFI"
+  },
+  {
+   "gravite": "ok",
+   "sujet": "API : schéma OpenAPI",
+   "texte": "non lisible en anonyme (statut 401)"
+  },
+  {
+   "gravite": "info",
+   "sujet": "API : CORS",
+   "texte": "Access-Control-Allow-Origin = https://site-tiers.example (comportement standard de Supabase ; la protection repose sur le jeton et les politiques RLS)"
+  },
+  {
+   "gravite": "ok",
+   "sujet": "RLS : lecture anonyme",
+   "texte": "38 tables interrogées sans connexion : aucune ligne renvoyée, sauf les annonces actives de la page d’accueil (24, publiques par conception, aucune annonce inactive visible)"
+  },
+  {
+   "gravite": "ok",
+   "sujet": "Fonctions : appel anonyme",
+   "texte": "moi 401, mon_profil 401, etat_securite_comptes 401"
+  },
+  {
+   "gravite": "ok",
+   "sujet": "Stockage : liste anonyme",
+   "texte": "aucun compartiment listable sans connexion (statut 200)"
+  },
+  {
+   "gravite": "ok",
+   "sujet": "Auth : inscription libre",
+   "texte": "désactivée (comptes créés par l'administrateur seulement)"
+  },
+  {
+   "gravite": "info",
+   "sujet": "npm audit --omit=dev",
+   "texte": "{\"info\":0,\"low\":0,\"moderate\":0,\"high\":0,\"critical\":0,\"total\":0} — sans portée réelle : le projet n'a aucune dépendance de production"
+  },
+  {
+   "gravite": "info",
+   "sujet": "npm audit (complet)",
+   "texte": "{\"info\":0,\"low\":0,\"moderate\":0,\"high\":2,\"critical\":1,\"total\":3} : @mapbox/node-pre-gyp (high), pdfjs-dist (high), tar (critical)"
+  }
+ ],
+ "details": {
+  "redirectionHttp": {
+   "statut": 301,
+   "location": "https://psyc01-cpu.github.io/vavang-demo/"
+  },
+  "tls": {
+   "site": {
+    "protocole": "TLSv1.3",
+    "chiffrement": "TLS_AES_128_GCM_SHA256",
+    "certificatValide": true,
+    "emetteur": "Let's Encrypt",
+    "expire": "Dec 29 23:44:45 2026 GMT"
+   },
+   "api": {
+    "protocole": "TLSv1.3",
+    "chiffrement": "TLS_AES_256_GCM_SHA384",
+    "certificatValide": true,
+    "emetteur": "Google Trust Services",
+    "expire": "Jan 22 14:22:32 2027 GMT"
+   }
+  },
+  "page": {
+   "statut": 200,
+   "entetes": {
+    "accept-ranges": "bytes",
+    "access-control-allow-origin": "*",
+    "age": "236",
+    "cache-control": "max-age=600",
+    "connection": "keep-alive",
+    "content-encoding": "gzip",
+    "content-length": "873",
+    "content-type": "text/html; charset=utf-8",
+    "date": "Wed, 18 Nov 2026 22:04:30 GMT",
+    "etag": "W/\"6afe1f2f-9bc\"",
+    "expires": "Wed, 18 Nov 2026 22:07:28 GMT",
+    "last-modified": "Wed, 18 Nov 2026 21:57:03 GMT",
+    "server": "GitHub.com",
+    "strict-transport-security": "max-age=31556952",
+    "vary": "Accept-Encoding",
+    "via": "1.1 varnish",
+    "x-cache": "HIT",
+    "x-cache-hits": "0",
+    "x-fastly-request-id": "457f587c6f03ac6f1c5b9e55cd3ece9eda9fca91",
+    "x-github-edge-region": "southafricanorth",
+    "x-github-request-id": "5C82:FB527:365B79:36D06E:6AFE1F47",
+    "x-origin-cache": "HIT",
+    "x-proxy-cache": "MISS",
+    "x-served-by": "cache-jnb-faor730020-JNB",
+    "x-timer": "S1795039471.689008,VS0,VE2"
+   }
+  },
+  "cspMeta": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://talremuridyehynsnfzv.supabase.co; font-src 'self' data:; connect-src 'self' data: blob: https://talremuridyehynsnfzv.supabase.co wss://talremuridyehynsnfzv.supabase.co; worker-src 'self' blob:; frame-src 'self' blob:; media-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self'",
+  "ressources": [
+   {
+    "chemin": "img/vavang.svg",
+    "statut": 200,
+    "octets": 640,
+    "type": "image/svg+xml"
+   },
+   {
+    "chemin": "css/app.css",
+    "statut": 200,
+    "octets": 14521,
+    "type": "text/css; charset=utf-8"
+   },
+   {
+    "chemin": "css/accueil.css",
+    "statut": 200,
+    "octets": 21041,
+    "type": "text/css; charset=utf-8"
+   },
+   {
+    "chemin": "config.js",
+    "statut": 200,
+    "octets": 2610,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/calcul.js",
+    "statut": 200,
+    "octets": 20084,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/totp.js",
+    "statut": 200,
+    "octets": 2453,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/donnees.js",
+    "statut": 200,
+    "octets": 53097,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/noyau.js",
+    "statut": 200,
+    "octets": 12866,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/documents.js",
+    "statut": 200,
+    "octets": 18159,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/demo-accueil.js",
+    "statut": 200,
+    "octets": 10602,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/demo-articles.js",
+    "statut": 200,
+    "octets": 12078,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/demo.js",
+    "statut": 200,
+    "octets": 35029,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/ecrans/base.js",
+    "statut": 200,
+    "octets": 18095,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/ecrans/besoins.js",
+    "statut": 200,
+    "octets": 8264,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/ecrans/consultations.js",
+    "statut": 200,
+    "octets": 11726,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/ecrans/dce.js",
+    "statut": 200,
+    "octets": 23857,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/ecrans/offres.js",
+    "statut": 200,
+    "octets": 31820,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/ecrans/analyse.js",
+    "statut": 200,
+    "octets": 43159,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/ecrans/rapport.js",
+    "statut": 200,
+    "octets": 22829,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/ecrans/execution.js",
+    "statut": 200,
+    "octets": 12860,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/ecrans/fournisseurs.js",
+    "statut": 200,
+    "octets": 15348,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/ecrans/administration.js",
+    "statut": 200,
+    "octets": 7952,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/ecrans/reprise.js",
+    "statut": 200,
+    "octets": 16256,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/ecrans/accueil.js",
+    "statut": 200,
+    "octets": 34900,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/ecrans/securite.js",
+    "statut": 200,
+    "octets": 15852,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/ecrans/complements.js",
+    "statut": 200,
+    "octets": 26806,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/ecrans/support.js",
+    "statut": 200,
+    "octets": 12793,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/ecrans/finances.js",
+    "statut": 200,
+    "octets": 6434,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/ecrans/visionneuse.js",
+    "statut": 200,
+    "octets": 2017,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "js/demarrage.js",
+    "statut": 200,
+    "octets": 407,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "img/organismes/cinor.png",
+    "statut": 200,
+    "octets": 27281,
+    "type": "image/png"
+   },
+   {
+    "chemin": "img/organismes/agglo-demo.svg",
+    "statut": 200,
+    "octets": 800,
+    "type": "image/svg+xml"
+   },
+   {
+    "chemin": "vendor/supabase.js",
+    "statut": 200,
+    "octets": 219850,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "vendor/jszip.min.js",
+    "statut": 200,
+    "octets": 97781,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "vendor/xlsx.full.min.js",
+    "statut": 200,
+    "octets": 709300,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "vendor/pdf.min.js",
+    "statut": 200,
+    "octets": 319989,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "vendor/pdfmake.min.js",
+    "statut": 200,
+    "octets": 833792,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "vendor/vfs_fonts.js",
+    "statut": 200,
+    "octets": 854773,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "vendor/docx.js",
+    "statut": 200,
+    "octets": 1061458,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "vendor/pdf.worker.min.js",
+    "statut": 200,
+    "octets": 1087181,
+    "type": "application/javascript; charset=utf-8"
+   },
+   {
+    "chemin": "img/vavang-clair.svg",
+    "statut": 200,
+    "octets": 640,
+    "type": "image/svg+xml"
+   },
+   {
+    "chemin": "vendor/qrcode.js",
+    "statut": 200,
+    "octets": 56658,
+    "type": "application/javascript; charset=utf-8"
+   }
+  ],
+  "secrets": [],
+  "contenuMixte": [],
+  "sourceMaps": [
+   "vendor/pdfmake.min.js"
+  ],
+  "bibliotheques": [
+   {
+    "nom": "SheetJS",
+    "chemin": "vendor/xlsx.full.min.js",
+    "servi": true,
+    "version": "0.20.3",
+    "identiqueNodeModules": true,
+    "note": "CVE-2023-30533 et CVE-2024-22363 corrigées à partir de 0.20.2"
+   },
+   {
+    "nom": "pdf.js",
+    "chemin": "vendor/pdf.min.js",
+    "servi": true,
+    "version": "3.11.174",
+    "identiqueNodeModules": true,
+    "note": "CVE-2024-4367 corrigée en 4.2.67 : version servie antérieure, faille neutralisée par isEvalSupported:false (vérifié dans le code)"
+   },
+   {
+    "nom": "JSZip",
+    "chemin": "vendor/jszip.min.js",
+    "servi": true,
+    "version": "3.10.2",
+    "identiqueNodeModules": true,
+    "note": "CVE-2022-48285 corrigée à partir de 3.8.0"
+   },
+   {
+    "nom": "pdfmake",
+    "chemin": "vendor/pdfmake.min.js",
+    "servi": true,
+    "version": "0.3.14",
+    "identiqueNodeModules": true,
+    "note": "aucune alerte connue relevée (non vérifié dans une base CVE)"
+   },
+   {
+    "nom": "supabase-js",
+    "chemin": "vendor/supabase.js",
+    "servi": true,
+    "version": "2.119.0 (déduite : fichier identique au paquet npm)",
+    "identiqueNodeModules": true,
+    "note": "aucune alerte connue relevée (non vérifié dans une base CVE)"
+   },
+   {
+    "nom": "docx",
+    "chemin": "vendor/docx.js",
+    "servi": true,
+    "version": "9.15.4 (déduite : fichier identique au paquet npm)",
+    "identiqueNodeModules": true,
+    "note": "aucune alerte connue relevée (non vérifié dans une base CVE)"
+   },
+   {
+    "nom": "qrcode-generator",
+    "chemin": "vendor/qrcode.js",
+    "servi": true,
+    "version": "1.4.4 (déduite : fichier identique au paquet npm)",
+    "identiqueNodeModules": true,
+    "note": "aucune alerte connue relevée (non vérifié dans une base CVE)"
+   }
+  ],
+  "methodes": {
+   "OPTIONS": 405,
+   "TRACE": 0,
+   "PUT": 405,
+   "DELETE": 405,
+   "POST": 405
+  },
+  "fichiersSensibles": {
+   ".git/config": 404,
+   ".env": 404,
+   "node_modules/": 404,
+   "package.json": 200,
+   "supabase/schema.sql": 200,
+   "tests/serveur.mjs": 200
+  },
+  "api": {
+   "racine": {
+    "statut": 401,
+    "entetes": {
+     "access-control-allow-methods": "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,TRACE,CONNECT",
+     "access-control-allow-origin": "*",
+     "access-control-max-age": "3600",
+     "alt-svc": "h3=\":443\"; ma=86400",
+     "cf-ray": "a5ca461b6f9d541e-RUN",
+     "connection": "keep-alive",
+     "content-length": "98",
+     "content-type": "application/json;charset=UTF-8",
+     "date": "Wed, 18 Nov 2026 22:04:57 GMT",
+     "sb-error-code": "UNAUTHORIZED_INVALID_API_KEY_TYPE",
+     "sb-gateway-version": "1",
+     "sb-project-ref": "talremuridyehynsnfzv",
+     "sb-request-id": "01a1f0b1-0d29-72d0-871d-d5ceed2e1860",
+     "server": "cloudflare",
+     "set-cookie": "__cf_bm=ggHLGQMbL86V5w0eiO6lRS3cNfMpMg5uL0_JLbvSwR8-1795039497.5108309-1.0.1.1-SuOfzMVpHcD_c8ap.iH2SO8ViW0y4VPX.mPuHHeFIAiloFOQlKbCtmBwv1sbw1xpAnu.RaQeKP3vcEpg1nhRFhb7Ehvb7MTrmL8Sid3QQjJJfbLftCTL6r7dz1p8ibHe; HttpOnly; SameSite=None; Partitioned; Secure; Path=/; Domain=supabase.co; Expires=Wed, 18 Nov 2026 22:34:57 GMT",
+     "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+     "x-content-type-options": "nosniff"
+    },
+    "extrait": "{\"message\":\"Secret API key required\",\"hint\":\"Only secret API keys can be used for this endpoint.\"}"
+   },
+   "tablesAnonymes": {
+    "profils": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "habilitations": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "parametres": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "journal": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "besoins": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "consultations": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "affectations": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "lots": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "grilles": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "criteres": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "grille_versions": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "modeles_grille": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "pieces_attendues": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "offres": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "pieces": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "annotations": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "lignes_prix": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "notes": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "notes_historique": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "demandes": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "analyses": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "rapports": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "modeles_document": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "documents_dce": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "documents_versions": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "validations": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "marches": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "evenements": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "fournisseurs": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "fournisseur_suivi": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "evaluations": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "reprises": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "annonces": {
+     "statut": 200,
+     "lignes": 5
+    },
+    "notifications": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "tickets": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "factures": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "calculs": {
+     "statut": 200,
+     "lignes": 0
+    },
+    "trace_technique": {
+     "statut": 200,
+     "lignes": 0
+    }
+   },
+   "annoncesPubliques": {
+    "lignes": 24,
+    "inactivesVisibles": 0
+   },
+   "fonctionsAnonymes": {
+    "moi": {
+     "statut": 401,
+     "extrait": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for function moi\"}"
+    },
+    "mon_profil": {
+     "statut": 401,
+     "extrait": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for function mon_profil\"}"
+    },
+    "etat_securite_comptes": {
+     "statut": 401,
+     "extrait": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for function etat_securite_comptes\"}"
+    }
+   },
+   "stockageAnonyme": {
+    "statut": 200,
+    "compartiments": 0
+   },
+   "authentification": {
+    "inscriptionDesactivee": true,
+    "confirmationEmailAuto": false,
+    "fournisseursExternes": [
+     "email"
+    ]
+   }
+  },
+  "npmAudit": {
+   "omitDev": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+   },
+   "complet": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 2,
+    "critical": 1,
+    "total": 3
+   },
+   "paquetsComplet": [
+    "@mapbox/node-pre-gyp (high)",
+    "pdfjs-dist (high)",
+    "tar (critical)"
+   ]
+  }
+ },
+ "limites": [
+  "Scan OWASP ZAP non réalisé, remplacé par un contrôle passif.",
+  "Aucun test actif : injections, XSS, contournement d'authentification, élévation de droits par requêtes forgées non testés par ce script.",
+  "Écritures anonymes ou par un profil non habilité non testées par ce script (pour ne rien écrire en base).",
+  "Versions des bibliothèques non confrontées à une base CVE en ligne ; les notes indiquent les failles connues de l'auteur."
+ ],
+ "bilan": {
+  "ok": 17,
+  "a-corriger": 3,
+  "info": 16,
+  "faible": 3
+ }
+}

@@ -46,11 +46,11 @@
     document.body.classList.remove('public'); if (E.arreterCarrousel) E.arreterCarrousel(); setTimeout(() => { if (E.majIdentiteMenu) E.majIdentiteMenu(); }, 0);
     m.hidden = false;
     const lien = (chemin, libelle, droit) => (!droit || droit.some(D.peut)) ? h('a', { href: '#' + chemin, 'data-chemin': chemin }, libelle) : null;
-    m.replaceChildren(
+    m.replaceChildren(...[
       h('div.marque', { id: 'identite-menu' }, h('span', window.CONFIG.organisme || '')),
       h('nav', { 'aria-label': 'Menu principal' },
         lien('/', 'Tableau de bord'), lien('/notifications', 'Notifications'),
-        h('div.groupe', 'Préparation'), lien('/besoins', 'Besoins et seuils'),
+        h('div.groupe', 'Préparation'), lien('/besoins', 'Besoins et seuils'), lien('/procedure', 'Aide au choix de la procédure'),
         h('div.groupe', 'Passation'), lien('/consultations', 'Consultations'), lien('/modeles', 'Modèles'),
         h('div.groupe', 'Exécution'), lien('/marches', 'Marchés'), lien('/fournisseurs', 'Fournisseurs'), lien('/evaluations', 'Évaluations des titulaires'),
         h('div.groupe', 'Administration'),
@@ -62,7 +62,7 @@
         lien('/parametres', 'Paramètres', ['admin.parametres'])),
       D.mode === 'local' ? h('div.mode-local', 'Mode démonstration locale') : null,
       h('div.compte', h('b', D.utilisateur.nom), h('span', D.ROLES[D.utilisateur.role] + (D.utilisateur.service ? ' · ' + D.utilisateur.service : '')), h('a.lien-securite', { href: '#/securite', 'data-chemin': '/securite' }, 'Ma sécurité'),
-        h('button', { type: 'button', onclick: U.agir(async () => { await D.deconnexion(); location.hash = '/'; U.rafraichir(); }) }, 'Se déconnecter')));
+        h('button', { type: 'button', onclick: U.agir(async () => { await D.deconnexion(); location.hash = '/'; U.rafraichir(); }) }, 'Se déconnecter'))].filter(Boolean));
   };
   E.majMenu = function (chemin) {
     if (E.majCloche) E.majCloche();

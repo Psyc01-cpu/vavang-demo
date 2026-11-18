@@ -132,3 +132,48 @@ mark { background: #ffd98a; padding: 0 1px; }
 @media print { #menu, .actions, #messages { display: none !important; } #contenu { padding: 0; } .carte { border: 0; } }
 
 .visionneuse .actions { margin-bottom: 10px; } .zone-pdf { max-height: 72vh; overflow: auto; background: #5b5246; padding: 14px; border-radius: 8px; text-align: center; } .page-pdf { background: #fff; box-shadow: 0 4px 16px rgba(0,0,0,.4); }
+
+/* ---------- Éditeur riche des documents du DCE ---------- */
+.editeur { border: 1px solid #a9a495; border-radius: 6px; background: #fff; }
+.editeur.lecture { border-color: var(--trait); background: #fbfaf5; }
+.editeur-tete { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 8px; border-bottom: 1px solid var(--trait); background: var(--fond-doux); border-radius: 6px 6px 0 0; position: sticky; top: 0; z-index: 2; }
+.editeur-barre { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; }
+.editeur-barre .outil { min-width: 32px; padding: 4px 8px; border: 1px solid var(--trait); background: #fff; border-radius: 4px; font: inherit; font-size: .84rem; cursor: pointer; color: var(--encre); }
+.editeur-barre .outil:hover:not(:disabled) { border-color: var(--noir); background: var(--creme); }
+.editeur-barre .outil:disabled { opacity: .45; cursor: default; }
+.editeur-barre .outil.gras { font-weight: 700; } .editeur-barre .outil.italique { font-style: italic; } .editeur-barre .outil.souligne { text-decoration: underline; }
+.editeur-barre .sep { width: 1px; height: 20px; background: var(--trait); margin: 0 4px; }
+.editeur-bascule { font-size: .83rem; display: flex; gap: 5px; align-items: center; }
+.editeur-zone { min-height: 340px; max-height: 70vh; overflow: auto; padding: 14px 18px; font-family: var(--serif); font-size: 1rem; line-height: 1.5; outline: none; overflow-wrap: anywhere; }
+.editeur-zone:focus-visible { box-shadow: inset 0 0 0 2px var(--braise); }
+.editeur-zone h1 { font-size: 1.4rem; margin: 14px 0 8px; } .editeur-zone h2 { font-size: 1.15rem; margin: 12px 0 6px; } .editeur-zone h3 { font-size: 1.02rem; margin: 10px 0 4px; }
+.editeur-zone p { margin: 0 0 .45rem; white-space: pre-wrap; } .editeur-zone ul, .editeur-zone ol { margin: 0 0 .6rem 1.4rem; padding: 0; }
+.editeur-zone table { border-collapse: collapse; margin: 6px 0 10px; width: 100%; font-family: var(--sans); font-size: .9rem; }
+.editeur-zone th, .editeur-zone td { border: 1px solid #C9BEA4; padding: 5px 8px; text-align: left; vertical-align: top; min-width: 40px; }
+.editeur-zone th { background: var(--fond-doux); }
+.editeur-brut { border: 0; border-radius: 0 0 6px 6px; font-family: var(--serif); font-size: 1rem; line-height: 1.5; min-height: 340px; }
+.modale .editeur-zone.lecture { min-height: 0; max-height: none; padding: 0; }
+
+/* ---------- GED : arborescence des dossiers ---------- */
+.ged { display: grid; grid-template-columns: minmax(240px, 320px) 1fr; gap: 18px; align-items: start; }
+@media (max-width: 1000px) { .ged { grid-template-columns: 1fr; } }
+.ged-arbre, .ged-arbre ul { list-style: none; margin: 0; padding: 0; }
+.ged-arbre ul { padding-left: 16px; border-left: 1px dashed var(--trait); margin-left: 10px; }
+.ged-noeud { display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; background: none; border: 1px solid transparent; border-radius: 5px; padding: 5px 8px; font: inherit; font-size: .92rem; color: var(--encre); cursor: pointer; }
+.ged-noeud:hover { background: var(--creme); }
+.ged-noeud.actif { background: var(--fond-doux); border-color: var(--trait); font-weight: 600; }
+.ged-noeud.survol { background: var(--ambre-fond); border: 1px dashed var(--braise); }
+.ged-icone { color: var(--braise-fonce); width: 12px; flex: none; }
+.ged-compte { margin-left: auto; font-size: .76rem; background: #fff; border: 1px solid var(--trait); border-radius: 10px; padding: 0 7px; color: var(--gris); }
+.ged-glissable { cursor: grab; } .ged-glissable.glisse { opacity: .5; }
+.ged-ranger { min-width: 180px; }
+
+/* ---------- Aide au choix de la procédure ---------- */
+.proc-lots { display: grid; gap: 6px; }
+.proc-lot { display: grid; grid-template-columns: 60px 1fr auto; gap: 8px; align-items: center; }
+.proc-lot::before { content: attr(data-lot); font-size: .83rem; color: var(--gris); grid-column: 1; grid-row: 1; }
+.proc-verdict { border-left: 5px solid var(--gris); background: var(--fond-doux); padding: 10px 14px; border-radius: 5px; margin-bottom: 12px; }
+.proc-verdict span { display: block; font-size: .78rem; color: var(--gris); } .proc-verdict b { display: block; font-family: var(--serif); font-size: 1.15rem; margin: 2px 0 6px; } .proc-verdict p { margin: 0; font-size: .9rem; }
+.proc-verdict.ok { border-left-color: var(--vert); background: var(--vert-fond); } .proc-verdict.info { border-left-color: var(--bleu); background: var(--bleu-fond); }
+.proc-verdict.alerte { border-left-color: var(--braise); background: var(--ambre-fond); } .proc-verdict.danger { border-left-color: var(--rouge); background: var(--rouge-fond); }
+.proc-notes { margin: 10px 0; padding-left: 18px; font-size: .88rem; } .proc-notes li { margin-bottom: 4px; }

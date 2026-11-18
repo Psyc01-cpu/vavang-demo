@@ -1,0 +1,71 @@
+# Sauvegarde automatique de la base hébergée (démonstration vavang), toutes les 6 heures : RPO cible 6 h.
+# Zéro euro : dépôt public, minutes GitHub Actions gratuites ; aucun secret obligatoire (compte de démonstration public).
+# Le résultat est publié en artefact, conservé 30 jours. Si le secret SAUVEGARDE_CLE existe, l'archive est chiffrée
+# (openssl AES-256-CBC, dérivation PBKDF2) ; sinon elle est publiée en clair et le journal le signale (données fictives).
+# Rappel : sur un dépôt public, les artefacts sont téléchargeables par toute personne connectée à GitHub.
+name: Sauvegarde de la base
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'   # 00:17, 06:17, 12:17, 18:17 UTC (minute décalée : les créneaux « pile » sont souvent retardés)
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sauvegarde
+  cancel-in-progress: false
+
+jobs:
+  sauvegarde:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CHROME: /usr/bin/google-chrome
+      VAVANG_URL: https://psyc01-cpu.github.io/vavang-demo/
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Dépendances (versions figées par package-lock.json)
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Sauvegarde (export de la base + fichiers + empreintes SHA-256)
+        id: sauvegarde
+        run: node tests/sauvegarde.mjs sauvegardes
+
+      - name: Vérification des empreintes
+        working-directory: sauvegardes/${{ steps.sauvegarde.outputs.nom }}
+        run: sha256sum -c --quiet SHA256SUMS && echo "Empreintes vérifiées."
+
+      - name: Archive (chiffrée si le secret SAUVEGARDE_CLE existe)
+        id: archive
+        env:
+          SAUVEGARDE_CLE: ${{ secrets.SAUVEGARDE_CLE }}
+          NOM: ${{ steps.sauvegarde.outputs.nom }}
+        run: |
+          mkdir -p artefact
+          tar -C sauvegardes -czf "artefact/$NOM.tar.gz" "$NOM"
+          if [ -n "$SAUVEGARDE_CLE" ]; then
+            openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -in "artefact/$NOM.tar.gz" -out "artefact/$NOM.tar.gz.enc" -pass env:SAUVEGARDE_CLE
+            rm "artefact/$NOM.tar.gz"
+            echo "Archive chiffrée (AES-256-CBC, PBKDF2 200 000 itérations)."
+            echo "Déchiffrer : openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in $NOM.tar.gz.enc -out $NOM.tar.gz"
+          else
+            echo "::warning title=Sauvegarde non chiffrée::Secret SAUVEGARDE_CLE absent : archive publiée EN CLAIR (acceptable uniquement parce que les données de la démonstration sont fictives)."
+          fi
+          (cd artefact && sha256sum * > "$NOM.archive.sha256" && cat "$NOM.archive.sha256")
+          rm -rf sauvegardes
+
+      - name: Publication en artefact (30 jours)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.sauvegarde.outputs.nom }}
+          path: artefact/
+          retention-days: 30
+          if-no-files-found: error

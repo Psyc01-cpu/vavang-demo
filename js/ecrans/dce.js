@@ -14,6 +14,9 @@
     return { organisme: window.CONFIG.organisme || '', reference: c.reference, objet: c.objet, procedure: c.procedure, type_marche: c.type_marche || '', nature: E.L.nature[c.nature] || '', service: c.service || '',
       date_limite: c.date_limite_offres ? U.date(c.date_limite_offres) : '', montant_estime: c.montant_estime ? U.euros(c.montant_estime) : '', lots: lots.map(l => 'Lot ' + l.numero + ' — ' + l.intitule).join('\n'), criteres: criteres.trim() };
   }
+  // Contenu mis en forme (éditeur riche) → blocs d'export ; sans contenu_html, le texte brut est converti (titres ARTICLE/TITRE/CHAPITRE, puces « - »).
+  const htmlDoc = d => d.contenu_html ? Editeur.reconstruire(d.contenu || '', d.contenu_html) : Editeur.htmlDepuisTexte(d.contenu || '');
+  E.blocsDocumentDce = d => Editeur.blocsExport(htmlDoc(d));
   const remplir = (texte, v) => texte.replace(/\{\{(\w+)\}\}/g, (m, k) => v[k] ? v[k] : m);
 
   // Contrôles automatiques : simples signalements à vérifier.
@@ -47,7 +50,7 @@
     const circuit = await D.circuitDce(); const ctx = await contexteDce(c);
     const [docs, modeles, pieces] = await Promise.all([D.lister('documents_dce', { consultation_id: id }, { ordre: 'type_piece' }), D.lister('modeles_document', { type: 'dce' }, { ordre: 'nom' }), D.lister('pieces', { consultation_id: id })]);
     // Pièces jointes du DCE : ni pièces d'offre, ni pièces de marché (rangées sous la consultation en ligne).
-    const jointes = pieces.filter(p => !p.offre_id && !p.marche_id);
+    const jointes = pieces.filter(p => !p.offre_id && !p.marche_id && !p.ged_seule); // ged_seule : déposée dans la GED, hors DCE
     const peut = D.peut('dce.rediger');
     const requis = REQUIS(c.procedure);
     const creer = () => U.editer('Nouveau document du DCE', [
@@ -61,7 +64,7 @@
       setTimeout(() => U.aller('/consultation/' + id + '/dce/' + d.id), 30);
     }, { libelle: 'Créer' });
     return h('div', E.enteteConsultation(c, 'dce'),
-      U.carte('Contrôle de complétude du dossier', [h('p.aide', 'Documents attendus pour la procédure « ' + c.procedure + ' ». Signalement à vérifier : la liste dépend du montage retenu.'),
+      U.carte('Contrôle de complétude du dossier', [h('p.aide', 'Documents attendus pour la procédure « ' + c.procedure + ' ». Signalement à vérifier : la liste dépend du montage retenu. ', h('a', { href: '#/procedure?consultation=' + id }, 'Vérifier la procédure avec les seuils 2026')),
         h('div.actions', requis.map(t => { const d = docs.filter(x => x.type_piece === t); const ok = d.some(x => ['valide', 'publie'].includes(x.statut)); return U.badge(t + ' : ' + (!d.length ? 'absent' : ok ? 'validé' : 'en cours'), !d.length ? 'danger' : ok ? 'ok' : 'alerte'); }))]),
       U.carte('Documents du dossier de consultation', U.tableau([
         { titre: 'Type', valeur: d => d.type_piece }, { titre: 'Titre', valeur: d => h('b', d.titre) }, { titre: 'Version', classe: 'etroit', valeur: d => 'v' + d.version },
@@ -79,7 +82,7 @@
     if (!prets.length) throw new Error('Aucun document validé : le paquet de publication ne contient que des pièces validées.');
     await Docs.charger('jszip'); const zip = new JSZip();
     const lots = await D.lister('lots', { consultation_id: c.id }, { ordre: 'numero' }); const criteres = await D.lister('criteres', { consultation_id: c.id });
-    for (const d of prets) zip.file('pieces/' + d.type_piece.replace(/[^\w\- ]+/g, '_') + ' - v' + d.version + '.pdf', await Docs.pdf({ titre: d.titre, sousTitre: (window.CONFIG.organisme || '') + ' — ' + c.reference, pied: d.titre + ' — v' + d.version, blocs: d.contenu.split('\n').map(l => /^(ARTICLE|TITRE|CHAPITRE)\b/i.test(l.trim()) ? { type: 'titre', niveau: 2, texte: l.trim() } : { type: 'p', texte: l }) }));
+    for (const d of prets) zip.file('pieces/' + d.type_piece.replace(/[^\w\- ]+/g, '_') + ' - v' + d.version + '.pdf', await Docs.pdf({ titre: d.titre, sousTitre: (window.CONFIG.organisme || '') + ' — ' + c.reference, pied: d.titre + ' — v' + d.version, blocs: E.blocsDocumentDce(d) }));
     for (const p of jointes) { const b = await D.telecharger(p.chemin); if (b) zip.file('annexes/' + p.nom_fichier, b); }
     const avis = { format: 'vavang-publication/1.0', acheteur: { nom: window.CONFIG.organismeComplet || window.CONFIG.organisme || '' }, reference: c.reference, objet: c.objet, nature: c.nature, procedure: c.procedure, type_marche: c.type_marche || null,
       montant_estime_ht: c.montant_estime || null, date_limite_remise: c.date_limite_offres || null, lots: lots.map(l => ({ numero: l.numero, intitule: l.intitule, montant_estime_ht: l.montant_estime || null,
@@ -97,7 +100,8 @@
     const ETAPES = ['redaction'].concat(ids, ['valide', 'publie']);
     const [versions, validations, clauses] = await Promise.all([D.lister('documents_versions', { document_id: did }, { ordre: 'version', desc: true }), D.lister('validations', { objet_type: 'documents_dce', objet_id: did }, { ordre: 'date' }), D.lister('modeles_document', { type: 'clause' }, { ordre: 'nom' })]);
     const modifiable = D.peut('dce.rediger') && d.statut === 'redaction';
-    const zone = h('textarea.saisie', { rows: 26, value: d.contenu, disabled: !modifiable, 'aria-label': 'Contenu du document', style: { fontFamily: 'var(--serif)', fontSize: '1rem', lineHeight: '1.5' } });
+    // Éditeur riche : le texte brut (contenu) reste la référence des contrôles et du circuit ; la mise en forme est dans contenu_html.
+    const ed = Editeur.creer({ html: d.contenu_html, texte: d.contenu || '', lectureSeule: !modifiable }); const htmlInitial = ed.html();
     const tr = (action, detail) => ({ action, libelle: d.titre, consultation_id: id, detail });
     const passer = async (statut, etape, decision, commentaire) => {
       await D.modifier('documents_dce', did, { statut }, tr(etape, { commentaire }));
@@ -106,16 +110,16 @@
     };
     const avecMotif = (titre, statut, etape, decision) => U.editer(titre, [{ nom: 'commentaire', libelle: 'Commentaire (obligatoire)', type: 'long', requis: true }], {}, v => passer(statut, etape, decision, v.commentaire), { libelle: 'Confirmer' });
     const enregistrer = () => U.editer('Enregistrer une nouvelle version', [{ nom: 'commentaire', libelle: 'Nature des modifications', requis: true, large: true }], {}, async v => {
-      const n = d.version + 1;
-      await D.modifier('documents_dce', did, { contenu: zone.value, version: n, redacteur_nom: D.utilisateur.nom, modifie_le: D.maintenant() }, tr('Nouvelle version du document (v' + n + ')', v));
-      await D.creer('documents_versions', { document_id: did, consultation_id: id, version: n, contenu: zone.value, auteur_nom: D.utilisateur.nom, date: D.maintenant(), commentaire: v.commentaire }, false);
+      const n = d.version + 1; const contenu = ed.texte(), contenu_html = ed.html();
+      await D.modifier('documents_dce', did, { contenu, contenu_html, version: n, redacteur_nom: D.utilisateur.nom, modifie_le: D.maintenant() }, tr('Nouvelle version du document (v' + n + ')', v));
+      await D.creer('documents_versions', { document_id: did, consultation_id: id, version: n, contenu, contenu_html, auteur_nom: D.utilisateur.nom, date: D.maintenant(), commentaire: v.commentaire }, false);
     });
     const actions = [];
     if (modifiable) { actions.push(U.bouton('Enregistrer (nouvelle version)', enregistrer, 'accent'));
       if (clauses.length) actions.push(U.bouton('Insérer une clause', () => { const m = U.modale('Bibliothèque de clauses', h('div', h('p.aide', 'Clauses proposées pour ce type de document en premier. La clause est insérée à l\'emplacement du curseur ; enregistrez ensuite une nouvelle version.'),
         clauses.filter(x => x.actif !== false).sort((a, b) => (b.categorie === d.type_piece) - (a.categorie === d.type_piece)).map(x => h('div.bloc-critere', h('header', h('h3', x.nom), h('span', x.categorie === d.type_piece ? U.badge('Suggérée pour ce document', 'ok') : U.badge(x.categorie, 'neutre'))), h('p', { style: { whiteSpace: 'pre-wrap', fontSize: '.88rem' } }, x.contenu),
-          h('button.bouton.secondaire.petit', { type: 'button', onclick: () => { const p = zone.selectionStart || zone.value.length; zone.value = zone.value.slice(0, p) + '\n' + x.contenu + '\n' + zone.value.slice(p); m.fermer(); U.message('Clause insérée : pensez à enregistrer.', 'info'); } }, 'Insérer')))), { large: true }); }, 'secondaire'));
-      actions.push(U.bouton('Soumettre (' + circuit[0].libelle + ')', async () => { if (zone.value !== d.contenu) throw new Error('Enregistrez d\'abord vos modifications.'); await passer(ids[0], 'Soumis à : ' + circuit[0].libelle, 'soumis'); if (E.notifierDroit) await E.notifierDroit(circuit[0].droit, 'Document à traiter (' + circuit[0].libelle + ') : ' + d.titre, '/consultation/' + id + '/dce/' + did, id); }, 'secondaire')); }
+          h('button.bouton.secondaire.petit', { type: 'button', onclick: () => { ed.inserer(x.contenu); m.fermer(); U.message('Clause insérée : pensez à enregistrer.', 'info'); } }, 'Insérer')))), { large: true }); }, 'secondaire'));
+      actions.push(U.bouton('Soumettre (' + circuit[0].libelle + ')', async () => { if (ed.texte() !== d.contenu || ed.html() !== htmlInitial) throw new Error('Enregistrez d\'abord vos modifications.'); await passer(ids[0], 'Soumis à : ' + circuit[0].libelle, 'soumis'); if (E.notifierDroit) await E.notifierDroit(circuit[0].droit, 'Document à traiter (' + circuit[0].libelle + ') : ' + d.titre, '/consultation/' + id + '/dce/' + did, id); }, 'secondaire')); }
     if (idx >= 0 && D.peut(circuit[idx].droit)) {
       const e = circuit[idx], suivante = circuit[idx + 1];
       actions.push(U.bouton('Approuver (' + e.libelle + ')', async () => { await passer(suivante ? suivante.id : 'valide', e.libelle + ' : approuvé' + (suivante ? '' : ' — document validé'), 'approuve'); if (suivante && E.notifierDroit) await E.notifierDroit(suivante.droit, 'Document à traiter (' + suivante.libelle + ') : ' + d.titre, '/consultation/' + id + '/dce/' + did, id); }, 'accent'));
@@ -124,7 +128,7 @@
     if (d.statut === 'valide' && D.peut('dce.publier')) actions.push(U.bouton('Marquer comme publié', async () => { if (await U.confirmer('Publication', 'Le document sera marqué comme publié et ne pourra plus être modifié. La mise en ligne sur le profil d\'acheteur reste à faire sur la plateforme de dématérialisation.', 'Marquer publié')) await passer('publie', 'Document publié', 'approuve'); }, 'accent'));
     if (['valide', 'publie'].includes(d.statut) && D.peut('dce.rediger')) actions.push(U.bouton('Rouvrir pour modification', () => avecMotif('Rouvrir le document', 'redaction', 'Réouverture pour modification', 'refuse'), 'secondaire'));
     const exp = async f => { const doc = { titre: d.titre, sousTitre: (window.CONFIG.organisme || '') + ' — ' + c.reference + ' — version ' + d.version + ' — ' + E.libelleDce(d.statut, circuit)[0], pied: d.titre + ' — v' + d.version,
-      blocs: d.contenu.split('\n').map(l => /^(ARTICLE|TITRE|CHAPITRE)\b/i.test(l.trim()) ? { type: 'titre', niveau: 2, texte: l.trim() } : { type: 'p', texte: l }) };
+      blocs: E.blocsDocumentDce(d) };
       U.telechargerBlob(f === 'pdf' ? await Docs.pdf(doc) : await Docs.word(doc), d.titre.replace(/[^\w\-]+/g, '_') + '-v' + d.version + (f === 'pdf' ? '.pdf' : '.docx')); await D.journal('Export d\'un document du DCE (' + (f === 'pdf' ? 'PDF' : 'Word') + ')', 'documents_dce', did, d.titre, null, id); };
     actions.push(U.bouton('Word', () => exp('word'), 'secondaire'), U.bouton('PDF', () => exp('pdf'), 'secondaire'));
     const sig = controles(d, c, ctx);
@@ -132,10 +136,10 @@
       U.titrePage(d.titre, d.type_piece + ' · version ' + d.version, [E.badgeDce(d.statut, circuit)]),
       h('div.etapes', ETAPES.map((s, i) => { const e = circuit.find(x => x.id === s); return h('span' + (s === d.statut ? '.courant' : i < ETAPES.indexOf(d.statut) ? '.fait' : ''), e ? e.libelle : E.L.dce[s][0]); })),
       sig.length ? h('div.note-info.alerte', h('b', 'Contrôles automatiques — à vérifier :'), h('ul', { style: { margin: '4px 0 0 18px', padding: 0 } }, sig.map(s => h('li', s)))) : h('div.note-info.ok', 'Contrôles automatiques : aucun signalement.'),
-      U.carte('Contenu', [modifiable ? null : h('p.aide', d.statut === 'redaction' ? 'Lecture seule : votre profil ne permet pas de rédiger.' : 'Lecture seule : le document est dans le circuit de validation.'), zone], actions),
+      U.carte('Contenu', [modifiable ? null : h('p.aide', d.statut === 'redaction' ? 'Lecture seule : votre profil ne permet pas de rédiger.' : 'Lecture seule : le document est dans le circuit de validation.'), ed.element], actions),
       h('div.grille2',
         U.carte('Versions', U.tableau([{ titre: 'Version', classe: 'etroit', valeur: v => 'v' + v.version }, { titre: 'Date et heure', valeur: v => U.dateHeure(v.date) }, { titre: 'Auteur', valeur: v => v.auteur_nom }, { titre: 'Modifications', valeur: v => v.commentaire },
-          { titre: '', classe: 'etroit', valeur: v => U.bouton('Voir', () => U.modale(d.titre + ' — version ' + v.version, h('pre', { style: { whiteSpace: 'pre-wrap', fontFamily: 'var(--serif)', margin: 0 } }, v.contenu), { large: true }), 'secondaire.petit') }], versions)),
+          { titre: '', classe: 'etroit', valeur: v => U.bouton('Voir', () => U.modale(d.titre + ' — version ' + v.version, v.contenu_html ? h('div.editeur-zone.lecture', { html: Editeur.assainir(v.contenu_html) }) : h('pre', { style: { whiteSpace: 'pre-wrap', fontFamily: 'var(--serif)', margin: 0 } }, v.contenu), { large: true }), 'secondaire.petit') }], versions)),
         U.carte('Circuit de validation', U.tableau([{ titre: 'Date et heure', valeur: v => U.dateHeure(v.date) }, { titre: 'Étape', valeur: v => [v.etape, v.version ? h('div.aide', 'sur la version ' + v.version) : null] }, { titre: 'Par', valeur: v => v.auteur_nom }, { titre: 'Commentaire', valeur: v => v.commentaire || '—' }], validations, { vide: 'Le document n\'a pas encore été soumis.' }))));
   };
   U.route('/consultation/:id/dce/:did', E.documentDce);

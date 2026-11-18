@@ -1,0 +1,672 @@
+{
+ "cible": "https://psyc01-cpu.github.io/vavang-demo/",
+ "debut": "2026-11-18T22:27:55.643Z",
+ "fin": "2026-11-18T22:30:22.151Z",
+ "bilan": {
+  "conforme": 82,
+  "NON CONFORME": 9,
+  "limite": 2,
+  "non vérifié": 0
+ },
+ "comptes_jetables": [
+  {
+   "id": "9e293964-67de-4878-9bb9-5b2d6edd4127",
+   "email": "jetable-mwmp0495@exemple-test.invalid",
+   "desactive": true
+  }
+ ],
+ "erreurs_js": [],
+ "resultats": [
+  {
+   "section": "1. HTTPS et en-têtes",
+   "test": "Page servie en HTTPS",
+   "attendu": "protocole https, statut 200",
+   "obtenu": "https: 200",
+   "statut": "conforme"
+  },
+  {
+   "section": "1. HTTPS et en-têtes",
+   "test": "http:// redirige vers https://",
+   "attendu": "redirection 301/308 vers https",
+   "obtenu": "301 → https://psyc01-cpu.github.io/vavang-demo/",
+   "statut": "conforme"
+  },
+  {
+   "section": "1. HTTPS et en-têtes",
+   "test": "En-tête HSTS",
+   "attendu": "Strict-Transport-Security présent",
+   "obtenu": "max-age=31556952",
+   "statut": "conforme"
+  },
+  {
+   "section": "1. HTTPS et en-têtes",
+   "test": "CSP (balise meta)",
+   "attendu": "default-src 'self', script-src sans 'unsafe-inline' ni 'unsafe-eval', object-src 'none', connect-src limité au projet Supabase",
+   "obtenu": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://talremuridyehynsnfzv.supabase.co; font-src 'self' da…",
+   "statut": "conforme"
+  },
+  {
+   "section": "1. HTTPS et en-têtes",
+   "test": "Anti-inclusion en cadre (clickjacking)",
+   "attendu": "X-Frame-Options ou CSP frame-ancestors en en-tête HTTP",
+   "obtenu": "absent (GitHub Pages ne permet pas d'en-têtes personnalisés ; frame-ancestors est sans effet en meta)",
+   "statut": "limite"
+  },
+  {
+   "section": "1. HTTPS et en-têtes",
+   "test": "API Supabase en http://",
+   "attendu": "redirection vers https ou refus",
+   "obtenu": "301 → https://talremuridyehynsnfzv.supabase.co/rest/v1/",
+   "statut": "conforme"
+  },
+  {
+   "section": "4. Double authentification de l'administrateur",
+   "test": "Mot de passe admin accepté (1er facteur)",
+   "attendu": "session ouverte en aal1",
+   "obtenu": "session ouverte",
+   "statut": "conforme"
+  },
+  {
+   "section": "4. Double authentification de l'administrateur",
+   "test": "Niveau de session après mot de passe seul",
+   "attendu": "currentLevel aal1, nextLevel aal2",
+   "obtenu": "aal1 → aal2",
+   "statut": "conforme"
+  },
+  {
+   "section": "4. Double authentification de l'administrateur",
+   "test": "moi() en aal1",
+   "attendu": "nul",
+   "obtenu": "null",
+   "statut": "conforme"
+  },
+  {
+   "section": "4. Double authentification de l'administrateur",
+   "test": "Lecture des consultations en aal1",
+   "attendu": "0 ligne",
+   "obtenu": "0 ligne(s)",
+   "statut": "conforme"
+  },
+  {
+   "section": "4. Double authentification de l'administrateur",
+   "test": "Lecture des profils en aal1",
+   "attendu": "0 ligne",
+   "obtenu": "0 ligne(s)",
+   "statut": "conforme"
+  },
+  {
+   "section": "4. Double authentification de l'administrateur",
+   "test": "Fonction d'administration (etat_securite_comptes) en aal1",
+   "attendu": "refusée",
+   "obtenu": "refusée : REGLE: Action réservée à l'administrateur.",
+   "statut": "conforme"
+  },
+  {
+   "section": "4. Double authentification de l'administrateur",
+   "test": "mon_profil() en aal1 (seule lecture permise)",
+   "attendu": "profil renvoyé avec mfa_requis = true, aal1",
+   "obtenu": "{\"role\":\"administrateur\",\"mfa_requis\":true,\"aal\":\"aal1\"}",
+   "statut": "conforme"
+  },
+  {
+   "section": "4. Double authentification de l'administrateur",
+   "test": "Code TOTP faux",
+   "attendu": "refusé",
+   "obtenu": "refusé : Invalid TOTP code entered",
+   "statut": "conforme"
+  },
+  {
+   "section": "4. Double authentification de l'administrateur",
+   "test": "Code TOTP exact",
+   "attendu": "accepté",
+   "obtenu": "accepté",
+   "statut": "conforme"
+  },
+  {
+   "section": "4. Double authentification de l'administrateur",
+   "test": "Niveau de session après le code",
+   "attendu": "aal2",
+   "obtenu": "aal2",
+   "statut": "conforme"
+  },
+  {
+   "section": "4. Double authentification de l'administrateur",
+   "test": "moi() en aal2",
+   "attendu": "profil administrateur",
+   "obtenu": "administrateur",
+   "statut": "conforme"
+  },
+  {
+   "section": "4. Double authentification de l'administrateur",
+   "test": "Lecture des consultations en aal2",
+   "attendu": "toutes (≥ 2 : c1, c2)",
+   "obtenu": "2 ligne(s)",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "Fichiers de démonstration présents dans « pieces » (préparation)",
+   "attendu": "14 fichiers",
+   "obtenu": "14 déjà présents, 0 téléversés par le gestionnaire",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "support : consultations lisibles",
+   "attendu": "aucune → []",
+   "obtenu": "[]",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "support : offres lisibles",
+   "attendu": "0 (celles des dossiers visibles), aucune d'un autre dossier",
+   "obtenu": "0 ligne(s), dont 0 hors dossier et 0 sans dossier",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "support : notes lisibles",
+   "attendu": "0 (celles des dossiers visibles), aucune d'un autre dossier",
+   "obtenu": "0 ligne(s), dont 0 hors dossier et 0 sans dossier",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "support : pieces lisibles",
+   "attendu": "0 (celles des dossiers visibles), aucune d'un autre dossier",
+   "obtenu": "0 ligne(s), dont 0 hors dossier et 0 sans dossier",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "support : lignes_prix lisibles",
+   "attendu": "0 (celles des dossiers visibles), aucune d'un autre dossier",
+   "obtenu": "0 ligne(s), dont 0 hors dossier et 0 sans dossier",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "support : téléchargement direct de c1/demo-o1-0.txt",
+   "attendu": "refusé",
+   "obtenu": "autorisé (159 octets)",
+   "statut": "NON CONFORME"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "support : liste du dossier c1 du compartiment",
+   "attendu": "0 fichier",
+   "obtenu": "14 fichier(s)",
+   "statut": "NON CONFORME"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "prescripteur : consultations lisibles",
+   "attendu": "celles de son service, créées par lui ou affectées → [c1]",
+   "obtenu": "[c1]",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "prescripteur : offres lisibles",
+   "attendu": "3 (celles des dossiers visibles), aucune d'un autre dossier",
+   "obtenu": "3 ligne(s), dont 0 hors dossier et 0 sans dossier",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "prescripteur : notes lisibles",
+   "attendu": "9 (celles des dossiers visibles), aucune d'un autre dossier",
+   "obtenu": "9 ligne(s), dont 0 hors dossier et 0 sans dossier",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "prescripteur : pieces lisibles",
+   "attendu": "14 (celles des dossiers visibles), aucune d'un autre dossier",
+   "obtenu": "14 ligne(s), dont 0 hors dossier et 0 sans dossier",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "prescripteur : lignes_prix lisibles",
+   "attendu": "9 (celles des dossiers visibles), aucune d'un autre dossier",
+   "obtenu": "9 ligne(s), dont 0 hors dossier et 0 sans dossier",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "prescripteur : téléchargement direct de c1/demo-o1-0.txt",
+   "attendu": "autorisé (dossier visible)",
+   "obtenu": "autorisé (159 octets)",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "prescripteur : liste du dossier c1 du compartiment",
+   "attendu": "fichiers listés",
+   "obtenu": "14 fichier(s)",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "lecteur : consultations lisibles",
+   "attendu": "seulement celle(s) affectée(s) → [c1]",
+   "obtenu": "[c1]",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "lecteur : offres lisibles",
+   "attendu": "3 (celles des dossiers visibles), aucune d'un autre dossier",
+   "obtenu": "3 ligne(s), dont 0 hors dossier et 0 sans dossier",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "lecteur : notes lisibles",
+   "attendu": "9 (celles des dossiers visibles), aucune d'un autre dossier",
+   "obtenu": "9 ligne(s), dont 0 hors dossier et 0 sans dossier",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "lecteur : pieces lisibles",
+   "attendu": "14 (celles des dossiers visibles), aucune d'un autre dossier",
+   "obtenu": "14 ligne(s), dont 0 hors dossier et 0 sans dossier",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "lecteur : lignes_prix lisibles",
+   "attendu": "9 (celles des dossiers visibles), aucune d'un autre dossier",
+   "obtenu": "9 ligne(s), dont 0 hors dossier et 0 sans dossier",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "lecteur : téléchargement direct de c1/demo-o1-0.txt",
+   "attendu": "autorisé (dossier visible)",
+   "obtenu": "autorisé (159 octets)",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "lecteur : liste du dossier c1 du compartiment",
+   "attendu": "fichiers listés",
+   "obtenu": "14 fichier(s)",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "prescripteur : dépôt d'un fichier dans le dossier c2 (consultation qu'il ne voit pas)",
+   "attendu": "refusé",
+   "obtenu": "ACCEPTÉ",
+   "statut": "NON CONFORME"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "support : marches (données sans dossier de consultation)",
+   "attendu": "0 ligne (le support éditeur n'a aucun droit métier)",
+   "obtenu": "3 ligne(s) sur 3",
+   "statut": "NON CONFORME"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "support : factures (données sans dossier de consultation)",
+   "attendu": "0 ligne (le support éditeur n'a aucun droit métier)",
+   "obtenu": "0 ligne(s) sur 0",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "support : fournisseurs (données sans dossier de consultation)",
+   "attendu": "0 ligne (le support éditeur n'a aucun droit métier)",
+   "obtenu": "6 ligne(s) sur 6",
+   "statut": "NON CONFORME"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "support : evaluations (données sans dossier de consultation)",
+   "attendu": "0 ligne (le support éditeur n'a aucun droit métier)",
+   "obtenu": "1 ligne(s) sur 1",
+   "statut": "NON CONFORME"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "support : evenements (données sans dossier de consultation)",
+   "attendu": "0 ligne (le support éditeur n'a aucun droit métier)",
+   "obtenu": "9 ligne(s) sur 9",
+   "statut": "NON CONFORME"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "support : liste de la racine du compartiment « pieces »",
+   "attendu": "aucun dossier de consultation ni de marché",
+   "obtenu": "[c1]",
+   "statut": "NON CONFORME"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "anonyme : lecture des 41 tables",
+   "attendu": "rien, sauf annonces actives et paramètre « identite »",
+   "obtenu": "aucune fuite (annonces actives : oui, parametres : aucun)",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "anonyme : téléchargement de c1/demo-o1-0.txt",
+   "attendu": "refusé",
+   "obtenu": "refusé : Object not found",
+   "statut": "conforme"
+  },
+  {
+   "section": "2. Cloisonnement par les règles d'accès du serveur",
+   "test": "anonyme : appel des fonctions serveur sensibles",
+   "attendu": "toutes refusées",
+   "obtenu": "{\"moi\":\"refusée\",\"mon_profil\":\"refusée\",\"creer_compte\":\"refusée\",\"revoquer_sessions\":\"refusée\",\"etat_securite_comptes\":\"refusée\",\"deverrouiller_compte\":\"refusée\",\"mes_evenements_securite\":\"refusée\",\"reinitialiser_demo\":\"refusée\"}",
+   "statut": "conforme"
+  },
+  {
+   "section": "3. Écritures interdites par le serveur (interface contournée)",
+   "test": "lecteur : insertion directe d'une consultation",
+   "attendu": "refusée",
+   "obtenu": "refusée : new row violates row-level security policy for table \"consultations\"",
+   "statut": "conforme"
+  },
+  {
+   "section": "3. Écritures interdites par le serveur (interface contournée)",
+   "test": "lecteur : modification directe du montant de l'offre o1",
+   "attendu": "0 ligne modifiée, montant inchangé",
+   "obtenu": "0 ligne(s) modifiée(s), montant 104500",
+   "statut": "conforme"
+  },
+  {
+   "section": "3. Écritures interdites par le serveur (interface contournée)",
+   "test": "lecteur : suppression directe de l'offre o1",
+   "attendu": "0 ligne supprimée",
+   "obtenu": "0 ligne(s) supprimée(s), o1 toujours présente",
+   "statut": "conforme"
+  },
+  {
+   "section": "3. Écritures interdites par le serveur (interface contournée)",
+   "test": "gestionnaire : se donner le profil administrateur (update direct de son profil)",
+   "attendu": "refusé, profil inchangé",
+   "obtenu": "0 ligne(s) modifiée(s), profil = gestionnaire",
+   "statut": "conforme"
+  },
+  {
+   "section": "3. Écritures interdites par le serveur (interface contournée)",
+   "test": "lecteur : s'accorder une habilitation (insert direct)",
+   "attendu": "refusé",
+   "obtenu": "refusé : new row violates row-level security policy for table \"habilitations\"",
+   "statut": "conforme"
+  },
+  {
+   "section": "3. Écritures interdites par le serveur (interface contournée)",
+   "test": "lecteur : fonctions d'administration (création de compte, sessions, mots de passe…)",
+   "attendu": "toutes refusées",
+   "obtenu": "{\"creer_compte\":\"refusée\",\"revoquer_sessions\":\"refusée\",\"etat_securite_comptes\":\"refusée\",\"deverrouiller_compte\":\"refusée\",\"definir_mot_de_passe\":\"refusée\",\"reinitialiser_mfa\":\"refusée\"}",
+   "statut": "conforme"
+  },
+  {
+   "section": "3. Écritures interdites par le serveur (interface contournée)",
+   "test": "administrateur (analyste et valideur) : dépôt de sa propre note « proposée »",
+   "attendu": "acceptée (préalable)",
+   "obtenu": "acceptée",
+   "statut": "conforme"
+  },
+  {
+   "section": "3. Écritures interdites par le serveur (interface contournée)",
+   "test": "administrateur : valider sa propre note (update direct)",
+   "attendu": "refusé par le déclencheur garde()",
+   "obtenu": "refusé : REGLE: Vous ne pouvez pas valider votre propre contribution.",
+   "statut": "conforme"
+  },
+  {
+   "section": "3. Écritures interdites par le serveur (interface contournée)",
+   "test": "Nettoyage : suppression de la note de test par son auteur",
+   "attendu": "acceptée",
+   "obtenu": "1 ligne supprimée",
+   "statut": "conforme"
+  },
+  {
+   "section": "3. Écritures interdites par le serveur (interface contournée)",
+   "test": "administrateur : insérer directement sa note déjà « validée »",
+   "attendu": "refusé",
+   "obtenu": "refusé : REGLE: Vous ne pouvez pas valider votre propre contribution.",
+   "statut": "conforme"
+  },
+  {
+   "section": "3. Écritures interdites par le serveur (interface contournée)",
+   "test": "gestionnaire (analyste sans droit de valider) : valider sa note n7",
+   "attendu": "refusé",
+   "obtenu": "refusé : REGLE: La validation des notes revient à un utilisateur habilité., statut = proposee",
+   "statut": "conforme"
+  },
+  {
+   "section": "3. Écritures interdites par le serveur (interface contournée)",
+   "test": "gestionnaire (lecteur du journal) : modifier puis supprimer une entrée du journal",
+   "attendu": "0 ligne modifiée, 0 supprimée, entrée intacte",
+   "obtenu": "modif : 0 ligne ; suppr : 0 ligne ; entrée intacte",
+   "statut": "conforme"
+  },
+  {
+   "section": "3. Écritures interdites par le serveur (interface contournée)",
+   "test": "gestionnaire : insertion directe dans le journal",
+   "attendu": "refusée (seule la fonction journaliser écrit)",
+   "obtenu": "refusée : new row violates row-level security policy for table \"journal\"",
+   "statut": "conforme"
+  },
+  {
+   "section": "3. Écritures interdites par le serveur (interface contournée)",
+   "test": "anonyme : journaliser()",
+   "attendu": "refusé",
+   "obtenu": "refusé : permission denied for function journaliser",
+   "statut": "conforme"
+  },
+  {
+   "section": "3. Écritures interdites par le serveur (interface contournée)",
+   "test": "gestionnaire : forger un événement de sécurité « Connexion » par journaliser()",
+   "attendu": "refusé (événement réservé au serveur)",
+   "obtenu": "refusé : REGLE: Cet événement est enregistré par le serveur.",
+   "statut": "conforme"
+  },
+  {
+   "section": "3. Écritures interdites par le serveur (interface contournée)",
+   "test": "gestionnaire : prétendre avoir activé la double authentification",
+   "attendu": "refusé (aucun facteur vérifié)",
+   "obtenu": "refusé : REGLE: Double authentification non activée.",
+   "statut": "conforme"
+  },
+  {
+   "section": "Captures de l'interface en ligne (70 et suivantes)",
+   "test": "Interface : connexion admin sans code",
+   "attendu": "champ « Code de vérification » demandé",
+   "obtenu": "code demandé",
+   "statut": "conforme"
+  },
+  {
+   "section": "Captures de l'interface en ligne (70 et suivantes)",
+   "test": "Interface : connexion admin avec code",
+   "attendu": "connecté administrateur",
+   "obtenu": "administrateur",
+   "statut": "conforme"
+  },
+  {
+   "section": "5. Verrouillage après échecs de connexion",
+   "test": "Création par l'administrateur d'un compte jetable (D.creerCompte → creer_compte)",
+   "attendu": "identifiant renvoyé",
+   "obtenu": "9e293964-67de-4878-9bb9-5b2d6edd4127",
+   "statut": "conforme"
+  },
+  {
+   "section": "5. Verrouillage après échecs de connexion",
+   "test": "Compte jetable : première connexion",
+   "attendu": "acceptée, moi() renvoie le profil lecteur",
+   "obtenu": "acceptée, moi = lecteur",
+   "statut": "conforme"
+  },
+  {
+   "section": "5. Verrouillage après échecs de connexion",
+   "test": "5 mauvais mots de passe",
+   "attendu": "5 refus",
+   "obtenu": "invalid_credentials, invalid_credentials, invalid_credentials, invalid_credentials, invalid_credentials",
+   "statut": "conforme"
+  },
+  {
+   "section": "5. Verrouillage après échecs de connexion",
+   "test": "Connexion avec le BON mot de passe après 5 échecs",
+   "attendu": "refusée (compte verrouillé, user_banned)",
+   "obtenu": "refusée : User is banned [user_banned]",
+   "statut": "conforme"
+  },
+  {
+   "section": "5. Verrouillage après échecs de connexion",
+   "test": "Interface admin : bouton « Déverrouiller » sur le compte verrouillé",
+   "attendu": "présent",
+   "obtenu": "présent",
+   "statut": "conforme"
+  },
+  {
+   "section": "5. Verrouillage après échecs de connexion",
+   "test": "D.deverrouiller par l'administrateur",
+   "attendu": "accepté",
+   "obtenu": "ok",
+   "statut": "conforme"
+  },
+  {
+   "section": "5. Verrouillage après échecs de connexion",
+   "test": "Connexion après déverrouillage",
+   "attendu": "acceptée, données lisibles",
+   "obtenu": "acceptée, moi = lecteur",
+   "statut": "conforme"
+  },
+  {
+   "section": "5 bis. Verrouillage déclenché sans tentative de connexion (déni de service)",
+   "test": "Anonyme : 5 appels à signaler_echec_connexion(adresse) SANS essayer de mot de passe, puis connexion avec le bon mot de passe",
+   "attendu": "connexion acceptée (un tiers ne doit pas pouvoir bloquer un compte en connaissant seulement son adresse)",
+   "obtenu": "REFUSÉE : User is banned [user_banned] — le compte est bloqué par un tiers anonyme",
+   "statut": "NON CONFORME"
+  },
+  {
+   "section": "6. Révocation de session à distance",
+   "test": "2e navigateur (contexte isolé) : connexion du compte jetable",
+   "attendu": "acceptée, moi() non nul",
+   "obtenu": "acceptée, moi = lecteur",
+   "statut": "conforme"
+  },
+  {
+   "section": "6. Révocation de session à distance",
+   "test": "Interface admin : bouton « Fermer ses sessions » sur le compte jetable",
+   "attendu": "présent avec le nombre de sessions",
+   "obtenu": "Fermer ses sessions (2)",
+   "statut": "conforme"
+  },
+  {
+   "section": "6. Révocation de session à distance",
+   "test": "D.revoquerSessions par l'administrateur",
+   "attendu": "≥ 2 sessions fermées (navigateur 1 et 2)",
+   "obtenu": "2",
+   "statut": "conforme"
+  },
+  {
+   "section": "6. Révocation de session à distance",
+   "test": "2e navigateur, requête suivante avec l'ancien jeton d'accès",
+   "attendu": "moi() nul, aucune donnée lisible",
+   "obtenu": "moi = null, profils = 0",
+   "statut": "conforme"
+  },
+  {
+   "section": "6. Révocation de session à distance",
+   "test": "2e navigateur : renouvellement du jeton (refresh token)",
+   "attendu": "refusé",
+   "obtenu": "refusé : Invalid Refresh Token: Refresh Token Not Found",
+   "statut": "conforme"
+  },
+  {
+   "section": "6. Révocation de session à distance",
+   "test": "1er navigateur (autre session du même compte)",
+   "attendu": "moi() nul également",
+   "obtenu": "null",
+   "statut": "conforme"
+  },
+  {
+   "section": "7. Création de compte (ci-dessus), changement de mot de passe, désactivation",
+   "test": "D.changerMotDePasse par l'administrateur",
+   "attendu": "accepté",
+   "obtenu": "ok",
+   "statut": "conforme"
+  },
+  {
+   "section": "7. Création de compte (ci-dessus), changement de mot de passe, désactivation",
+   "test": "Session ouverte avant le changement de mot de passe",
+   "attendu": "fermée (moi() nul)",
+   "obtenu": "null",
+   "statut": "conforme"
+  },
+  {
+   "section": "7. Création de compte (ci-dessus), changement de mot de passe, désactivation",
+   "test": "Connexion avec l'ancien mot de passe",
+   "attendu": "refusée",
+   "obtenu": "refusée : Invalid login credentials",
+   "statut": "conforme"
+  },
+  {
+   "section": "7. Création de compte (ci-dessus), changement de mot de passe, désactivation",
+   "test": "Connexion avec le nouveau mot de passe",
+   "attendu": "acceptée",
+   "obtenu": "acceptée, moi = lecteur",
+   "statut": "conforme"
+  },
+  {
+   "section": "7. Création de compte (ci-dessus), changement de mot de passe, désactivation",
+   "test": "Désactivation du compte par l'administrateur",
+   "attendu": "acceptée",
+   "obtenu": "ok",
+   "statut": "conforme"
+  },
+  {
+   "section": "7. Création de compte (ci-dessus), changement de mot de passe, désactivation",
+   "test": "Session du compte désactivé",
+   "attendu": "fermée : moi() nul, aucune donnée",
+   "obtenu": "moi = null, profils = 0",
+   "statut": "conforme"
+  },
+  {
+   "section": "7. Création de compte (ci-dessus), changement de mot de passe, désactivation",
+   "test": "Nouvelle connexion du compte désactivé",
+   "attendu": "aucune donnée lisible (le service d'authentification délivre un jeton, mais mon_profil et toutes les lectures sont vides)",
+   "obtenu": "jeton délivré ; mon_profil = null, profils = 0",
+   "statut": "conforme"
+  },
+  {
+   "section": "8. Comptes de secours (administrateurs)",
+   "test": "Au moins 2 administrateurs actifs (compte de secours)",
+   "attendu": "≥ 2",
+   "obtenu": "1 administrateur(s) actif(s) — démo : un seul compte administrateur partagé ; aucun administrateur permanent n'est créé par ce test",
+   "statut": "limite"
+  },
+  {
+   "section": "8. Comptes de secours (administrateurs)",
+   "test": "Le dernier administrateur ne peut pas se retirer le profil",
+   "attendu": "refusé",
+   "obtenu": "refusé : REGLE: Vous ne pouvez pas modifier votre propre profil ni désactiver votre propre compte.",
+   "statut": "conforme"
+  },
+  {
+   "section": "Captures : refus d'accès vus par un profil limité",
+   "test": "Interface : le lecteur ouvre /admin",
+   "attendu": "refus affiché",
+   "obtenu": "Action impossible Action non autorisée pour votre profil (Gérer les utilisateurs et les habilitations).",
+   "statut": "conforme"
+  },
+  {
+   "section": "Captures : refus d'accès vus par un profil limité",
+   "test": "Interface : le support ouvre la consultation c1",
+   "attendu": "refus ou dossier introuvable",
+   "obtenu": "Action impossible Consultation introuvable.",
+   "statut": "conforme"
+  }
+ ]
+}
