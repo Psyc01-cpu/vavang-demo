@@ -96,6 +96,17 @@
       code.focus();
     };
     const journal = enLigne ? await D.mesEvenementsSecurite(12).catch(() => []) : (await D.lister('journal', {}, { ordre: 'date', desc: true, limite: 400 })).filter(l => (l.auteur_id === D.utilisateur.id || l.objet_id === D.utilisateur.id) && E.estSecurite(l)).slice(0, 12);
+    // Connexion unique (SSO) : associer ou dissocier un compte externe (fournisseurs activés dans config.js, mode hébergé).
+    const NOMS_SSO = { github: 'GitHub', google: 'Google', azure: 'Microsoft' };
+    const fournisseurs = D.ssoFournisseurs ? D.ssoFournisseurs() : [];
+    const liees = fournisseurs.length ? await D.identitesSso().catch(() => []) : [];
+    const carteSso = fournisseurs.length ? U.carte('Connexion unique (SSO)', [
+      h('p.aide', 'Associez un compte externe pour vous connecter sans mot de passe vavang. Vos droits restent ceux de votre profil ; la double authentification exigée pour votre profil s\'applique toujours.'),
+      U.definition(fournisseurs.map(p => { const i = liees.find(x => x.provider === p);
+        return [NOMS_SSO[p] || p, i ? U.badge('Associé' + (i.identity_data && (i.identity_data.user_name || i.identity_data.email) ? ' : ' + (i.identity_data.user_name || i.identity_data.email) : ''), 'ok') : U.badge('Non associé', 'neutre')]; }))],
+      fournisseurs.map(p => liees.find(x => x.provider === p)
+        ? U.bouton('Dissocier ' + (NOMS_SSO[p] || p), async () => { await D.delierSso(p); U.message('Compte externe dissocié.'); U.rafraichir(); }, 'secondaire')
+        : U.bouton('Associer mon compte ' + (NOMS_SSO[p] || p), () => D.lierSso(p), 'secondaire'))) : null;
     return h('div', U.titrePage('Ma sécurité', D.utilisateur.nom + ' — ' + D.utilisateur.email),
       obligatoire && !etat.mfa ? h('div.note-info.alerte', h('b', 'Étape obligatoire : '), (sec.mfa_tous ? 'tous les comptes' : 'les comptes administrateurs') + ' doivent activer la double authentification avant d\'accéder à l\'application.') : null,
       h('div.grille2',
@@ -114,6 +125,7 @@
             }, 'secondaire')] : []))),
         U.carte('Règles de sécurité en vigueur', U.definition([['Déconnexion automatique', 'après ' + sec.inactivite_minutes + ' minutes sans activité'], ['Verrouillage du compte', 'après ' + sec.echecs_max + ' échecs de connexion, pendant ' + sec.verrouillage_minutes + ' minutes'], ['Double authentification', sec.mfa_tous ? 'obligatoire pour tous' : (sec.mfa_admin ? 'obligatoire pour les administrateurs' : 'facultative') + (sec.mfa_proposer ? ', proposée à chaque connexion' : '')]]))),
       zone,
+      carteSso,
       U.carte('Vos derniers événements de sécurité', E.tableauJournal(journal)));
   };
   U.route('/securite', E.maSecurite);

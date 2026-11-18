@@ -97,7 +97,14 @@
     if (D.mode === 'supabase') {
       if (!cfg.supabaseUrl || !cfg.supabaseCle) throw new Error('Configuration incomplète : renseignez l\'adresse (supabaseUrl) et la clé publique (supabaseCle) dans config.js.');
       if (!window.supabase) await D.chargerScript('vendor/supabase.js');
-      sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseCle, { auth: { persistSession: true, storageKey: 'acheteur-session' } });
+      // Flux PKCE : le retour d'un fournisseur d'identité (SSO) arrive en « ?code=… », compatible avec les routes en « #/… ».
+      const retourSso = new URLSearchParams(location.search);
+      sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseCle, { auth: { persistSession: true, storageKey: 'acheteur-session', flowType: 'pkce', detectSessionInUrl: true } });
+      if (retourSso.has('code') || retourSso.has('error')) {
+        if (retourSso.has('error')) D.erreurSso = traduireSso(retourSso.get('error_description') || retourSso.get('error'));
+        else { try { await sb.auth.exchangeCodeForSession(retourSso.get('code')); } catch (e) { /* déjà échangé par detectSessionInUrl */ } D.retourSso = true; }
+        history.replaceState(null, '', location.pathname + (location.hash || '#/'));
+      }
       // Session fermée ailleurs (expiration, révocation, autre onglet) : on oublie l'utilisateur et on réaffiche l'écran.
       sb.auth.onAuthStateChange(ev => {
         if (ev !== 'SIGNED_OUT') return;
@@ -111,6 +118,8 @@
           // Mot de passe vérifié mais code de double authentification pas encore saisi : profil non chargé.
           if (aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') D.mfaEnAttente = true;
           else await chargerProfil(data.session.user.id);
+          // Retour d'une connexion unique (SSO) : connexion enregistrée côté serveur, comme pour un mot de passe.
+          if (D.retourSso && D.utilisateur) { try { await sb.rpc('connexion_reussie'); } catch (e) { /* sans effet */ } }
         }
       } catch (e) {
         console.warn('session', e); D.utilisateur = null; D.droits = new Set(); D.affectations = []; D.mfaEnAttente = false;
@@ -246,6 +255,33 @@
     const u = D.utilisateur; if (!u) return [];
     const Ecr = window.Ecrans; const estSec = l => (Ecr && Ecr.estSecurite) ? Ecr.estSecurite(l) : ['session', 'securite'].includes(l.objet_type);
     return (await D.lister('journal', {}, { ordre: 'date', desc: true, limite: 400 })).filter(l => (l.auteur_id === u.id || l.objet_id === u.id) && estSec(l)).slice(0, limite);
+  };
+  /* ---------- Connexion unique (SSO) par un fournisseur d'identité externe (mode hébergé) ---------- */
+  function traduireSso(m) {
+    m = String(m || '');
+    if (/signups? not allowed|not allowed for this instance/i.test(m)) return 'Ce compte externe n\'est associé à aucun compte vavang. Connectez-vous d\'abord avec votre adresse et votre mot de passe, puis associez-le dans « Ma sécurité ».';
+    if (/access_denied|denied/i.test(m)) return 'Connexion annulée chez le fournisseur d\'identité.';
+    return 'Connexion unique impossible : ' + m;
+  }
+  D.ssoFournisseurs = () => (D.mode === 'supabase' && Array.isArray(cfg.sso)) ? cfg.sso : [];
+  const retourVers = suite => location.origin + location.pathname + (suite || '#/');
+  D.connexionSso = async fournisseur => {
+    const { error } = await sb.auth.signInWithOAuth({ provider: fournisseur, options: { redirectTo: retourVers('#/') } });
+    if (error) throw new Error(traduireSso(error.message));
+  };
+  D.identitesSso = async () => {
+    if (D.mode !== 'supabase') return [];
+    const { data, error } = await sb.auth.getUserIdentities(); if (error) throw new Error(traduire(error));
+    return ((data && data.identities) || []).filter(i => i.provider !== 'email');
+  };
+  D.lierSso = async fournisseur => {
+    const { error } = await sb.auth.linkIdentity({ provider: fournisseur, options: { redirectTo: retourVers('#/securite') } });
+    if (error) throw new Error(traduireSso(error.message));
+  };
+  D.delierSso = async fournisseur => {
+    const id = (await D.identitesSso()).find(i => i.provider === fournisseur); if (!id) return;
+    const { error } = await sb.auth.unlinkIdentity(id); if (error) throw new Error(traduire(error));
+    await D.journal('Dissociation d\'un compte externe (SSO)', 'securite', D.utilisateur && D.utilisateur.id, fournisseur);
   };
   D.maDerniereConnexion = async () => {
     if (D.mode === 'supabase') { const { data } = await sb.auth.getUser(); return (data && data.user && data.user.last_sign_in_at) || null; }

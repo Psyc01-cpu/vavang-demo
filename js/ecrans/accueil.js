@@ -205,6 +205,14 @@
         h('button.lien', { type: 'button', onclick: U.agir(async () => { await D.deconnexion(); D.mfaEnAttente = false; U.rafraichir(); }) }, 'Changer de compte')));
     }
     f.controles.code.setAttribute('inputmode', 'numeric'); f.controles.code.setAttribute('autocomplete', 'one-time-code');
+    // Connexion unique (SSO) : compte externe déjà associé à un compte vavang dans « Ma sécurité ».
+    const NOMS_SSO = { github: 'GitHub', google: 'Google', azure: 'Microsoft' };
+    if (!enAttente && D.ssoFournisseurs && D.ssoFournisseurs().length) {
+      f.append(h('div.sso', h('p.aide-sous', 'ou'),
+        ...D.ssoFournisseurs().map(p => U.bouton('Se connecter avec ' + (NOMS_SSO[p] || p), () => D.connexionSso(p), 'secondaire')),
+        h('p.aide', 'Connexion unique de test : le compte externe doit d\'abord être associé à un compte vavang (Ma sécurité). Un compte externe inconnu est refusé.')));
+    }
+    if (D.erreurSso) { f.prepend(h('p.note-info.alerte.plein', { role: 'alert' }, D.erreurSso)); D.erreurSso = null; }
     const demo = CFG.afficherComptesDemo && window.Demo;
     const aide = h('div.aide-connexion', { id: 'aide-connexion', hidden: true, role: 'dialog', 'aria-label': 'Aide à la connexion' },
       h('div.aide-tete', h('b', 'Aide à la connexion'), h('button.lien', { type: 'button', 'aria-label': 'Fermer l\'aide', onclick: () => basculer(false) }, '✕')),

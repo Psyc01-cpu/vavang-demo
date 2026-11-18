@@ -32,6 +32,8 @@ window.CONFIG = {
   // Permet de reporter la double authentification de l'administrateur, uniquement sur ce poste (adresse locale). Toujours false en ligne.
   reportMfaDemoLocale: true,
   // Clé TOTP (base32) du compte administrateur de démonstration en ligne, volontairement publique ; affichée seulement si afficherComptesDemo.
+  // Connexion unique (SSO) de test proposée en ligne : fournisseurs activés dans Supabase (Authentication > Providers).
+  sso: local ? [] : ['github'],
   demoMfaSecret: 'IRPRVHTGYYKXLIWJ4WSVHIEMRDXGJID6'
 };
 })();
