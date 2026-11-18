@@ -31,7 +31,7 @@ body.public #contenu { max-width: none; padding: 0; }
 .sous-onglets .point { color: var(--braise); }
 
 .carrousel { position: relative; border-radius: 16px; overflow: hidden; border: 1px solid var(--trait); background: var(--noir); }
-.carrousel::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 44px; z-index: 2; pointer-events: none; background-image: url('../img/motifs/lambrequin-clair.svg'); background-repeat: repeat-x; background-size: auto 44px; }
+.carrousel::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 44px; z-index: 2; pointer-events: none; background-image: url('../img/motifs/lambrequin-clair.svg'); background-repeat: round no-repeat; background-size: auto 44px; }
 .carrousel.vide { background: #fff; padding: 40px; text-align: center; color: var(--gris); }
 .diapo { display: grid; grid-template-columns: 1.25fr 1fr; min-height: 300px; }
 .piste { display: grid; }
@@ -116,7 +116,7 @@ body.public #contenu { max-width: none; padding: 0; }
 .credits-photos h2 { font-size: .9rem; margin-bottom: 4px; color: var(--encre); }
 .credits-photos ul { margin: 0 0 4px 18px; padding: 0; } .credits-photos p { margin: 0; }
 .accueil-pied-frise { margin-top: 6px; }
-.accueil-pied { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 20px; padding: 18px 0 28px; font-size: .8rem; color: var(--gris); border-top: 1px solid var(--trait); }
+.accueil-pied { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 20px; padding: 18px 0 28px; font-size: .8rem; color: var(--gris); }
 .lien-editeur { color: var(--noir); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; } .lien-editeur:hover { color: var(--braise-fonce); }
 .accueil-pied .lien { color: var(--gris); font-size: .8rem; text-decoration: none; } .accueil-pied .lien:hover { text-decoration: underline; }
 .modale.tres-large { max-width: 1180px; } .apercu-accueil { pointer-events: auto; } .apercu-accueil .accueil { padding-top: 0; }

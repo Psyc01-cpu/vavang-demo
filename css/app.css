@@ -36,7 +36,7 @@ p { margin: 0 0 .6rem; }
 .mfa-etapes ol { margin: 0; padding-left: 20px; } .mfa-etapes li { margin-bottom: 8px; } #secret-totp { font-size: 1rem; background: var(--fond-doux); padding: 2px 6px; border-radius: 4px; }
 .synth { margin: 2px 0 8px 18px; padding: 0; } .synth li { margin: 3px 0; } .synth-ref { color: var(--gris); font-size: .82rem; } .synth-titre { margin: 10px 0 2px; font-size: .86rem; font-family: var(--sans); }
 .mode-local { margin: 10px 18px 0; font-size: .7rem; color: #F2C48A; }
-.frise { height: 48px; background-image: url('../img/motifs/lambrequin.svg'); background-repeat: repeat-x; background-size: auto 48px; }
+.frise { height: 48px; background-image: url('../img/motifs/lambrequin.svg'); background-repeat: round no-repeat; background-size: auto 48px; }
 .frise.claire { background-image: url('../img/motifs/lambrequin-clair.svg'); }
 #contenu { flex: 1; min-width: 0; padding: 26px 32px 60px; max-width: 1500px; }
 
