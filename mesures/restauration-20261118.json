@@ -1,0 +1,214 @@
+{
+ "debut": "2026-11-18T22:39:58.325Z",
+ "durees": {
+  "controle_local_s": 0.017,
+  "connexion_s": 14.38,
+  "restauration_base_s": 1.097,
+  "restauration_fichiers_s": 6.42,
+  "verification_s": 3.913,
+  "rto_mesure_s": 25.81
+ },
+ "verification": {
+  "tables": {
+   "lots": {
+    "attendu": 3,
+    "obtenu": 3,
+    "identique": true
+   },
+   "notes": {
+    "attendu": 9,
+    "obtenu": 9,
+    "identique": true
+   },
+   "offres": {
+    "attendu": 3,
+    "obtenu": 3,
+    "identique": true
+   },
+   "pieces": {
+    "attendu": 14,
+    "obtenu": 14,
+    "identique": true
+   },
+   "besoins": {
+    "attendu": 6,
+    "obtenu": 6,
+    "identique": true
+   },
+   "calculs": {
+    "attendu": 0,
+    "obtenu": 0,
+    "identique": true
+   },
+   "grilles": {
+    "attendu": 1,
+    "obtenu": 1,
+    "identique": true
+   },
+   "journal": {
+    "attendu": 125,
+    "obtenu": 125,
+    "identique": true
+   },
+   "marches": {
+    "attendu": 3,
+    "obtenu": 3,
+    "identique": true
+   },
+   "profils": {
+    "attendu": 9,
+    "obtenu": 9,
+    "identique": true
+   },
+   "tickets": {
+    "attendu": 1,
+    "obtenu": 1,
+    "identique": true
+   },
+   "analyses": {
+    "attendu": 0,
+    "obtenu": 0,
+    "identique": true
+   },
+   "annonces": {
+    "attendu": 24,
+    "obtenu": 24,
+    "identique": true
+   },
+   "criteres": {
+    "attendu": 6,
+    "obtenu": 6,
+    "identique": true
+   },
+   "demandes": {
+    "attendu": 2,
+    "obtenu": 2,
+    "identique": true
+   },
+   "factures": {
+    "attendu": 0,
+    "obtenu": 0,
+    "identique": true
+   },
+   "rapports": {
+    "attendu": 0,
+    "obtenu": 0,
+    "identique": true
+   },
+   "reprises": {
+    "attendu": 0,
+    "obtenu": 0,
+    "identique": true
+   },
+   "evenements": {
+    "attendu": 9,
+    "obtenu": 9,
+    "identique": true
+   },
+   "parametres": {
+    "attendu": 8,
+    "obtenu": 8,
+    "identique": true
+   },
+   "annotations": {
+    "attendu": 0,
+    "obtenu": 0,
+    "identique": true
+   },
+   "evaluations": {
+    "attendu": 1,
+    "obtenu": 1,
+    "identique": true
+   },
+   "lignes_prix": {
+    "attendu": 9,
+    "obtenu": 9,
+    "identique": true
+   },
+   "validations": {
+    "attendu": 1,
+    "obtenu": 1,
+    "identique": true
+   },
+   "affectations": {
+    "attendu": 2,
+    "obtenu": 2,
+    "identique": true
+   },
+   "fournisseurs": {
+    "attendu": 6,
+    "obtenu": 6,
+    "identique": true
+   },
+   "consultations": {
+    "attendu": 2,
+    "obtenu": 2,
+    "identique": true
+   },
+   "documents_dce": {
+    "attendu": 2,
+    "obtenu": 2,
+    "identique": true
+   },
+   "habilitations": {
+    "attendu": 64,
+    "obtenu": 64,
+    "identique": true
+   },
+   "notifications": {
+    "attendu": 0,
+    "obtenu": 0,
+    "identique": true
+   },
+   "modeles_grille": {
+    "attendu": 1,
+    "obtenu": 1,
+    "identique": true
+   },
+   "grille_versions": {
+    "attendu": 1,
+    "obtenu": 1,
+    "identique": true
+   },
+   "modeles_document": {
+    "attendu": 10,
+    "obtenu": 10,
+    "identique": true
+   },
+   "notes_historique": {
+    "attendu": 0,
+    "obtenu": 0,
+    "identique": true
+   },
+   "pieces_attendues": {
+    "attendu": 10,
+    "obtenu": 10,
+    "identique": true
+   },
+   "fournisseur_suivi": {
+    "attendu": 1,
+    "obtenu": 1,
+    "identique": true
+   },
+   "documents_versions": {
+    "attendu": 3,
+    "obtenu": 3,
+    "identique": true
+   }
+  },
+  "journal_lignes_ajoutees": 3,
+  "fichiers_identiques": "14/14",
+  "ecarts": [],
+  "reussie": true
+ },
+ "sauvegarde": "sauvegarde-20261118-2239.json",
+ "sha256_sauvegarde": "5222aa6670704a89e6d20ab02b150b96a1a4c5ac7b59e05c92a0c399b2451c72",
+ "date_sauvegarde": "2026-11-18T22:39:42.316Z",
+ "lignes_sauvegarde": 336,
+ "fichiers_sauvegarde": 14,
+ "base": "https://psyc01-cpu.github.io/vavang-demo/",
+ "lignes_restaurees": 336,
+ "fichiers_supprimes": 14,
+ "fichiers_deposes": 14,
+ "fin": "2026-11-18T22:40:24.737Z"
+}

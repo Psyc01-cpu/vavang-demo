@@ -5,9 +5,9 @@
 ## Avertissement
 
 - vavang est un **prototype**. Aucune version n’est en service chez une collectivité. Toutes les données sont fictives.
-- Les versions 0.1 à 0.4 ont été **reconstituées après coup**, d’après `README.md` et `COUVERTURE-CCTP.md`. Le projet n’est pas encore sous gestion de versions (pas de dépôt Git, pas d’étiquettes). Seules les dates écrites dans ces documents sont reprises ; les autres ne sont pas connues.
+- Les versions 0.1 à 0.4 ont été **reconstituées après coup**, d’après `README.md` et `COUVERTURE-CCTP.md`. Le dépôt Git n’existe que depuis la mise en ligne (version 0.5) ; aucune étiquette de version. Seules les dates écrites dans ces documents sont reprises ; les autres ne sont pas connues.
 - Le numéro de `package.json` est resté à `0.1.0`. Il sera aligné à la prochaine livraison.
-- Toutes les vérifications citées portent sur le **mode local** (données dans le navigateur). Le mode hébergé est écrit, jamais exécuté.
+- Jusqu’à la version 0.4, les vérifications citées portent sur le **mode local** (données dans le navigateur). À partir de la version 0.5, la démo en ligne (mode hébergé, données fictives) est aussi vérifiée côté serveur.
 
 ## Méthode de mise à jour (toutes versions)
 
@@ -19,6 +19,48 @@ Le site est statique : une mise à jour remplace des fichiers. Il n’y a pas de
 3. Si les données ont été modifiées par la nouvelle version : restaurer l’export complet pris à l’étape 1.
 
 En mode hébergé, la même logique s’appliquerait au site statique. Le retour arrière du schéma Postgres n’est pas écrit.
+
+---
+
+## Version 0.5 — démo en ligne et preuves côté serveur (19 novembre 2026)
+
+Objectif : mettre en ligne une démo gratuite, hébergée dans l’UE, et vérifier côté serveur ce qui ne l’était qu’en local.
+
+### Évolutions
+- **Démo en ligne** : https://psyc01-cpu.github.io/vavang-demo/ (GitHub Pages, HTTPS, HSTS) ; base, authentification et fichiers sur Supabase, offre gratuite, région eu-west-1 (Irlande). Organisme fictif « Agglo Démo ». Comptes de démonstration documentés dans `README.md`. Remise à zéro chaque nuit à 3 h (heure de La Réunion).
+- **Sécurité côté serveur** : règles d’accès par ligne ; double authentification de l’administrateur exigée par le serveur (session aal2) ; verrouillage et déverrouillage des comptes ; fermeture des sessions à distance ; règle empêchant de retirer le dernier administrateur.
+- **Connexion par un fournisseur externe** : OAuth GitHub de test (association dans « Ma sécurité », refus d’un compte non associé). Aller-retour réel avec GitHub à vérifier.
+- **Sauvegarde** toutes les 3 h par action GitHub, export complet avec empreintes SHA-256, chiffrement possible par secret ; **restauration** vérifiée table par table et fichier par fichier.
+- **Supervision** toutes les 15 minutes, page d’état publique `statut.html`, modèle de rapport mensuel.
+- **API REST** documentée : `docs/API.md` et `docs/openapi.json` (51 chemins).
+- **Éditeur riche du DCE** : titres, gras, italique, listes, tableaux ; collage assaini ; mise en forme reprise dans les exports Word et PDF.
+- **GED** : arborescence libre de dossiers, rangement par glisser-déposer.
+- **Aide au choix de la procédure** renforcée : seuils 2026 avec leur source et leur état, valeur totale des lots, dérogation des petits lots.
+- **Documentation** : architecture, API, supervision, procédure de support, sous-traitants, audit de sécurité et d’accessibilité, auto-évaluation RGAA, notes de version.
+
+### Corrections
+- **F1** (stockage) et **F3** (données générales lisibles par le support) : failles trouvées par les tests en ligne, corrigées par `supabase/correctifs.sql`, puis revérifiées.
+- **F2** (un tiers anonyme peut verrouiller un compte non administrateur) : atténuée (10 signalements par poste et par 15 minutes, jamais de verrouillage automatique d’un administrateur). Correction complète impossible sur l’offre gratuite.
+
+### Vérifications
+- Scénario local : 125 vérifications, 69 captures, aucune erreur JavaScript.
+- Tests de calcul : 16 groupes réussis.
+- Tests en ligne (`mesures/en-ligne.json`) : 93 contrôles, 90 conformes, 1 non conforme (F2), 2 limites (pas d’en-tête anti-cadre sur GitHub Pages ; un seul administrateur en démo). Captures 70 à 76.
+- Exercice de restauration le 18/11/2026 à 22:40 UTC (`mesures/restauration-20261118.json`) : 37 tables sur 37 et 14 fichiers sur 14 identiques, 0 écart, RTO technique 25,8 s. RPO par conception : 3 h (exigence CCTP : 4 h).
+- Accessibilité : axe-core, 11 écrans sur 11 sans violation ; auto-évaluation RGAA 4.1 à 71,0 %.
+- Contrôle de sécurité passif (`mesures/scan-securite.json`) : 17 conformes, 3 à corriger (en-têtes), 3 faibles, 0 critique. Pas de scan OWASP ZAP.
+
+### Impacts
+- Administrateurs : la double authentification est imposée par le serveur en ligne.
+- Données : nouvelles fonctions SQL `exporter_sauvegarde` et `restaurer_sauvegarde` ; tâche de remise à zéro nocturne.
+- Exploitation : secret `SAUVEGARDE_CLE` à créer pour chiffrer les sauvegardes (non défini à ce jour, artefacts en clair, données fictives).
+
+### Anomalies connues
+- Voir la liste commune.
+
+### Retour arrière
+- Site : remettre en place les fichiers de la version précédente sur GitHub Pages.
+- Base : restaurer la dernière sauvegarde par `tests/restauration.mjs`. Le retour arrière du schéma SQL n’est pas écrit.
 
 ---
 
@@ -132,23 +174,30 @@ Objectif : combler les manques relevés dans la couverture du CCTP, sans coût e
 ## Anomalies et limites connues (état au 19 novembre 2026)
 
 ### Sécurité
-- **Mode local** : les mots de passe de démonstration sont stockés en clair dans le navigateur. Le mode local ne doit servir qu’à la démonstration.
-- **SheetJS 0.18.5** (version du registre npm) : des vulnérabilités publiques concernent la lecture de fichiers piégés (CVE-2023-30533, CVE-2024-22363). À remplacer par la version diffusée par SheetJS (0.20.2 ou plus) avant tout usage réel.
-- **pdf.js 3.11.174** : version concernée par CVE-2024-4367 tant que l’option `isEvalSupported` n’est pas désactivée, ce qui est le cas dans `js/documents.js`. À corriger (option désactivée ou mise à jour).
-- **Fonction `gerer-compte`** : son client est importé depuis `esm.sh` sans version figée. À embarquer ou à figer avant déploiement.
-- L’habilitation limitée à un lot n’est pas reprise dans les règles serveur de `schema.sql`.
-- Double authentification du mode hébergé : non écrite.
-- Pas de durée maximale de session indépendante de l’activité. Une session ouverte n’est pas coupée à distance.
+- **Mode local** : les données et les comptes vivent dans le navigateur d’un poste (mots de passe en empreinte PBKDF2). Le mode local ne doit servir qu’à la démonstration.
+- **SheetJS** : passé de 0.18.5 (vulnérable) à 0.20.3, version corrigée diffusée par l’éditeur (voir `docs/AUDIT-SECURITE-ET-ACCESSIBILITE.md`).
+- **pdf.js 3.11.174** : faille CVE-2024-4367 neutralisée par `isEvalSupported: false` (`js/documents.js`, `js/ecrans/visionneuse.js`). Passage à la version 4 à planifier.
+- **Fonction `gerer-compte`** : client Supabase figé en version 2.119.0, chargé depuis le registre npm.
+- Faille F2 en ligne : un tiers anonyme peut verrouiller un compte non administrateur. Atténuée ; correction complète réservée à une offre Supabase payante.
+- L’habilitation limitée à un lot n’est pas contrôlée par les tests en ligne.
+- Pas d’en-têtes de sécurité personnalisés (anti-cadre notamment) sur GitHub Pages.
+- Un seul administrateur dans la démo en ligne.
+- Pas de durée maximale de session indépendante de l’activité.
 - Adresse IP non relevée au journal en mode local.
 
 ### Fonctions
 - Testé dans Chrome uniquement.
-- Seuils de procédure par défaut saisis de mémoire, à vérifier sur les textes en vigueur.
-- Contributions de plusieurs analystes vérifiées avec un seul analyste.
+- Seuils de procédure : certains restent marqués « à vérifier » dans l’application, à contrôler sur les textes en vigueur.
+- Plusieurs analystes : moyenne des contributions vérifiée par un test de calcul ; le scénario dans le navigateur n’en joue qu’un.
 - Jours fériés non déduits des délais du support.
 - Restauration totale uniquement.
 - Pas de reconnaissance de caractères sur les PDF scannés.
 - Pas d’envoi de courriel.
+- Pas d’IA.
+- Connexion par GitHub : aller-retour réel à vérifier ; pas de SAML.
 
 ### Exploitation
-- Mode hébergé jamais déployé : sauvegardes, chiffrement, supervision, disponibilité et plan de reprise ne sont pas vérifiés.
+- Sauvegardes publiées en clair tant que le secret `SAUVEGARDE_CLE` n’est pas défini.
+- RPO réel non encore mesuré sur la durée (cible 3 h ; exécutions planifiées GitHub non garanties à l'heure).
+- Disponibilité de 99,5 % ni mesurée sur un mois ni garantie (offres gratuites).
+- Artefacts de sauvegarde et pages statiques chez GitHub, sans garantie de localisation dans l’UE.

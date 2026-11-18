@@ -1,6 +1,6 @@
 # vavang — sauvegarde, restauration et plan de reprise
 
-Ce document distingue ce qui est **réellement testé** (démonstration locale, section 1), de ce qui est **écrit pour la démonstration hébergée mais pas encore exécuté** (sections 2 et 3). Tout ce qui n'a pas été mesuré est indiqué comme tel.
+Ce document décrit ce qui est **testé en démonstration locale** (section 1) et **en démonstration en ligne** (section 2, exercice réel du 18/11/2026). Tout ce qui n'a pas été mesuré est indiqué comme tel.
 
 ## 1. Ce qui est testé (démonstration locale)
 
@@ -18,7 +18,7 @@ Limites de la restauration en local :
 
 ## 2. Démonstration hébergée (Supabase) : sauvegarde et restauration sans coût
 
-La démonstration publique (https://psyc01-cpu.github.io/vavang-demo/) fonctionne sur un projet Supabase du **plan gratuit** (région UE, Irlande). Les données y sont fictives. Le dispositif ci-dessous est **écrit mais pas encore exécuté** : la partie SQL (`supabase/sauvegarde.sql`) reste à installer, puis l'exercice de restauration reste à faire. Aucune durée n'est donc mesurée à ce jour.
+La démonstration publique (https://psyc01-cpu.github.io/vavang-demo/) fonctionne sur un projet Supabase du **plan gratuit** (région UE, Irlande). Les données y sont fictives. Le dispositif ci-dessous est **installé et exécuté**. Le 18/11/2026, l'action de sauvegarde a été lancée à la main avec succès (1 min 16 s) et un exercice de restauration réel a été fait (section 2.5). Une sauvegarde lancée depuis un poste local prend 24 s.
 
 ### 2.1 Ce que fournit l'hébergeur sur le plan gratuit
 
@@ -27,7 +27,7 @@ La démonstration publique (https://psyc01-cpu.github.io/vavang-demo/) fonctionn
 | Sauvegardes automatiques | Page de tarifs, colonne Free : « Automatic backups : Not included » ; « Point in time recovery : Not included ». | On ne compte **pas** sur l'hébergeur. Le guide des sauvegardes de Supabase ne précise ni la durée de conservation ni le téléchargement pour le plan gratuit. Il recommande aux projets gratuits d'exporter eux-mêmes leurs données régulièrement et d'en garder une copie ailleurs. L'existence d'une sauvegarde quotidienne non téléchargeable sur le plan gratuit est **à vérifier** : les sources se contredisent. |
 | Plans payants (pour mémoire) | Pro : 7 jours de sauvegardes quotidiennes, restaurables depuis le tableau de bord mais non téléchargeables directement. Restauration à un instant donné (PITR) : option payante d'environ 100 $ par mois pour 7 jours. | Hors du principe « zéro euro » ; à chiffrer seulement en cas de marché. |
 | Fichiers déposés | Les sauvegardes de base de Supabase ne contiennent pas les fichiers du stockage. | Les fichiers sont copiés par notre propre sauvegarde (voir 2.2). |
-| Mise en veille | Plan gratuit : projet mis en pause après 1 semaine d'inactivité. | La sauvegarde toutes les 6 heures sollicite la base. Qu'elle suffise à empêcher la mise en pause est **non vérifié**. |
+| Mise en veille | Plan gratuit : projet mis en pause après 1 semaine d'inactivité. | La sauvegarde toutes les 3 heures sollicite la base. Qu'elle suffise à empêcher la mise en pause est **non vérifié**. |
 
 Sources : https://supabase.com/pricing et https://supabase.com/docs/guides/platform/backups
 
@@ -35,7 +35,7 @@ Sources : https://supabase.com/pricing et https://supabase.com/docs/guides/platf
 
 | Élément | Dispositif | Fichier |
 |---|---|---|
-| Déclenchement | Action GitHub planifiée toutes les 6 heures (00:17, 06:17, 12:17 et 18:17 UTC), ou lancée à la main (« Run workflow »). Le dépôt `vavang-demo` est public, donc les minutes sont gratuites. | `.github/workflows/sauvegarde.yml` |
+| Déclenchement | Action GitHub planifiée toutes les 3 heures (à la minute 17, UTC), ou lancée à la main (« Run workflow »). Le dépôt `vavang-demo` est public, donc les minutes sont gratuites. | `.github/workflows/sauvegarde.yml` |
 | Connexion | Chrome sans interface ouvre la démo en ligne et se connecte en administrateur par le vrai parcours de l'application : mot de passe, puis code TOTP calculé à partir de `CONFIG.demoMfaSecret`, la clé publique de démonstration. La session obtenue est en aal2. Aucun secret n'est stocké dans GitHub. | `tests/sauvegarde.mjs` |
 | Export de la base | La fonction `exporter_sauvegarde()` (security definer) est réservée à un administrateur (`admin.utilisateurs` via `moi()`) dont la session est en aal2. Elle renvoie les **37 tables métier** de `schema.sql`, ligne par ligne (`id, d, cree_le, cree_par, modifie_le`), avec l'inventaire des fichiers. L'export est inscrit au journal. | `supabase/sauvegarde.sql` |
 | Fichiers | Tous les fichiers des compartiments `pieces` et `accueil` sont téléchargés, et leur taille est contrôlée. | `tests/sauvegarde.mjs` |
@@ -47,8 +47,8 @@ Sources : https://supabase.com/pricing et https://supabase.com/docs/guides/platf
 Limites connues :
 - Les **comptes de connexion** (`auth.*` : adresses, mots de passe, facteurs TOTP) ne sont pas sauvegardés, volontairement. Le profil métier de chaque agent l'est, dans la table `profils`.
 - La **trace technique** (`trace_technique`), le verrouillage des comptes et le jeu de référence de la démonstration (`demo_seed`) ne sont pas sauvegardés.
-- Les horaires de GitHub Actions ne sont pas garantis : une exécution planifiée peut être retardée, voire sautée en cas de forte charge. Sur un dépôt public, GitHub **désactive aussi les planifications après 60 jours sans activité** sur le dépôt. Le RPO réel peut donc dépasser 6 heures.
-- **Écart avec le CCTP** : il demande une perte maximale de 4 heures (3.7.7), alors que la cible retenue ici est de 6 heures. Pour s'en approcher, il suffit de passer à `'17 */3 * * *'` (toutes les 3 heures). Cela reste gratuit sur un dépôt public, mais le retard possible des exécutions planifiées demeure.
+- Les horaires de GitHub Actions ne sont pas garantis : une exécution planifiée peut être retardée, voire sautée en cas de forte charge. Sur un dépôt public, GitHub **désactive aussi les planifications après 60 jours sans activité** sur le dépôt. Le RPO réel peut donc dépasser 3 heures.
+- **Exigence du CCTP** : perte maximale de 4 heures (3.7.7). La planification `'17 */3 * * *'` (toutes les 3 heures, gratuite sur un dépôt public) vise 3 heures, avec une marge d'une heure pour un retard d'exécution de GitHub. Le RPO réel reste à mesurer sur plusieurs jours (historique des exécutions).
 - La sauvegarde est logique (contenu des tables) et non physique : les fonctions, règles d'accès et déclencheurs viennent des fichiers `supabase/*.sql` du dépôt, qu'on rejoue sur un projet neuf.
 
 ### 2.3 Restauration et vérification
@@ -63,23 +63,34 @@ Limites connues :
 
 Le script écrit `restauration-<date>.json` à côté de la sauvegarde, avec la durée de chaque étape. **RTO mesuré = étapes 1 à 4** : connexion, restauration de la base, fichiers et vérification. La décision de restaurer et la récupération de l'artefact ne sont pas comptées : à ajouter dans le compte rendu d'exercice.
 
-Points non vérifiés : délai maximal d'exécution d'une requête du rôle `authenticated` sur Supabase (quelques secondes par défaut), taille maximale acceptée pour l'appel `restaurer_sauvegarde` et comportement des deux fonctions SQL. Rien de cela n'est mesuré, car le SQL n'est pas encore exécuté.
+Points non vérifiés : délai maximal d'exécution d'une requête du rôle `authenticated` sur Supabase et taille maximale acceptée pour l'appel `restaurer_sauvegarde`. Avec le jeu de démonstration (37 tables, 336 lignes, 14 fichiers), la restauration de la base a pris 1,1 s ; un volume réel n'a pas été essayé.
 
 ### 2.4 État par rapport au CCTP
 
 | Exigence du CCTP | Dispositif | Statut |
 |---|---|---|
-| Sauvegardes automatisées, chiffrées, séparées (3.7.6) | Action GitHub toutes les 6 h ; archive chiffrée si `SAUVEGARDE_CLE` est défini ; stockage chez GitHub, hors de Supabase | Écrit, non exécuté |
-| Perte maximale de 4 heures (RPO, 3.7.7) | Cible : 6 h, soit **au-delà de l'exigence** (voir 2.2). PITR payant non retenu. | RPO mesuré : **à mesurer** |
-| Rétablissement en 8 heures (RTO, 3.7.7) | `tests/restauration.mjs` : restauration, vérification et durées mesurées | RTO mesuré : **à mesurer** |
-| Tests de restauration réguliers, au moins un exercice par an | Exercice avec compte rendu (date, sauvegarde utilisée, durées, écarts) | Non réalisé : premier exercice à faire |
+| Sauvegardes automatisées, chiffrées, séparées (3.7.6) | Action GitHub toutes les 3 h ; archive chiffrée si `SAUVEGARDE_CLE` est défini ; stockage chez GitHub, hors de Supabase | **Partiel** : exécution manuelle réussie le 18/11/2026 (1 min 16 s ; 37 tables, 336 lignes, 14 fichiers). Secret `SAUVEGARDE_CLE` non défini à ce jour : artefact en clair (données fictives). |
+| Perte maximale de 4 heures (RPO, 3.7.7) | Cible : 3 h, dans l'exigence (voir 2.2). PITR payant non retenu. | RPO : **3 h par conception** (fréquence des sauvegardes) ; RPO réel à mesurer (retards possibles de GitHub) |
+| Rétablissement en 8 heures (RTO, 3.7.7) | `tests/restauration.mjs` : restauration, vérification et durées mesurées | RTO technique mesuré le 18/11/2026 : **25,8 s** (étapes 1 à 4) ; conforme |
+| Tests de restauration réguliers, au moins un exercice par an | Exercice avec compte rendu (date, sauvegarde utilisée, durées, écarts) | **Premier exercice réalisé le 18/11/2026 à 22:40 UTC** : réussi, 0 écart (section 2.5). Régularité à organiser. |
 | Journaux conservés 12 mois (3.7.5) | Table `journal` en base, sans suppression, incluse dans chaque sauvegarde. La démo est remise à zéro chaque nuit, donc son journal ne dure pas 12 mois. | Non vérifié |
 
-Mise en service (à faire une fois) :
-1. Exécuter `supabase/sauvegarde.sql` dans l'éditeur SQL du projet, après `schema.sql` et `schema_demo.sql`.
-2. Facultatif mais recommandé : créer le secret de dépôt `SAUVEGARDE_CLE` (Settings → Secrets and variables → Actions) avec une phrase de passe longue, conservée hors de GitHub.
-3. Pousser `.github/workflows/sauvegarde.yml` sur la branche par défaut de `vavang-demo`, puis lancer l'action à la main une première fois.
-4. Faire l'exercice de restauration et reporter les durées dans le tableau ci-dessus.
+Mise en service : faite. `supabase/sauvegarde.sql` est exécuté, l'action est poussée sur `vavang-demo` et a été lancée une première fois à la main. Reste à faire : créer le secret de dépôt `SAUVEGARDE_CLE` (Settings → Secrets and variables → Actions) avec une phrase de passe longue, conservée hors de GitHub, pour que les artefacts soient chiffrés.
+
+### 2.5 Exercice de restauration du 18/11/2026
+
+| Élément | Résultat |
+|---|---|
+| Date | 18/11/2026, 22:40 UTC |
+| Outil | `node tests/restauration.mjs <sauvegarde> --confirmer`, sur la démo en ligne |
+| Contenu restauré | 37 tables, 336 lignes, 14 fichiers |
+| Résultat | **Réussi** : 37 tables sur 37 identiques (SHA-256), 14 fichiers sur 14, **0 écart** |
+| Durées | connexion 14,4 s ; base 1,1 s ; fichiers 6,4 s ; vérification 3,9 s |
+| **RTO technique mesuré** | **25,8 s** (étapes 1 à 4 de 2.3). Exigence du CCTP : 8 h. Ne comprend ni la décision de restaurer, ni la récupération de l'artefact. |
+| **RPO** | **3 h par conception** (une sauvegarde toutes les 3 h). Exigence du CCTP : 4 h. Peut dépasser 3 h si GitHub retarde une exécution planifiée ; non encore mesuré sur la durée. |
+| Sauvegarde locale | Lancée depuis un poste : 24 s |
+| Rapport de l'exercice | `mesures/restauration-20261118.json` (durées, 37 tables, 14 fichiers, écarts) |
+| Remise à zéro de la démo | Chaque nuit à 3 h (heure de La Réunion), par pg_cron. |
 
 ## 3. Procédure de reprise après incident
 

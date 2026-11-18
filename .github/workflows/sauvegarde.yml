@@ -1,4 +1,4 @@
-# Sauvegarde automatique de la base hébergée (démonstration vavang), toutes les 6 heures : RPO cible 6 h.
+# Sauvegarde automatique de la base hébergée (démonstration vavang), toutes les 3 heures : RPO cible 3 h (CCTP 3.7.7 : 4 h).
 # Zéro euro : dépôt public, minutes GitHub Actions gratuites ; aucun secret obligatoire (compte de démonstration public).
 # Le résultat est publié en artefact, conservé 30 jours. Si le secret SAUVEGARDE_CLE existe, l'archive est chiffrée
 # (openssl AES-256-CBC, dérivation PBKDF2) ; sinon elle est publiée en clair et le journal le signale (données fictives).
@@ -7,7 +7,7 @@ name: Sauvegarde de la base
 
 on:
   schedule:
-    - cron: '17 */6 * * *'   # 00:17, 06:17, 12:17, 18:17 UTC (minute décalée : les créneaux « pile » sont souvent retardés)
+    - cron: '17 */3 * * *'   # toutes les 3 h à la minute 17 UTC (RPO cible 3 h, CCTP 3.7.7 : 4 h) (minute décalée : les créneaux « pile » sont souvent retardés)
   workflow_dispatch: {}
 
 permissions:
