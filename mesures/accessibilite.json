@@ -1,0 +1,73 @@
+{
+ "date": "2026-11-18T21:45:40.898Z",
+ "outil": "axe-core 4.10.2",
+ "regles": "WCAG 2.1 A et AA",
+ "ecrans": [
+  {
+   "ecran": "Page d'accueil",
+   "chemin": "/",
+   "violations": [],
+   "passes": 29
+  },
+  {
+   "ecran": "Article",
+   "chemin": "/info/r-analyser",
+   "violations": [],
+   "passes": 26
+  },
+  {
+   "ecran": "Tableau de bord",
+   "chemin": "/",
+   "violations": [],
+   "passes": 24
+  },
+  {
+   "ecran": "Consultations",
+   "chemin": "/consultations",
+   "violations": [],
+   "passes": 23
+  },
+  {
+   "ecran": "Candidatures et offres",
+   "chemin": "/consultation/c1/offres",
+   "violations": [],
+   "passes": 28
+  },
+  {
+   "ecran": "Analyse — saisie des notes",
+   "chemin": "/consultation/c1/analyse?vue=notation",
+   "violations": [],
+   "passes": 27
+  },
+  {
+   "ecran": "Analyse — synthèse",
+   "chemin": "/consultation/c1/analyse?vue=synthese",
+   "violations": [],
+   "passes": 28
+  },
+  {
+   "ecran": "Fiche d'un marché",
+   "chemin": "/marche/m1",
+   "violations": [],
+   "passes": 27
+  },
+  {
+   "ecran": "Demandes d'assistance",
+   "chemin": "/support",
+   "violations": [],
+   "passes": 23
+  },
+  {
+   "ecran": "Notifications",
+   "chemin": "/notifications",
+   "violations": [],
+   "passes": 23
+  },
+  {
+   "ecran": "Paramètres",
+   "chemin": "/parametres",
+   "violations": [],
+   "passes": 26
+  }
+ ]
+}

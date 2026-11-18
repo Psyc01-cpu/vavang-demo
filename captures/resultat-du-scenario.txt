@@ -1,0 +1,108 @@
+Scénario joué le 19/11/2026 01:49:21 — mode local
+Navigateur : C:/Program Files/Google/Chrome/Application/chrome.exe
+
+1. page d'accueil : onglets, support, annonces et actualités affichés avant connexion
+2. double authentification imposée au premier accès de l'administrateur : code QR, clé, vérification d'un code TOTP
+3. création d'un compte nominatif avec son profil
+4. un administrateur ne peut pas désactiver son propre compte
+5. l'administrateur publie une annonce sur la page d'accueil, tracée au journal
+6. un code de double authentification faux est refusé
+7. connexion de l'administrateur avec mot de passe et code TOTP
+8. compte verrouillé après 5 échecs de connexion (seuil paramétrable)
+9. même avec le bon mot de passe, le compte verrouillé reste refusé
+10. l'administrateur voit le compte verrouillé
+11. déverrouillage du compte par l'administrateur, tracé
+12. déconnexion automatique après 15 minutes sans activité (durée paramétrable)
+13. journal de sécurité : verrouillage, déverrouillage, double authentification, déconnexion automatique, échecs de connexion
+14. habilitation sur dossier limitée à un lot (Sacha Leroy, analyste du lot 2 seulement)
+15. consultation 2026-021 créée depuis le besoin, avec deux lots et trois agents habilités sur le dossier
+16. incohérence détectée : sous-critères 55 pour 60, verrouillage impossible
+17. grille cohérente : total des pondérations égal à 100
+18. le gestionnaire ne voit pas le bouton de verrouillage (réservé au valideur)
+19. grille verrouillée en version 1 par le valideur, horodatée
+20. règle vérifiée : une pondération ne peut plus être modifiée après verrouillage
+21. bordereau XLSX lu : 3 lignes, total recalculé concordant avec le montant déclaré
+22. contrôle d'une pièce par l'agent enregistré avec son auteur et sa date
+23. pli incomplet : DC2 absent et document scanné signalés, à vérifier
+24. écart entre le total recalculé (61 000 €) et le montant déclaré (61 500 €) signalé
+25. trois offres importées ; tableau comparatif des candidatures avec la pièce absente
+26. recherche plein texte dans les pièces : 3 passages trouvés dans les 3 mémoires PDF
+27. ouverture de la pièce à la page trouvée, terme recherché surligné
+28. annotation avec signet enregistrée sur la page 2 de la pièce, avec son auteur
+29. une note sans justification ne peut pas être proposée à la validation
+30. six notes saisies et proposées à la validation, chacune avec sa justification
+31. écart de prix signalé pour l'offre la plus basse, sans qualification ni rejet
+32. aucune note de prix tant que les montants ne sont pas validés par un agent habilité
+33. avant validation : aucun total, aucun classement
+34. règle vérifiée : l'analyste ne peut pas valider une note
+35. réponse à la demande de complément enregistrée : le DC2 versé au pli lève le signalement
+36. le valideur reçoit une notification « Analyse à valider » dans l'application
+37. trois candidatures admises et trois montants validés par décision nominative du valideur
+38. cinq notes validées par le valideur, une renvoyée à l'analyste avec commentaire
+39. classement partiel : l'offre dont une note n'est pas validée n'est pas classée
+40. validation de l'analyse refusée tant qu'une note n'est pas validée
+41. l'analyste est notifié de la note renvoyée par le valideur
+42. totaux conformes au calcul à la main : 75,50 — 67,50 — 61,46 (prix 40 × 61 500 ÷ montant ; notes ÷ 10 × pondération)
+43. classement provisoire : 1er Jamrosat, 2e Zévi, 3e Letchi
+44. le tableau affiché porte les mêmes valeurs
+45. synthèse par candidat assemblée sans IA à partir des seules appréciations validées, avec renvoi au critère et à la source
+46. synthèses par candidat exportées en Word
+47. tableau d'analyse exporté en XLSX (21206 octets)
+48. règle vérifiée : après validation de l'analyse, les notes sont figées
+49. projet de rapport généré, modifié à la main et enregistré
+50. rapport exporté en PDF (46022 octets)
+51. rapport exporté en Word modifiable (13906 octets)
+52. courrier type prérempli avec la note, le rang et l'attributaire pressenti
+53. courrier exporté en Word
+54. règle vérifiée : un rapport validé est figé
+55. le lecteur ne voit que ses dossiers affectés et n'a aucun bouton de création
+56. le lecteur ne peut pas déposer d'offre
+57. règle vérifiée : écriture refusée au profil lecteur
+58. accès refusé (et tracé) à un dossier non affecté
+59. dossier d'audit restitué en PDF (73562 octets)
+60. archive d'audit avec les pièces sources (497368 octets)
+61. journal du dossier : 75 actions horodatées, 3 auteurs, 38 types d'action
+62. règle vérifiée : le journal ne peut pas être modifié
+63. l'analyste habilité sur le lot 2 ne voit pas le lot 1
+64. règle vérifiée : saisie refusée sur un lot non affecté
+65. circuit paramétré par l'administrateur : Relecture > Visa juridique > Validation
+66. document généré depuis le modèle : référence, lots et critères de la grille repris automatiquement
+67. contrôle automatique : passage à compléter signalé
+68. le relecteur est notifié dans l'application
+69. circuit paramétré complet tracé : soumis, relu, visa juridique, validé, publié — cinq étapes nominatives et horodatées
+70. document du DCE exporté en Word
+71. modèle de grille réutilisable enregistré avec version, date d'effet et auteur
+72. révision des prix par formule : C = 0,15 + 0,85 × 112,4 / 108,2 = 1,033 (millième supérieur) ; 49 200 € révisés à 50 823,60 €, incidence 1 623,60 €
+73. montant actuel recalculé avec l'avenant (98 400 + 3 900 = 102 300 €)
+74. échéances calculées : fin de période au 01/12/2028 et décision de reconduction
+75. une évaluation sans faits vérifiables ne peut pas être validée
+76. évaluation rattachée à des faits, validée par le valideur
+77. critère ajouté par l'administrateur (coefficient 2) pris en compte : moyenne pondérée 30 / 7 = 4,3
+78. historique des évaluations exporté en XLSX
+79. demande T-2026-0002 créée : numéro unique, horodatage, criticité P2, échéances contractuelles calculées en heures ouvrées
+80. l'équipe support est notifiée de la nouvelle demande
+81. règle vérifiée : le support ne peut pas clore lui-même une demande
+82. délais contractuels suivis : prise en charge et diagnostic dans les délais
+83. historique complet de la demande : création, prise en charge, diagnostic, solution, clôture validée
+84. reprise à blanc d'un CSV : 3 lignes prêtes, 2 anomalies détectées (titulaire manquant, montant et date illisibles)
+85. reprise définitive : 3 marchés créés, fichier source conservé
+86. reprise de documents PDF et DOCX rattachés à un marché repris
+87. export complet généré (487368 octets) : tables JSON et CSV, pièces sources, inventaire, dictionnaire
+88. retour arrière : les 3 marchés repris sont supprimés, le rapport de contrôle est conservé
+89. état modifié après la sauvegarde (un besoin ajouté, trois marchés retirés)
+90. archive contrôlée par rapport à son inventaire avant toute écriture
+91. restauration réussie : les 15 tables contrôlées reviennent exactement à l'état de la sauvegarde (besoins 7, consultations 3, lots 5, offres 6, notes 15, pieces 32, marches 7, evenements 13, fournisseurs 12, evaluations 2, tickets 2, documents_dce 3, rapports 1, affectations 5, habilitations 64)
+92. pièces restaurées : fichier source et texte extrait page par page (mémoire Jamrosat, 3 pages)
+93. restauration tracée au journal
+94. journal des calculs horodaté : un calcul conservé à chaque validation ; le dernier place Jamrosat en tête avec 75,50
+95. visionneuse PDF : pages affichées avec leur mise en page d'origine (3 pages), navigation et zoom
+96. facture suivie de la réception au paiement : service fait, mandatement, paiement, avec délai global de 30 jours
+97. export des factures vers le logiciel financier (CSV documenté)
+98. droits par service : un prescripteur du service Patrimoine voit les dossiers de son service, et seulement eux, sans affectation nominative
+99. lecture automatique d’un règlement : 5 critères et sous-critères repris avec leurs pondérations (45 + 50 + 5), contrôlés avant reprise
+100. critères repris dans la grille du lot 2 après confirmation de l’agent
+101. contrôle du contenu des déclarations : nom du candidat absent, clé du SIRET fausse, montant de l’acte d’engagement différent — trois signalements à vérifier
+102. analyse distincte des variantes : classement des seules offres de base, la variante est analysée à part
+103. paquet de publication : pièces validées en PDF et fiche de l’avis (avis.json) à charger sur le profil d’acheteur
+104. fichiers exportés présents sur le disque : 12 fichiers dans captures/exports
+105. aucune erreur JavaScript pendant tout le scénario

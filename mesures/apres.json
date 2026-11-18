@@ -1,0 +1,111 @@
+{
+ "date": "2026-11-18T18:10:52.247Z",
+ "navigateur": "C:/Program Files/Google/Chrome/Application/chrome.exe",
+ "note": "Cache désactivé, serveur local sans compression : poids bruts, majorants de ce que transférerait un hébergement compressé.",
+ "ecrans": [
+  {
+   "ecran": "Page d'accueil (avant connexion)",
+   "requetes": 31,
+   "octets_transferes": 579785,
+   "ko": 566,
+   "par_type_ko": {
+    "Document": 2,
+    "Stylesheet": 27,
+    "Script": 398,
+    "Other": 1,
+    "Image": 138
+   },
+   "dom_content_loaded_ms": 38,
+   "load_ms": 38,
+   "chargement_complet_ms": 1609,
+   "noeuds_dom": 878,
+   "tas_js_mo": 2.7,
+   "plus_lourds": [
+    "img/photos/fournaise-vue-du-ciel.jpg : 137 Ko",
+    "js/ecrans/analyse.js : 38 Ko",
+    "js/donnees.js : 37 Ko",
+    "js/demo.js : 34 Ko",
+    "js/ecrans/offres.js : 29 Ko",
+    "js/ecrans/accueil.js : 27 Ko"
+   ]
+  },
+  {
+   "ecran": "Tableau de bord",
+   "requetes": 29,
+   "octets_transferes": 439109,
+   "ko": 429,
+   "par_type_ko": {
+    "Document": 2,
+    "Stylesheet": 27,
+    "Script": 398,
+    "Other": 1,
+    "Image": 1
+   },
+   "dom_content_loaded_ms": 37,
+   "load_ms": 38,
+   "chargement_complet_ms": 1241,
+   "noeuds_dom": 816,
+   "tas_js_mo": 2.8,
+   "plus_lourds": [
+    "js/ecrans/analyse.js : 38 Ko",
+    "js/donnees.js : 37 Ko",
+    "js/demo.js : 34 Ko",
+    "js/ecrans/offres.js : 29 Ko",
+    "js/ecrans/accueil.js : 27 Ko",
+    "js/ecrans/rapport.js : 23 Ko"
+   ]
+  },
+  {
+   "ecran": "Analyse d'une consultation",
+   "requetes": 29,
+   "octets_transferes": 439109,
+   "ko": 429,
+   "par_type_ko": {
+    "Document": 2,
+    "Stylesheet": 27,
+    "Script": 398,
+    "Other": 1,
+    "Image": 1
+   },
+   "dom_content_loaded_ms": 39,
+   "load_ms": 39,
+   "chargement_complet_ms": 1273,
+   "noeuds_dom": 1120,
+   "tas_js_mo": 3,
+   "plus_lourds": [
+    "js/ecrans/analyse.js : 38 Ko",
+    "js/donnees.js : 37 Ko",
+    "js/demo.js : 34 Ko",
+    "js/ecrans/offres.js : 29 Ko",
+    "js/ecrans/accueil.js : 27 Ko",
+    "js/ecrans/rapport.js : 23 Ko"
+   ]
+  },
+  {
+   "ecran": "Fiche d'une offre",
+   "requetes": 29,
+   "octets_transferes": 439109,
+   "ko": 429,
+   "par_type_ko": {
+    "Document": 2,
+    "Stylesheet": 27,
+    "Script": 398,
+    "Other": 1,
+    "Image": 1
+   },
+   "dom_content_loaded_ms": 38,
+   "load_ms": 38,
+   "chargement_complet_ms": 1356,
+   "noeuds_dom": 1269,
+   "tas_js_mo": 2.8,
+   "plus_lourds": [
+    "js/ecrans/analyse.js : 38 Ko",
+    "js/donnees.js : 37 Ko",
+    "js/demo.js : 34 Ko",
+    "js/ecrans/offres.js : 29 Ko",
+    "js/ecrans/accueil.js : 27 Ko",
+    "js/ecrans/rapport.js : 23 Ko"
+   ]
+  }
+ ]
+}

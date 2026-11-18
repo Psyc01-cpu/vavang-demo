@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="96" viewBox="0 0 300 96" role="img" aria-labelledby="t">
+  <title id="t">Agglo Démo — collectivité fictive de démonstration</title>
+  <g transform="translate(8 8)">
+    <rect width="80" height="80" rx="18" fill="#3E5C76"/>
+    <path d="M12 58 L30 34 L42 48 L54 26 L68 58 Z" fill="#E9D8A6"/>
+    <circle cx="58" cy="20" r="6" fill="#E9D8A6"/>
+    <path d="M12 64 Q26 58 40 64 T68 64" fill="none" stroke="#E9D8A6" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <text x="104" y="46" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="#3E5C76">Agglo Démo</text>
+  <text x="105" y="70" font-family="Arial, sans-serif" font-size="12.5" letter-spacing=".5" fill="#5B6B78">COLLECTIVITÉ FICTIVE</text>
+</svg>

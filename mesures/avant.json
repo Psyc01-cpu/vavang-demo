@@ -1,0 +1,111 @@
+{
+ "date": "2026-11-18T17:50:55.484Z",
+ "navigateur": "C:/Program Files/Google/Chrome/Application/chrome.exe",
+ "note": "Cache désactivé, serveur local sans compression : poids bruts, majorants de ce que transférerait un hébergement compressé.",
+ "ecrans": [
+  {
+   "ecran": "Page d'accueil (avant connexion)",
+   "requetes": 34,
+   "octets_transferes": 4783902,
+   "ko": 4672,
+   "par_type_ko": {
+    "Document": 2,
+    "Stylesheet": 26,
+    "Script": 4504,
+    "Other": 1,
+    "Image": 138
+   },
+   "dom_content_loaded_ms": 134,
+   "load_ms": 134,
+   "chargement_complet_ms": 1463,
+   "noeuds_dom": 864,
+   "tas_js_mo": 26.5,
+   "plus_lourds": [
+    "vendor/docx.js : 1037 Ko",
+    "vendor/xlsx.full.min.js : 861 Ko",
+    "vendor/vfs_fonts.js : 835 Ko",
+    "vendor/pdfmake.min.js : 816 Ko",
+    "vendor/pdf.min.js : 313 Ko",
+    "vendor/supabase.js : 215 Ko"
+   ]
+  },
+  {
+   "ecran": "Tableau de bord",
+   "requetes": 32,
+   "octets_transferes": 4643226,
+   "ko": 4534,
+   "par_type_ko": {
+    "Document": 2,
+    "Stylesheet": 26,
+    "Script": 4504,
+    "Other": 1,
+    "Image": 1
+   },
+   "dom_content_loaded_ms": 133,
+   "load_ms": 133,
+   "chargement_complet_ms": 1308,
+   "noeuds_dom": 809,
+   "tas_js_mo": 26.5,
+   "plus_lourds": [
+    "vendor/docx.js : 1037 Ko",
+    "vendor/xlsx.full.min.js : 861 Ko",
+    "vendor/vfs_fonts.js : 835 Ko",
+    "vendor/pdfmake.min.js : 816 Ko",
+    "vendor/pdf.min.js : 313 Ko",
+    "vendor/supabase.js : 215 Ko"
+   ]
+  },
+  {
+   "ecran": "Analyse d'une consultation",
+   "requetes": 32,
+   "octets_transferes": 4643226,
+   "ko": 4534,
+   "par_type_ko": {
+    "Document": 2,
+    "Stylesheet": 26,
+    "Script": 4504,
+    "Other": 1,
+    "Image": 1
+   },
+   "dom_content_loaded_ms": 130,
+   "load_ms": 130,
+   "chargement_complet_ms": 1629,
+   "noeuds_dom": 1000,
+   "tas_js_mo": 26.6,
+   "plus_lourds": [
+    "vendor/docx.js : 1037 Ko",
+    "vendor/xlsx.full.min.js : 861 Ko",
+    "vendor/vfs_fonts.js : 835 Ko",
+    "vendor/pdfmake.min.js : 816 Ko",
+    "vendor/pdf.min.js : 313 Ko",
+    "vendor/supabase.js : 215 Ko"
+   ]
+  },
+  {
+   "ecran": "Fiche d'une offre",
+   "requetes": 32,
+   "octets_transferes": 4643226,
+   "ko": 4534,
+   "par_type_ko": {
+    "Document": 2,
+    "Stylesheet": 26,
+    "Script": 4504,
+    "Other": 1,
+    "Image": 1
+   },
+   "dom_content_loaded_ms": 104,
+   "load_ms": 104,
+   "chargement_complet_ms": 1925,
+   "noeuds_dom": 1262,
+   "tas_js_mo": 26.5,
+   "plus_lourds": [
+    "vendor/docx.js : 1037 Ko",
+    "vendor/xlsx.full.min.js : 861 Ko",
+    "vendor/vfs_fonts.js : 835 Ko",
+    "vendor/pdfmake.min.js : 816 Ko",
+    "vendor/pdf.min.js : 313 Ko",
+    "vendor/supabase.js : 215 Ko"
+   ]
+  }
+ ]
+}

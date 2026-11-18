@@ -1,0 +1,22 @@
+{
+  "name": "logiciel-acheteur",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Prototype de gestion des marchés publics côté acheteur — l'entreprise.ai",
+  "scripts": {
+    "test": "node tests/calcul.test.mjs",
+    "scenario": "node tests/scenario.mjs",
+    "servir": "node tests/serveur.mjs"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.119.0",
+    "axe-core": "^4.10.2",
+    "docx": "^9.15.4",
+    "jszip": "^3.10.2",
+    "pdfjs-dist": "^3.11.174",
+    "pdfmake": "^0.3.14",
+    "puppeteer-core": "^25.18.1",
+    "qrcode-generator": "^1.4.4",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  }
+}

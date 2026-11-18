@@ -1,0 +1,72 @@
+[
+ {
+  "chemin": "c1/demo-o1-0.txt",
+  "type": "text/plain;charset=utf-8",
+  "octets": 159
+ },
+ {
+  "chemin": "c1/demo-o1-1.txt",
+  "type": "text/plain;charset=utf-8",
+  "octets": 150
+ },
+ {
+  "chemin": "c1/demo-o1-2.txt",
+  "type": "text/plain;charset=utf-8",
+  "octets": 153
+ },
+ {
+  "chemin": "c1/demo-o1-3.txt",
+  "type": "text/plain;charset=utf-8",
+  "octets": 1145
+ },
+ {
+  "chemin": "c1/demo-o1-4.txt",
+  "type": "text/plain;charset=utf-8",
+  "octets": 145
+ },
+ {
+  "chemin": "c1/demo-o2-0.txt",
+  "type": "text/plain;charset=utf-8",
+  "octets": 163
+ },
+ {
+  "chemin": "c1/demo-o2-1.txt",
+  "type": "text/plain;charset=utf-8",
+  "octets": 154
+ },
+ {
+  "chemin": "c1/demo-o2-2.txt",
+  "type": "text/plain;charset=utf-8",
+  "octets": 157
+ },
+ {
+  "chemin": "c1/demo-o2-3.txt",
+  "type": "text/plain;charset=utf-8",
+  "octets": 1048
+ },
+ {
+  "chemin": "c1/demo-o2-4.txt",
+  "type": "text/plain;charset=utf-8",
+  "octets": 149
+ },
+ {
+  "chemin": "c1/demo-o3-0.txt",
+  "type": "text/plain;charset=utf-8",
+  "octets": 158
+ },
+ {
+  "chemin": "c1/demo-o3-1.txt",
+  "type": "text/plain;charset=utf-8",
+  "octets": 150
+ },
+ {
+  "chemin": "c1/demo-o3-2.txt",
+  "type": "text/plain;charset=utf-8",
+  "octets": 776
+ },
+ {
+  "chemin": "c1/demo-o3-3.txt",
+  "type": "text/plain;charset=utf-8",
+  "octets": 145
+ }
+]
