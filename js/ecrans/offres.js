@@ -178,14 +178,20 @@
     return U.tableau([
       { titre: 'Candidat', valeur: d => (offres.find(o => o.id === d.offre_id) || {}).candidat }, { titre: 'Nature', valeur: d => E.L.demande[d.type] }, { titre: 'Objet', valeur: d => d.objet },
       { titre: 'Envoyée le', valeur: d => U.date(d.date_envoi) }, { titre: 'Échéance', valeur: d => [U.date(d.echeance), d.statut === 'envoyee' && d.echeance && Calcul.joursAvant(d.echeance, D.aujourdhui()) < 0 ? [' ', U.badge('Dépassée', 'danger')] : null] },
-      { titre: 'Réponse', valeur: d => d.reponse ? [d.reponse, h('div.aide', 'Reçue le ' + U.date(d.date_reponse))] : U.badge('En attente', 'alerte') },
+      { titre: 'Réponse', valeur: d => d.a_repondu === 'non' ? [U.badge('Pas de réponse', 'danger'), h('div.aide', 'Constaté le ' + U.date(d.date_reponse))]
+          : d.reponse ? [U.badge('Répondu', 'ok'), h('div', d.reponse), h('div.aide', 'Reçue le ' + U.date(d.date_reponse))] : U.badge('En attente', 'alerte') },
       { titre: 'Décision de l\'agent', valeur: d => d.decision ? [d.decision, h('div.aide', d.decision_par_nom + ', ' + U.dateHeure(d.decision_le))] : '—' },
-      { titre: '', classe: 'etroit', valeur: d => peut && !d.decision ? U.bouton(d.reponse ? 'Décider' : 'Saisir la réponse', () => U.editer('Suivi de la demande', [
-        { nom: 'reponse', libelle: 'Réponse reçue (résumé)', type: 'long' }, { nom: 'date_reponse', libelle: 'Date de réception', type: 'date', defaut: D.aujourdhui() },
-        { nom: 'decision', libelle: 'Décision prise par l\'agent habilité', type: 'long', aide: 'Laissez vide tant qu\'aucune décision n\'est prise.' }], d, async v => {
-        const patch = Object.assign({}, v, { statut: v.decision ? 'close' : v.reponse ? 'reponse_recue' : d.statut });
+      { titre: '', classe: 'etroit', valeur: d => peut && !d.decision ? U.bouton(d.reponse || d.a_repondu ? 'Décider' : 'Saisir la réponse', () => U.editer('Suivi de la demande', [
+        { nom: 'a_repondu', libelle: 'Le candidat a-t-il répondu ?', type: 'choix', options: [['oui', 'Oui, réponse reçue'], ['non', 'Non, aucune réponse']], requis: true,
+          aide: 'Sans réponse à l\'échéance, la décision (offre irrégulière, non-admission…) revient à l\'agent habilité et doit être motivée.' },
+        { nom: 'reponse', libelle: 'Réponse reçue (résumé)', type: 'long', aide: 'À remplir si le candidat a répondu.' },
+        { nom: 'date_reponse', libelle: 'Date de réception ou du constat', type: 'date', defaut: D.aujourdhui() },
+        { nom: 'decision', libelle: 'Décision prise par l\'agent habilité', type: 'long', aide: 'Laissez vide tant qu\'aucune décision n\'est prise.' }], Object.assign({}, d, { a_repondu: d.a_repondu || (d.reponse ? 'oui' : '') }), async v => {
+        if (v.a_repondu === 'oui' && !v.reponse) throw new Error('Résumez la réponse du candidat, ou indiquez qu\'il n\'a pas répondu.');
+        if (v.a_repondu === 'non') v.reponse = '';
+        const patch = Object.assign({}, v, { statut: v.decision ? 'close' : v.a_repondu === 'non' ? 'sans_reponse' : 'reponse_recue' });
         if (v.decision) { D.exiger('analyse.valider'); patch.decision_par_nom = D.utilisateur.nom; patch.decision_le = D.maintenant(); }
-        await D.modifier('demandes', d.id, patch, { action: v.decision ? 'Décision sur une demande au candidat' : 'Réponse du candidat enregistrée', libelle: E.L.demande[d.type] + ' — ' + ((offres.find(o => o.id === d.offre_id) || {}).candidat || ''), consultation_id: c.id }); }), 'secondaire.petit') : null }],
+        await D.modifier('demandes', d.id, patch, { action: v.decision ? 'Décision sur une demande au candidat' : v.a_repondu === 'non' ? 'Absence de réponse du candidat constatée' : 'Réponse du candidat enregistrée', libelle: E.L.demande[d.type] + ' — ' + ((offres.find(o => o.id === d.offre_id) || {}).candidat || ''), consultation_id: c.id }); }), 'secondaire.petit') : null }],
       demandes, { vide: 'Aucune demande de complément, de précision ou de justification.' });
   };
 
