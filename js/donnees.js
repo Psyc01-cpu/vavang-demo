@@ -466,6 +466,76 @@
     if (trace !== false) await D.journal((trace && trace.action) || 'Suppression', table, id, (trace && trace.libelle) || TABLES[table], trace && trace.detail, trace && trace.consultation_id);
   };
 
+  /* ---------- Guichet d'assistance (dépôt sans connexion) ----------
+     Pas de ligne directe : le demandeur choisit un type de panne, écrit un commentaire et laisse un numéro de rappel.
+     Valeurs autorisées et limites partagées avec l'écran (js/ecrans/guichet.js) et avec le serveur (supabase/guichet.sql). */
+  D.GUICHET = {
+    types: [['connexion', 'Je n\'arrive pas à me connecter'], ['compte', 'Compte bloqué / mot de passe'], ['ecran', 'Un écran ne s\'affiche pas ou une erreur apparaît'],
+      ['lenteur', 'Lenteur'], ['fichiers', 'Import / export de fichiers'], ['documents', 'Document ou modèle (DCE, rapport)'], ['analyse', 'Analyse des offres / calculs'],
+      ['droits', 'Droits et habilitations'], ['evolution', 'Demande d\'évolution'], ['autre', 'Autre question']],
+    urgences: [['bloquant', 'Bloquant — je ne peux plus travailler', 'P2'], ['genant', 'Gênant — je contourne, mais cela me ralentit', 'P3'], ['sans_urgence', 'Sans urgence — une question, une idée', 'P4']],
+    profils: [['agent', 'Agent utilisateur'], ['referent', 'Référent de la collectivité'], ['autre', 'Autre']],
+    creneaux: [['des_que_possible', 'Dès que possible, aux horaires du guichet'], ['matin', 'Le matin (8 h – 12 h)'], ['apres_midi', 'L\'après-midi (12 h – 17 h)']],
+    limites: { nom: 120, collectivite: 160, telephone: 30, courriel: 160, commentaire: 3000 },
+    plafonds: { parTelephone: 5, parCourriel: 5, total: 30 } // dépôts par heure
+  };
+  const libelleDe = (liste, cle) => (liste.find(x => x[0] === cle) || [])[1];
+  // Contrôle et nettoyage d'une demande du guichet (mêmes règles que deposer_demande_guichet côté serveur).
+  D.validerGuichet = function (v) {
+    const G = D.GUICHET, L = G.limites, t = x => String(x == null ? '' : x).trim();
+    if (t(v.site_web)) throw new Error('Demande refusée.'); // champ piège invisible : rempli seulement par un robot
+    const p = { type_demande: t(v.type_demande), commentaire: t(v.commentaire), nom: t(v.nom), collectivite: t(v.collectivite), telephone: t(v.telephone), courriel: t(v.courriel).toLowerCase(),
+      profil: t(v.profil) || 'agent', creneau: t(v.creneau) || 'des_que_possible', urgence: t(v.urgence) };
+    if (!libelleDe(G.types, p.type_demande)) throw new Error('Choisissez le type de panne ou de demande.');
+    if (!p.commentaire) throw new Error('Décrivez votre demande dans le commentaire.');
+    if (!p.nom) throw new Error('Indiquez vos nom et prénom.');
+    if (!p.collectivite) throw new Error('Indiquez votre collectivité et votre service.');
+    if (!p.telephone) throw new Error('Indiquez le numéro auquel l\'équipe support peut vous rappeler.');
+    for (const k of Object.keys(L)) if (p[k].length > L[k]) throw new Error('Texte trop long (' + k + ' : ' + L[k] + ' caractères au plus).');
+    const chiffres = p.telephone.replace(/\D/g, '');
+    if (!/^[0-9+ .()-]+$/.test(p.telephone) || chiffres.length < 6 || chiffres.length > 15) throw new Error('Numéro de rappel invalide : chiffres, espaces, points ou tirets (6 à 15 chiffres).');
+    if (p.courriel && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.courriel)) throw new Error('Adresse électronique invalide.');
+    if (!libelleDe(G.profils, p.profil)) throw new Error('Profil inconnu.');
+    if (!libelleDe(G.creneaux, p.creneau)) throw new Error('Créneau de rappel inconnu.');
+    if (!libelleDe(G.urgences, p.urgence)) throw new Error('Indiquez l\'urgence de la demande.');
+    if (v.consentement !== true) throw new Error('Cochez la case d\'accord sur le traitement de vos coordonnées.');
+    return p;
+  };
+  // Dépôt d'une demande au guichet, sans connexion. En ligne : fonction serveur (numéro et heure posés par le serveur).
+  // En local : écriture directe de la demande (table tickets) et des notifications du support, sans passer par Regles (le visiteur n'a pas de compte) ;
+  // les autres règles restent entières. Un agent connecté qui dépose au guichet reste le demandeur (comme garde() côté serveur).
+  D.deposerDemandeGuichet = async function (v) {
+    const p = D.validerGuichet(v);
+    if (D.mode === 'supabase') {
+      const r = await rpc('deposer_demande_guichet', { p: Object.assign({ consentement: true }, p) });
+      return { id: r.id, numero: r.numero, date_depot: r.date_depot };
+    }
+    const G = D.GUICHET, maintenant = D.maintenant(), heure = Date.now() - 3600000;
+    const recents = cache.tickets.filter(x => x.origine === 'guichet' && new Date(x.date_depot).getTime() > heure);
+    const telCle = p.telephone.replace(/\D/g, '');
+    if (recents.length >= G.plafonds.total || recents.filter(x => String((x.demandeur || {}).telephone || '').replace(/\D/g, '') === telCle).length >= G.plafonds.parTelephone
+      || (p.courriel && recents.filter(x => (x.demandeur || {}).courriel === p.courriel).length >= G.plafonds.parCourriel))
+      throw new Error('Trop de demandes déposées en peu de temps : réessayez dans une heure.');
+    const an = new Date().getFullYear();
+    const max = Math.max(0, ...cache.tickets.map(x => String(x.numero || '').match(new RegExp('^T-' + an + '-(\\d+)$'))).filter(Boolean).map(m => Number(m[1])));
+    const numero = 'T-' + an + '-' + String(max + 1).padStart(4, '0');
+    const criticite = G.urgences.find(x => x[0] === p.urgence)[2], typeLib = libelleDe(G.types, p.type_demande);
+    const ligne = { __t: 'tickets', id: D.id(), numero, origine: 'guichet', type_demande: p.type_demande, type_libelle: typeLib, objet: typeLib, description: p.commentaire, criticite, urgence: p.urgence,
+      demandeur_id: (D.utilisateur && D.utilisateur.id) || null, demandeur_nom: p.nom, service: p.collectivite, demandeur: { nom: p.nom, collectivite: p.collectivite, telephone: p.telephone, courriel: p.courriel, profil: p.profil },
+      rappel: { creneau: p.creneau }, consentement: true, date_depot: maintenant, date_creation: maintenant, cree_le: maintenant, statut: 'nouveau', pieces_jointes: [], rappels: [],
+      echeances: Calcul.echeancesSupport(criticite, maintenant),
+      historique: [{ date: maintenant, auteur: p.nom + ' (guichet)', type: 'Dépôt au guichet', texte: 'Demande déposée au guichet (' + libelleDe(G.urgences, p.urgence) + '). Rappel souhaité : ' + libelleDe(G.creneaux, p.creneau).toLowerCase() + '.' }] };
+    cache.tickets.push(ligne); await idbReq('lignes', 'readwrite', s => s.put(ligne, 'tickets|' + ligne.id));
+    // Notification de l'équipe support (écrite ici : le visiteur ne peut pas passer par D.creer).
+    const roles = new Set(cache.habilitations.filter(x => x.droit === 'support.traiter').map(x => x.role));
+    for (const pr of cache.profils.filter(x => x.actif !== false && roles.has(x.role))) {
+      const n = { __t: 'notifications', id: D.id(), destinataire_id: pr.id, texte: 'Nouvelle demande au guichet ' + numero + ' (' + criticite + ') : ' + typeLib, lien: '/support/' + ligne.id, lu: false, date: maintenant, emetteur_nom: 'Guichet', cree_le: maintenant };
+      cache.notifications.push(n); await idbReq('lignes', 'readwrite', s => s.put(n, 'notifications|' + n.id));
+    }
+    await D.journal('Dépôt d\'une demande au guichet', 'tickets', ligne.id, numero + ' — ' + typeLib, { urgence: p.urgence, criticite });
+    return { id: ligne.id, numero, date_depot: maintenant };
+  };
+
   /* ---------- Journal (ajout seul : ni modification ni suppression) ---------- */
   D.journal = async function (action, objetType, objetId, libelle, detail, consultationId, resultat) {
     const u = D.utilisateur || {};

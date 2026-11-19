@@ -1,4 +1,4 @@
-Scénario joué le 19/11/2026 04:10:54 — mode local
+Scénario joué le 19/11/2026 05:31:21 — mode local
 Navigateur : C:/Program Files/Google/Chrome/Application/chrome.exe
 
 1. page d'accueil : onglets, support, annonces et actualités affichés avant connexion
@@ -50,8 +50,8 @@ Navigateur : C:/Program Files/Google/Chrome/Application/chrome.exe
 47. tableau d'analyse exporté en XLSX (21206 octets)
 48. règle vérifiée : après validation de l'analyse, les notes sont figées
 49. projet de rapport généré, modifié à la main et enregistré
-50. rapport exporté en PDF (46025 octets)
-51. rapport exporté en Word modifiable (13911 octets)
+50. rapport exporté en PDF (46014 octets)
+51. rapport exporté en Word modifiable (13908 octets)
 52. courrier type prérempli avec la note, le rang et l'attributaire pressenti
 53. courrier exporté en Word
 54. règle vérifiée : un rapport validé est figé
@@ -59,8 +59,8 @@ Navigateur : C:/Program Files/Google/Chrome/Application/chrome.exe
 56. le lecteur ne peut pas déposer d'offre
 57. règle vérifiée : écriture refusée au profil lecteur
 58. accès refusé (et tracé) à un dossier non affecté
-59. dossier d'audit restitué en PDF (73506 octets)
-60. archive d'audit avec les pièces sources (497377 octets)
+59. dossier d'audit restitué en PDF (73545 octets)
+60. archive d'audit avec les pièces sources (497370 octets)
 61. journal du dossier : 75 actions horodatées, 3 auteurs, 38 types d'action
 62. règle vérifiée : le journal ne peut pas être modifié
 63. l'analyste habilité sur le lot 2 ne voit pas le lot 1
@@ -87,7 +87,7 @@ Navigateur : C:/Program Files/Google/Chrome/Application/chrome.exe
 84. reprise à blanc d'un CSV : 3 lignes prêtes, 2 anomalies détectées (titulaire manquant, montant et date illisibles)
 85. reprise définitive : 3 marchés créés, fichier source conservé
 86. reprise de documents PDF et DOCX rattachés à un marché repris
-87. export complet généré (487956 octets) : tables JSON et CSV, pièces sources, inventaire, dictionnaire
+87. export complet généré (488084 octets) : tables JSON et CSV, pièces sources, inventaire, dictionnaire
 88. retour arrière : les 3 marchés repris sont supprimés, le rapport de contrôle est conservé
 89. état modifié après la sauvegarde (un besoin ajouté, trois marchés retirés)
 90. archive contrôlée par rapport à son inventaire avant toute écriture
@@ -132,5 +132,20 @@ Navigateur : C:/Program Files/Google/Chrome/Application/chrome.exe
 129. bascule « Tableau » : la liste s'affiche en tableau avec la colonne « Étape du parcours »
 130. tableau de bord « Où en sont mes dossiers » : 9 pastilles, 3 dossier(s) répartis par étape
 131. pastille du tableau de bord cliquée : la liste est filtrée sur l'étape « dce » (1 dossier(s))
-132. fichiers exportés présents sur le disque : 14 fichiers dans captures/exports
-133. aucune erreur JavaScript pendant tout le scénario
+132. en-tête de la page d'accueil sans bloc « Besoin d'aide ? » ni courriel ni téléphone de l'éditeur
+133. survol de l'onglet « Échanges » : il se colore (rgb(226, 216, 192) → rgb(242, 196, 141)) mais l'onglet sélectionné reste « Solutions »
+134. clic sur « Échanges » : l'onglet change et reste sélectionné après le départ de la souris ; la sous-rubrique « Contacter le support » mène au guichet
+135. clavier : la flèche gauche passe à l'onglet « S'informer » (focus suivi)
+136. règle conservée : sans connexion, l'écriture directe dans les tickets reste refusée (seul le guichet dépose)
+137. guichet public (#/guichet) : 10 types de panne en cartes avec pictogramme, « Pas de ligne directe », horaires du guichet, aucun courriel ni téléphone de l'éditeur
+138. sans accord sur le traitement des coordonnées, la demande est refusée
+139. champ piège rempli (robot) : dépôt refusé
+140. numéro de rappel invalide refusé
+141. ticket T-2026-0003 créé sans connexion : origine guichet, statut nouveau, horodatage 2026-11-19T01:31:15.075Z, numéro de rappel, criticité P3 (gênant)
+142. accusé de réception : numéro, date et heure de dépôt, résumé, délai de prise en charge selon l'urgence, rappel au numéro indiqué
+143. l'équipe support est notifiée de la demande déposée au guichet
+144. liste du support : la demande T-2026-0003 porte le badge « Guichet » et le numéro à rappeler
+145. fiche de la demande : type de panne, commentaire, numéro à rappeler (lien d'appel pour le support), créneau souhaité
+146. action « Rappel effectué » : date, heure et compte rendu dans l'historique ; demandeur joint → demande prise en charge
+147. fichiers exportés présents sur le disque : 14 fichiers dans captures/exports
+148. aucune erreur JavaScript pendant tout le scénario

@@ -148,18 +148,16 @@ L’administrateur exporte tout en une archive : données en JSON et en CSV, doc
 Connexions, échecs, changements de droits, exports : tout est inscrit au journal de sécurité, qui ne se modifie pas.
 
 > La double authentification est obligatoire pour les administrateurs.`, 1),
-    A('r-support', 'echanges', 1, 'Contacter le support', 'Une question, un blocage : déclarez votre demande dans vavang et suivez-la jusqu’à sa clôture.', `
-## Le plus rapide : la demande d’assistance
-Menu « Demandes d’assistance », puis « Nouvelle demande ». Indiquez l’écran concerné et joignez une capture si vous pouvez.
+    A('r-support', 'echanges', 1, 'Contacter le support', 'Pas de ligne directe : un guichet de demandes, et l’équipe support vous rappelle.', `
+## Le guichet du support
+Onglet « Échanges », puis « Contacter le support ». Choisissez le type de panne, écrivez un commentaire, laissez le numéro où vous joindre.
 
-## Ce que vous voyez ensuite
-- Un numéro unique.
-- La criticité, de P1 (tout est bloqué) à P4 (simple question).
-- Les délais d’intervention qui s’appliquent, et s’ils sont tenus.
-- Chaque échange, daté.
+## Ce qui se passe ensuite
+- Un numéro de demande, avec la date et l’heure du dépôt.
+- L’équipe support traite votre demande et vous rappelle aux horaires du guichet.
+- Chaque rappel et chaque échange sont datés dans l’historique de la demande.
 
-## Qui clôt la demande ?
-Vous. Le support propose une solution ; c’est la collectivité qui valide que le problème est réglé.`, 1),
+> Une fois connecté, vous suivez aussi vos demandes dans le menu « Demandes d’assistance ».`, 1),
     A('r-ameliorations', 'echanges', 2, 'Proposer une amélioration', 'Une fonction vous manque, un écran vous semble compliqué ? Dites-le. Chaque proposition reçoit une réponse.', `
 Les meilleures évolutions viennent de ceux qui utilisent l’outil tous les jours.
 

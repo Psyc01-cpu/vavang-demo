@@ -93,7 +93,7 @@
       else if (c.type === 'choix') ctl = h('select', { id: idc }, (c.vide === false ? [] : [h('option', { value: '' }, '— choisir —')]).concat(c.options.map(o => h('option', { value: o[0], selected: String(o[0]) === String(v) }, o[1]))));
       else if (c.type === 'case') ctl = h('input', { id: idc, type: 'checkbox', checked: !!v });
       else if (c.type === 'fichier') ctl = h('input', { id: idc, type: 'file', multiple: c.multiple, accept: c.accept });
-      else ctl = h('input', { id: idc, type: c.type === 'nombre' ? 'number' : c.type === 'date' ? 'date' : c.type === 'motdepasse' ? 'password' : c.type === 'email' ? 'email' : 'text', step: c.type === 'nombre' ? (c.pas || 'any') : null, value: v, min: c.min, max: c.max });
+      else ctl = h('input', { id: idc, type: c.type === 'nombre' ? 'number' : c.type === 'date' ? 'date' : c.type === 'dateheure' ? 'datetime-local' : c.type === 'motdepasse' ? 'password' : c.type === 'email' ? 'email' : 'text', step: c.type === 'nombre' ? (c.pas || 'any') : null, value: v, min: c.min, max: c.max });
       if (c.requis) ctl.required = true;
       if (c.lectureSeule) ctl.disabled = true;
       ctl.name = c.nom; controles[c.nom] = ctl;
@@ -108,7 +108,7 @@
         if (c.type === 'case') r[c.nom] = ctl.checked;
         else if (c.type === 'fichier') r[c.nom] = Array.from(ctl.files);
         else if (c.type === 'nombre') r[c.nom] = ctl.value === '' ? null : Number(ctl.value);
-        else r[c.nom] = ctl.value === '' && (c.type === 'date' || c.type === 'choix') ? null : (typeof ctl.value === 'string' ? ctl.value.trim() : ctl.value);
+        else r[c.nom] = ctl.value === '' && (c.type === 'date' || c.type === 'dateheure' || c.type === 'choix') ? null : (typeof ctl.value === 'string' ? ctl.value.trim() : ctl.value);
       }
       return r;
     };

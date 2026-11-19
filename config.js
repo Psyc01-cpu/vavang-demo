@@ -25,7 +25,9 @@ window.CONFIG = {
   logoContientNom: true,
   // Mention affichée tant que l'outil n'est pas en service chez la collectivité (données fictives).
   maquette: 'Maquette de démonstration — données fictives',
-  support: { email: 'contact@lentreprise.ai', telephone: '0692 49 87 47', horaires: 'du lundi au vendredi, de 8 h à 17 h (heure de La Réunion)' },
+  // Support : pas de ligne directe, tout passe par le guichet de demandes (#/guichet) ; seuls les horaires du guichet sont affichés.
+  // L'adresse ne sert qu'aux mentions légales (identification de l'éditeur, obligation LCEN) ; elle n'est pas proposée comme moyen de contact du support.
+  support: { email: 'contact@lentreprise.ai', horaires: 'du lundi au vendredi, de 8 h à 17 h (heure de La Réunion)' },
   // Annonces qui défilent : durée d'affichage de chaque annonce et durée du fondu entre deux annonces (millisecondes).
   carrousel: { duree_ms: 6500, fondu_ms: 700 },
   afficherComptesDemo: true,

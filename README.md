@@ -96,7 +96,8 @@ supabase-js (client), pdf.js 3.11 (lecture des PDF), pdfmake (export PDF), docx 
 |---|---|
 | `js/totp.js`, `js/ecrans/securite.js` | Double authentification TOTP, déconnexion après inactivité, verrouillage après échecs, journal de sécurité, paramètres de sécurité. |
 | `js/ecrans/complements.js` | Centre de notifications, circuit du DCE paramétrable, critères d'évaluation paramétrables, synthèse par candidat sans IA, révision des prix par formule. |
-| `js/ecrans/support.js` | Demandes d'assistance : numéro, criticité P1 à P4, délais du CCTP en heures ouvrées, historique, clôture validée par la collectivité. |
+| `js/ecrans/support.js` | Demandes d'assistance : numéro, criticité P1 à P4, délais du CCTP en heures ouvrées, historique, clôture validée par la collectivité. Demandes du guichet : badge « Guichet », numéro à rappeler, action « Rappel effectué ». |
+| `js/ecrans/guichet.js`, `supabase/guichet.sql` | Guichet du support sans connexion (`#/guichet`) : pas de ligne directe ; type de panne, commentaire, numéro de rappel, accusé de réception (numéro, date et heure). En ligne, dépôt par la fonction serveur `deposer_demande_guichet` (à exécuter). |
 | `docs/` | Guides utilisateur et administrateur, formats d'échange, sauvegarde et reprise, mesures environnementales. |
 | `tests/mesures.mjs`, `mesures/` | Mesures de sobriété (poids, requêtes, mémoire), avant et après le chargement des bibliothèques à la demande. |
 

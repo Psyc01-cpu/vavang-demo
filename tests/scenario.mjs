@@ -622,6 +622,59 @@ try {
     'pastille du tableau de bord cliquée : la liste est filtrée sur l\'étape « ' + compteur.cle + ' » (' + compteur.nb + ' dossier(s))');
   await captureN(82, 'mes-dossiers-filtre-par-etape', { entier: true });
 
+  titre('Guichet du support sans connexion : types de panne, commentaire, rappel ; onglets au survol et au clic ; vue du support');
+  await clic('Se déconnecter'); await attendre('Connexion'); await pause(600);
+  const accueilSansContact = await page.evaluate(() => ({ bloc: !!document.querySelector('.bloc-support'), texte: /0692|contact@lentreprise|Besoin d.aide/.test(document.body.innerText) }));
+  ok(!accueilSansContact.bloc && !accueilSansContact.texte, 'en-tête de la page d\'accueil sans bloc « Besoin d\'aide ? » ni courriel ni téléphone de l\'éditeur');
+  const etatOnglets = () => page.evaluate(() => [...document.querySelectorAll('.onglets-site [role=tab]')].filter(b => b.getAttribute('aria-selected') === 'true').map(b => b.dataset.cle).join(','));
+  const avantSurvol = await etatOnglets();
+  const fondAvant = await page.evaluate(() => getComputedStyle(document.getElementById('onglet-echanges')).backgroundColor);
+  await page.hover('#onglet-echanges'); await pause(400);
+  const fondSurvol = await page.evaluate(() => getComputedStyle(document.getElementById('onglet-echanges')).backgroundColor);
+  ok(avantSurvol === 'solutions' && await etatOnglets() === 'solutions' && fondSurvol !== fondAvant && !(await present('Proposer une amélioration')),
+    'survol de l\'onglet « Échanges » : il se colore (' + fondAvant + ' → ' + fondSurvol + ') mais l\'onglet sélectionné reste « Solutions »');
+  await page.click('#onglet-echanges'); await pause(300); await page.mouse.move(5, 5); await pause(300);
+  ok(await etatOnglets() === 'echanges' && await page.evaluate(() => !!document.querySelector('.sous-onglets a[href="#/guichet"]')),
+    'clic sur « Échanges » : l\'onglet change et reste sélectionné après le départ de la souris ; la sous-rubrique « Contacter le support » mène au guichet');
+  await page.focus('#onglet-echanges'); await page.keyboard.press('ArrowLeft'); await pause(200);
+  ok(await etatOnglets() === 's-informer' && await page.evaluate(() => document.activeElement.id === 'onglet-s-informer'), 'clavier : la flèche gauche passe à l\'onglet « S\'informer » (focus suivi)');
+  await page.click('#onglet-echanges'); await pause(200);
+  ok((await tenter("await D.creer('tickets', { objet: 'essai' })")).includes('connecté'), 'règle conservée : sans connexion, l\'écriture directe dans les tickets reste refusée (seul le guichet dépose)');
+  await page.evaluate(() => document.querySelector('.sous-onglets a[href="#/guichet"]').click()); await attendre('De quoi s\'agit-il');
+  const grille = await page.evaluate(() => ({ n: document.querySelectorAll('.guichet-type').length, svg: document.querySelectorAll('.guichet-type svg').length, texte: document.body.innerText }));
+  ok(grille.n === 10 && grille.svg === 10 && grille.texte.includes('Pas de ligne directe') && grille.texte.includes('Horaires du guichet') && !/0692|contact@lentreprise|mailto:/.test(grille.texte + await page.evaluate(() => document.body.innerHTML.match(/mailto:|tel:/g) || '')),
+    'guichet public (#/guichet) : 10 types de panne en cartes avec pictogramme, « Pas de ligne directe », horaires du guichet, aucun courriel ni téléphone de l\'éditeur');
+  await captureN(84, 'guichet-types-de-panne', { entier: true });
+  await page.evaluate(() => document.querySelector('.guichet-type[data-type="fichiers"]').click()); await attendre('Téléphone de rappel');
+  await remplir('Votre commentaire', 'L\'export XLSX de la liste des fournisseurs reste bloqué sur « Préparation du fichier ».');
+  await remplir('Urgence', 'Gênant'); await remplir('Nom et prénom', 'Agent Exemple'); await remplir('Collectivité et service', 'Agglo Démo — Direction de la commande publique');
+  await remplir('Téléphone de rappel', '0262 00 00 01'); await remplir('Créneau de rappel souhaité', 'matin');
+  await page.evaluate(() => [...document.querySelectorAll('button[type=submit]')].find(b => b.textContent.includes('Envoyer ma demande')).click()); await pause(500);
+  ok(/Cochez la case/.test(await page.evaluate(() => document.querySelector('.guichet .erreur-formulaire').textContent)), 'sans accord sur le traitement des coordonnées, la demande est refusée');
+  ok((await tenter("await D.deposerDemandeGuichet({ type_demande: 'autre', commentaire: 'x', nom: 'x', collectivite: 'x', telephone: '0262000002', urgence: 'genant', consentement: true, site_web: 'http://robot.example' })")).includes('refusée'), 'champ piège rempli (robot) : dépôt refusé');
+  ok((await tenter("await D.deposerDemandeGuichet({ type_demande: 'autre', commentaire: 'x', nom: 'x', collectivite: 'x', telephone: 'abc', urgence: 'genant', consentement: true })")).includes('Numéro de rappel invalide'), 'numéro de rappel invalide refusé');
+  await remplir('J\'accepte', true);
+  await page.evaluate(() => [...document.querySelectorAll('button[type=submit]')].find(b => b.textContent.includes('Envoyer ma demande')).click()); await attendre('Demande enregistrée');
+  const accuse = await page.evaluate(async () => { const n = document.querySelector('.guichet-numero b').textContent; const t = (await D.lister('tickets')).find(x => x.numero === n);
+    return { n, texte: document.querySelector('.guichet-accuse').innerText, t }; });
+  ok(/^T-\d{4}-\d{4}$/.test(accuse.n) && accuse.t && accuse.t.origine === 'guichet' && accuse.t.statut === 'nouveau' && accuse.t.demandeur_id === null && accuse.t.date_depot && accuse.t.demandeur.telephone === '0262 00 00 01' && accuse.t.criticite === 'P3',
+    'ticket ' + accuse.n + ' créé sans connexion : origine guichet, statut nouveau, horodatage ' + (accuse.t && accuse.t.date_depot) + ', numéro de rappel, criticité P3 (gênant)');
+  ok(/\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}/.test(accuse.texte) && accuse.texte.includes('Prise en charge et rappel : sous 1 jour ouvré') && accuse.texte.includes('vous rappelle aux horaires du guichet') && accuse.texte.includes('0262 00 00 01'),
+    'accusé de réception : numéro, date et heure de dépôt, résumé, délai de prise en charge selon l\'urgence, rappel au numéro indiqué');
+  await captureN(85, 'guichet-accuse-de-reception', { entier: true });
+  await aller('/', 'Connexion'); await connecter('support');
+  await aller('/notifications', 'Vos notifications'); ok(await present('Nouvelle demande au guichet ' + accuse.n), 'l\'équipe support est notifiée de la demande déposée au guichet');
+  await aller('/support', 'Demandes d\'assistance');
+  ok(await page.evaluate(n => { const tr = [...document.querySelectorAll('tr')].find(x => x.innerText.includes(n)); return !!tr && tr.innerText.includes('Guichet') && tr.innerText.includes('0262 00 00 01'); }, accuse.n), 'liste du support : la demande ' + accuse.n + ' porte le badge « Guichet » et le numéro à rappeler');
+  await aller('/support/' + accuse.t.id, 'Demande déposée au guichet');
+  ok(await page.evaluate(() => !!document.querySelector('a[href="tel:0262000001"]') && document.body.innerText.includes('Le matin (8 h – 12 h)') && document.body.innerText.includes('Import / export de fichiers')),
+    'fiche de la demande : type de panne, commentaire, numéro à rappeler (lien d\'appel pour le support), créneau souhaité');
+  await clic('Rappel effectué'); await remplir('Issue du rappel', 'joint'); await remplir('Compte rendu du rappel', 'Agent rappelé : export relancé ensemble, fichier obtenu. Correctif de l\'export en préparation.'); await valider('Enregistrer le rappel');
+  await attendre('Rappel du ');
+  const apresRappel = await page.evaluate(async id => { const t = await D.lire('tickets', id); return { statut: t.statut, rappels: (t.rappels || []).length, h: t.historique.map(x => x.type).join(',') }; }, accuse.t.id);
+  ok(apresRappel.statut === 'pris_en_charge' && apresRappel.rappels === 1 && apresRappel.h === 'Dépôt au guichet,Rappel effectué', 'action « Rappel effectué » : date, heure et compte rendu dans l\'historique ; demandeur joint → demande prise en charge');
+  await captureN(86, 'support-demande-guichet', { entier: true });
+
   await pause(1500);
   const fichiers = fs.readdirSync(EXPORTS);
   ok(fichiers.some(f => f.endsWith('.pdf')) && fichiers.some(f => f.endsWith('.docx')) && fichiers.some(f => f.endsWith('.zip')), 'fichiers exportés présents sur le disque : ' + fichiers.length + ' fichiers dans captures/exports');

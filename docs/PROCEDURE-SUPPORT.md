@@ -20,14 +20,15 @@ L’outil attribue un **numéro unique** (`T-AAAA-NNNN`), horodate la demande, e
 
 Qui peut déclarer : gestionnaire, prescripteur, valideur, lecteur, administrateur. Chaque agent voit ses demandes. L’administrateur voit toutes celles de la collectivité.
 
-### 1.2 Si l’application est inaccessible
+### 1.2 Sans connexion : le guichet du support
 
-Une panne totale empêche de déclarer dans l’outil. Dans ce cas :
+Il n’y a **pas de ligne directe** (ni courriel ni téléphone du support). Si vous ne pouvez pas vous connecter, ou sans compte, passez par le **guichet** : page d’accueil, onglet « Échanges », « Contacter le support » (adresse `#/guichet`).
 
-- courriel : contact@lentreprise.ai ;
-- téléphone : 0692 49 87 47 (coordonnées affichées sur la page d’accueil).
+1. Choisissez le **type de panne** dans la grille (connexion, compte bloqué, écran en erreur, lenteur, fichiers, documents, analyse, droits, évolution, autre).
+2. Écrivez votre **commentaire**, indiquez l’**urgence** (bloquant, gênant, sans urgence) et le **numéro où vous rappeler** (obligatoire), votre courriel si vous le souhaitez, et le créneau de rappel souhaité.
+3. Un **accusé de réception** affiche le numéro de la demande, la date et l’heure du dépôt et le délai de prise en charge.
 
-Le support crée alors la demande dans l’outil dès que possible. Le délai court à partir de l’appel ou du courriel.
+L’équipe support traite la demande et **rappelle** le demandeur aux horaires du guichet (du lundi au vendredi, de 8 h à 17 h, heure de La Réunion), ou contacte le référent de la collectivité. Chaque rappel est consigné dans la demande (« Rappel effectué » : date, heure, issue, compte rendu). Urgence → criticité : bloquant = P2, gênant = P3, sans urgence = P4 ; le support peut requalifier.
 
 ## 2. Criticités et délais
 

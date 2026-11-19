@@ -67,14 +67,8 @@
   };
 
   /* ---------- Support et pied de page ---------- */
-  E.contacterSupport = function () {
-    const s = CFG.support || {};
-    U.modale('Contacter le support', h('div.support-fenetre',
-      h('p', 'Une question sur l\'outil, un blocage, une demande de paramétrage : le support de ' + (CFG.editeur || 'l\'entreprise.ai') + ' vous répond.'),
-      U.definition([['Courriel', s.email ? h('a', { href: 'mailto:' + s.email }, s.email) : 'à renseigner'], ['Téléphone', s.telephone ? h('a', { href: 'tel:' + s.telephone.replace(/\s/g, '') }, s.telephone) : 'à renseigner'], ['Horaires', s.horaires || 'à renseigner']]),
-      h('p.aide', { style: { marginTop: '12px' } }, 'Une fois connecté, déclarez et suivez vos demandes dans le menu « Demandes d\'assistance » : numéro, criticité, délais et historique.'),
-      h('p.aide', 'Pour un mot de passe oublié ou un compte bloqué, adressez-vous d\'abord à l\'administrateur de votre collectivité.')));
-  };
+  // Pas de ligne directe : le contact avec le support passe toujours par le guichet de demandes (rappel aux horaires du guichet).
+  E.contacterSupport = () => U.aller('/guichet');
   const PIED = {
     'Accessibilité': 'La conformité aux règles d\'accessibilité numérique n\'a pas encore été évaluée : aucun audit n\'a été réalisé à ce jour. Signalez au support toute difficulté d\'accès.',
     'Mentions légales': () => 'Éditeur : ' + (CFG.editeur || 'l\'entreprise.ai') + ', entreprise individuelle, Saint-Paul (La Réunion).\nContact : ' + ((CFG.support || {}).email || '') + '.\nVersion de démonstration : les données affichées sont fictives.',
@@ -82,27 +76,37 @@
     'Cookies': 'Ce site ne dépose aucun cookie de mesure d\'audience ni de publicité. La session de connexion est conservée dans le stockage de votre navigateur.'
   };
   function pied() {
-    return [h('div.frise.accueil-pied-frise', { 'aria-hidden': 'true' }), h('footer.accueil-pied', h('a.lien', { href: '#/info/credits-photos' }, 'Crédits photos'), Object.keys(PIED).map(k => h('button.lien', { type: 'button', onclick: () => U.modale(k, E.texteRiche(typeof PIED[k] === 'function' ? PIED[k]() : PIED[k])) }, k)),
+    return [h('div.frise.accueil-pied-frise', { 'aria-hidden': 'true' }), h('footer.accueil-pied', h('a.lien', { href: '#/guichet' }, 'Contacter le support'), h('a.lien', { href: '#/info/credits-photos' }, 'Crédits photos'), Object.keys(PIED).map(k => h('button.lien', { type: 'button', onclick: () => U.modale(k, E.texteRiche(typeof PIED[k] === 'function' ? PIED[k]() : PIED[k])) }, k)),
       h('span', '© ' + new Date().getFullYear() + ' ' + (CFG.nomLogiciel ? CFG.nomLogiciel + ', une solution de ' : ''), h('a.lien-editeur', { href: CFG.siteEditeur || 'https://lentreprise.ai/', target: '_blank', rel: 'noopener' }, CFG.editeur || 'l\'entreprise.ai')))];
   }
 
   /* ---------- En-tête et onglets ---------- */
+  // La rubrique « Contacter le support » de l'onglet Échanges est remplacée par un lien fixe vers le guichet de demandes,
+  // en local comme en ligne (sans dépendre du contenu des annonces en base).
+  const estRubriqueSupport = x => x.id === 'r-support' || /^contacter le support$/i.test(String(x.titre || '').trim());
   async function entete(ongletActif) {
     const rubriques = await annonces('rubrique');
     const sousBarre = h('nav.sous-onglets', { 'aria-label': 'Rubriques' });
-    const onglets = h('div.onglets-site', { role: 'tablist' });
+    const onglets = h('div.onglets-site', { role: 'tablist', 'aria-label': 'Rubriques du site' });
+    // Le survol colore l'onglet (CSS) sans le changer ; il change au clic, ou au clavier (flèches, Début, Fin), et reste sélectionné.
     const choisir = cle => {
-      onglets.querySelectorAll('button').forEach(b => { const on = b.dataset.cle === cle; b.classList.toggle('actif', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
-      const r = rubriques.filter(x => x.onglet === cle).concat(cle === 's-informer' ? [{ id: 'credits-photos', titre: 'Crédits photographiques' }] : []);
-      sousBarre.replaceChildren(...(r.length ? r.map((x, i) => [i ? h('span.point', '•') : null, h('a', { href: '#/info/' + x.id }, x.titre)]).flat().filter(Boolean) : [h('span.aide', 'Aucune rubrique publiée.')]));
+      onglets.querySelectorAll('button').forEach(b => { const on = b.dataset.cle === cle; b.classList.toggle('actif', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; });
+      let r = rubriques.filter(x => x.onglet === cle).concat(cle === 's-informer' ? [{ id: 'credits-photos', titre: 'Crédits photographiques' }] : []);
+      if (cle === 'echanges') r = [{ lien: '#/guichet', titre: 'Contacter le support' }].concat(r.filter(x => !estRubriqueSupport(x)));
+      sousBarre.replaceChildren(...(r.length ? r.map((x, i) => [i ? h('span.point', '•') : null, h('a', { href: x.lien || '#/info/' + x.id }, x.titre)]).flat().filter(Boolean) : [h('span.aide', 'Aucune rubrique publiée.')]));
     };
-    ONGLETS.forEach(o => onglets.appendChild(h('button', { type: 'button', role: 'tab', 'data-cle': o[0], onclick: () => choisir(o[0]), onmouseenter: () => choisir(o[0]) }, o[1])));
+    const auClavier = e => {
+      const b = [...onglets.querySelectorAll('button')]; const k = b.indexOf(e.currentTarget);
+      const n = { ArrowRight: k + 1, ArrowLeft: k - 1, Home: 0, End: b.length - 1 }[e.key]; if (n === undefined) return;
+      e.preventDefault(); const c = b[(n + b.length) % b.length]; choisir(c.dataset.cle); c.focus();
+    };
+    ONGLETS.forEach(o => onglets.appendChild(h('button', { type: 'button', role: 'tab', id: 'onglet-' + o[0], 'data-cle': o[0], onclick: () => choisir(o[0]), onkeydown: auClavier }, o[1])));
     choisir(ongletActif || 'solutions');
     return h('header.accueil-tete',
-      h('div.accueil-haut', await E.blocMarques(),
-        h('div.bloc-support', h('div', h('b', 'Besoin d\'aide ?'), h('span', (CFG.support || {}).horaires || '')), h('button.bouton.support-bouton', { type: 'button', onclick: E.contacterSupport }, '→ Contacter le support'))),
+      h('div.accueil-haut', await E.blocMarques()),
       h('div.barre-onglets', onglets, sousBarre));
   }
+  E.enteteAccueil = entete; E.piedAccueil = pied;
 
   /* ---------- Carrousel d'annonces ---------- */
   let minuteur = null;
@@ -218,6 +222,7 @@
       h('div.aide-tete', h('b', 'Aide à la connexion'), h('button.lien', { type: 'button', 'aria-label': 'Fermer l\'aide', onclick: () => basculer(false) }, '✕')),
       h('p', 'Connectez-vous avec l\'adresse et le mot de passe remis par l\'administrateur de votre collectivité.'),
       h('p', h('b', 'Mot de passe oublié ? '), 'Adressez-vous à l\'administrateur, qui le réinitialise.'),
+      h('p', h('b', 'Un blocage ? '), 'Déposez une demande au ', h('a', { href: '#/guichet' }, 'guichet du support'), ' : l\'équipe vous rappelle aux horaires du guichet.'),
       demo ? [h('p.aide-sous', 'Comptes de démonstration — données fictives. Cliquez sur un profil :'),
         h('div.profils-demo', window.Demo.COMPTES.map(c => h('button', { type: 'button', onclick: () => { f.controles.email.value = c.email; f.controles.mdp.value = c.mot_de_passe; basculer(false); f.controles.mdp.focus(); } }, h('b', D.ROLES[c.role]), h('span', c.nom)))),
         D.mode === 'supabase' ? h('p.aide-sous', 'Comptes partagés entre les visiteurs, remis à zéro chaque nuit à 3 h (heure de La Réunion).') : null,
@@ -287,8 +292,10 @@
   E.public = async function (chemin) {
     document.getElementById('menu').hidden = true; document.body.classList.add('public'); E.arreterCarrousel();
     const m = (chemin || '').match(/^\/info\/([^/?]+)/);
+    // Guichet de demandes : route publique, et ancienne rubrique « Contacter le support » redirigée vers lui.
+    const guichet = /^\/guichet(\/|\?|$)/.test(chemin || '') || (m && decodeURIComponent(m[1]) === 'r-support');
     const zone = document.getElementById('contenu');
-    try { zone.replaceChildren(m ? (m[1] === 'credits-photos' ? await pageCredits() : await pageRubrique(decodeURIComponent(m[1]))) : await pageAccueil()); window.scrollTo(0, 0); }
+    try { zone.replaceChildren(guichet ? await E.pageGuichet() : m ? (m[1] === 'credits-photos' ? await pageCredits() : await pageRubrique(decodeURIComponent(m[1]))) : await pageAccueil()); window.scrollTo(0, 0); }
     catch (e) { console.warn(e); zone.replaceChildren(h('div.carte', h('h2', 'Page indisponible'), h('p', e.message))); }
   };
   E.connexion = () => E.public((location.hash || '#/').slice(1));
