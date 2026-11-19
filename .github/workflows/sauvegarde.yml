@@ -1,14 +1,30 @@
-# Sauvegarde automatique de la base hébergée (démonstration vavang), toutes les 3 heures : RPO cible 3 h (CCTP 3.7.7 : 4 h).
+# Sauvegarde automatique de la base hébergée (démonstration vavang), avec rotation à plusieurs échéances.
 # Zéro euro : dépôt public, minutes GitHub Actions gratuites ; aucun secret obligatoire (compte de démonstration public).
-# Le résultat est publié en artefact, conservé 30 jours. Si le secret SAUVEGARDE_CLE existe, l'archive est chiffrée
-# (openssl AES-256-CBC, dérivation PBKDF2) ; sinon elle est publiée en clair et le journal le signale (données fictives).
-# Rappel : sur un dépôt public, les artefacts sont téléchargeables par toute personne connectée à GitHub.
+#
+# Plan de sauvegarde (l'échéance est écrite dans le nom de l'artefact) :
+#   courante      toutes les 3 h (minute 17 UTC)          artefact conservé  3 jours
+#   quotidienne   chaque jour à 02:17 UTC (sauf dimanche)  artefact conservé 30 jours
+#   hebdomadaire  le dimanche à 02:17 UTC                  artefact conservé 90 jours (maximum GitHub pour un dépôt public)
+#   mensuelle     1er dimanche du mois, SEULEMENT si le secret SAUVEGARDE_CLE existe : archive CHIFFRÉE publiée en
+#                 « release » GitHub (sans limite de durée), les 12 plus récentes sont gardées. Sans le secret : rien.
+# Deux planifications seulement : l'échéance est déduite de celle qui a déclenché l'exécution (github.event.schedule).
+#
+# Si le secret SAUVEGARDE_CLE existe, l'archive est chiffrée (openssl AES-256-CBC, dérivation PBKDF2) ; sinon elle est
+# publiée en clair et le journal le signale (données fictives). Sur un dépôt public, les artefacts sont téléchargeables
+# par toute personne connectée à GitHub, et les releases par tout le monde : c'est pourquoi la release exige le chiffrement.
 name: Sauvegarde de la base
 
 on:
   schedule:
-    - cron: '17 */3 * * *'   # toutes les 3 h à la minute 17 UTC (RPO cible 3 h, CCTP 3.7.7 : 4 h) (minute décalée : les créneaux « pile » sont souvent retardés)
-  workflow_dispatch: {}
+    - cron: '17 */3 * * *'   # courante : toutes les 3 h à la minute 17 UTC (RPO cible 3 h, CCTP 3.7.7 : 4 h ; minute décalée, les créneaux « pile » sont souvent retardés)
+    - cron: '17 2 * * *'     # quotidienne (hebdomadaire le dimanche) : 02:17 UTC, soit 06:17 à La Réunion
+  workflow_dispatch:
+    inputs:
+      echeance:
+        description: 'Échéance de la sauvegarde lancée à la main'
+        type: choice
+        options: [courante, quotidienne, hebdomadaire]
+        default: courante
 
 permissions:
   contents: read
@@ -21,6 +37,10 @@ jobs:
   sauvegarde:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    outputs:
+      artefact: ${{ steps.echeance.outputs.artefact }}
+      mensuelle: ${{ steps.archive.outputs.mensuelle }}
+      mois: ${{ steps.echeance.outputs.mois }}
     env:
       CHROME: /usr/bin/google-chrome
       VAVANG_URL: https://psyc01-cpu.github.io/vavang-demo/
@@ -43,29 +63,89 @@ jobs:
         working-directory: sauvegardes/${{ steps.sauvegarde.outputs.nom }}
         run: sha256sum -c --quiet SHA256SUMS && echo "Empreintes vérifiées."
 
+      - name: Échéance et durée de conservation
+        id: echeance
+        env:
+          PLANIFICATION: ${{ github.event.schedule }}
+          MANUELLE: ${{ inputs.echeance }}
+          NOM: ${{ steps.sauvegarde.outputs.nom }}
+        run: |
+          if [ -n "$MANUELLE" ]; then ECHEANCE="$MANUELLE"
+          elif [ "$PLANIFICATION" = "17 2 * * *" ]; then
+            if [ "$(date -u +%u)" = "7" ]; then ECHEANCE=hebdomadaire; else ECHEANCE=quotidienne; fi
+          else ECHEANCE=courante; fi
+          case "$ECHEANCE" in
+            courante) JOURS=3 ;; quotidienne) JOURS=30 ;; hebdomadaire) JOURS=90 ;;
+            *) echo "Échéance inconnue : $ECHEANCE"; exit 1 ;;
+          esac
+          ARTEFACT="sauvegarde-$ECHEANCE-${NOM#sauvegarde-}"
+          echo "Échéance : $ECHEANCE ; conservation : $JOURS jours ; artefact : $ARTEFACT"
+          { echo "echeance=$ECHEANCE"; echo "jours=$JOURS"; echo "artefact=$ARTEFACT"; echo "mois=$(date -u +%Y%m)"; } >> "$GITHUB_OUTPUT"
+
       - name: Archive (chiffrée si le secret SAUVEGARDE_CLE existe)
         id: archive
         env:
           SAUVEGARDE_CLE: ${{ secrets.SAUVEGARDE_CLE }}
           NOM: ${{ steps.sauvegarde.outputs.nom }}
+          ECHEANCE: ${{ steps.echeance.outputs.echeance }}
         run: |
           mkdir -p artefact
           tar -C sauvegardes -czf "artefact/$NOM.tar.gz" "$NOM"
+          MENSUELLE=non
           if [ -n "$SAUVEGARDE_CLE" ]; then
             openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -in "artefact/$NOM.tar.gz" -out "artefact/$NOM.tar.gz.enc" -pass env:SAUVEGARDE_CLE
             rm "artefact/$NOM.tar.gz"
             echo "Archive chiffrée (AES-256-CBC, PBKDF2 200 000 itérations)."
             echo "Déchiffrer : openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in $NOM.tar.gz.enc -out $NOM.tar.gz"
+            # copie mensuelle : la sauvegarde hebdomadaire du premier dimanche du mois (jour 1 à 7), chiffrée uniquement
+            if [ "$ECHEANCE" = "hebdomadaire" ] && [ "$(date -u +%-d)" -le 7 ]; then MENSUELLE=oui; fi
           else
-            echo "::warning title=Sauvegarde non chiffrée::Secret SAUVEGARDE_CLE absent : archive publiée EN CLAIR (acceptable uniquement parce que les données de la démonstration sont fictives)."
+            echo "::warning title=Sauvegarde non chiffrée::Secret SAUVEGARDE_CLE absent : archive publiée EN CLAIR (acceptable uniquement parce que les données de la démonstration sont fictives). Aucune copie mensuelle en release."
           fi
+          echo "mensuelle=$MENSUELLE" >> "$GITHUB_OUTPUT"
           (cd artefact && sha256sum * > "$NOM.archive.sha256" && cat "$NOM.archive.sha256")
           rm -rf sauvegardes
 
-      - name: Publication en artefact (30 jours)
+      - name: Publication en artefact (${{ steps.echeance.outputs.echeance }}, ${{ steps.echeance.outputs.jours }} jours)
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.sauvegarde.outputs.nom }}
+          name: ${{ steps.echeance.outputs.artefact }}
           path: artefact/
-          retention-days: 30
+          retention-days: ${{ steps.echeance.outputs.jours }}
           if-no-files-found: error
+
+  # Copie mensuelle en release : uniquement une archive chiffrée (jamais de données en clair dans une release publique).
+  mensuelle:
+    needs: sauvegarde
+    if: needs.sauvegarde.outputs.mensuelle == 'oui'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write   # créer la release et supprimer les plus anciennes (ce job seulement)
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      ETIQUETTE: sauvegarde-mensuelle-${{ needs.sauvegarde.outputs.mois }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.sauvegarde.outputs.artefact }}
+          path: artefact
+
+      - name: Contrôle (archive chiffrée et empreinte)
+        working-directory: artefact
+        run: |
+          ls *.tar.gz.enc >/dev/null 2>&1 || { echo "Aucune archive chiffrée : rien n'est publié."; exit 1; }
+          if ls *.tar.gz >/dev/null 2>&1; then echo "Archive en clair présente : publication refusée."; exit 1; fi
+          sha256sum -c --quiet *.archive.sha256 && echo "Empreinte de l'archive vérifiée."
+
+      - name: Release mensuelle (une par mois, 12 gardées)
+        run: |
+          if gh release view "$ETIQUETTE" >/dev/null 2>&1; then echo "La release $ETIQUETTE existe déjà : rien à faire."; exit 0; fi
+          gh release create "$ETIQUETTE" artefact/* --target "$GITHUB_SHA" --latest=false \
+            --title "Sauvegarde mensuelle $ETIQUETTE (chiffrée)" \
+            --notes "Archive chiffrée (AES-256-CBC, PBKDF2 200 000 itérations) de la base de démonstration. Déchiffrement : openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in <fichier>.tar.gz.enc -out <fichier>.tar.gz (phrase de passe SAUVEGARDE_CLE, conservée hors de GitHub)."
+          gh release list --limit 200 --json tagName --jq '.[].tagName' | grep '^sauvegarde-mensuelle-' | sort -r | tail -n +13 | while read -r ancienne; do
+            echo "Suppression de la release de plus de 12 mois : $ancienne"
+            gh release delete "$ancienne" --yes --cleanup-tag
+          done

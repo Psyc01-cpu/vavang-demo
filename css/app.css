@@ -177,3 +177,84 @@ mark { background: #ffd98a; padding: 0 1px; }
 .proc-verdict.ok { border-left-color: var(--vert); background: var(--vert-fond); } .proc-verdict.info { border-left-color: var(--bleu); background: var(--bleu-fond); }
 .proc-verdict.alerte { border-left-color: var(--braise); background: var(--ambre-fond); } .proc-verdict.danger { border-left-color: var(--rouge); background: var(--rouge-fond); }
 .proc-notes { margin: 10px 0; padding-left: 18px; font-size: .88rem; } .proc-notes li { margin-bottom: 4px; }
+
+/* ---------- Frise du parcours d'une consultation (js/ecrans/frise.js) ---------- */
+.lecteur-seul { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.picto { display: inline-flex; line-height: 0; }
+.frise-carte { position: relative; padding-top: 30px; overflow: hidden; }
+.frise-bord { position: absolute; left: 0; right: 0; top: 0; height: 14px; background-image: url('../img/motifs/lambrequin.svg'); background-repeat: round no-repeat; background-size: auto 14px; }
+.frise-carte .carte-tete { margin-bottom: 6px; }
+.frise-resume { margin: 0; font-size: .9rem; color: var(--encre); }
+.frise-resume b { color: var(--braise-fonce); }
+.frise-echeance { color: var(--gris); }
+.frise-note { margin-top: 8px; }
+.frise-defile { overflow-x: auto; padding: 16px 2px 4px; }
+.frise-etapes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(9, minmax(108px, 1fr)); }
+.frise-etape { position: relative; text-align: center; padding: 0 4px; }
+.frise-etape:not(:last-child)::after { content: ''; position: absolute; top: 32px; left: calc(50% + 38px); right: calc(-50% + 38px); height: 4px; border-radius: 2px; background: var(--trait); }
+.frise-etape.fait:not(:last-child)::after { background: var(--noir); }
+.frise-etape.courant:not(:last-child)::after { background: linear-gradient(to right, var(--braise), var(--trait)); }
+.frise-lien { display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: var(--encre); border-radius: 10px; padding: 0 2px 4px; }
+.frise-lien:hover .frise-pastille { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(42, 26, 10, .18); }
+.frise-lien:hover .frise-libelle { text-decoration: underline; }
+.frise-pastille { position: relative; width: 68px; height: 68px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: transform .15s, box-shadow .15s; flex: none; }
+.frise-etape.fait .frise-pastille { background: var(--noir); color: #fff; border: 2px solid var(--noir); }
+.frise-etape.courant .frise-pastille { background: var(--braise); color: var(--brun); border: 2px solid var(--braise-fonce); box-shadow: 0 0 0 7px rgba(232, 135, 30, .28), 0 0 0 13px rgba(232, 135, 30, .12); }
+.frise-etape.avenir .frise-pastille { background: #fff; color: var(--gris); border: 2px dashed #8A8475; }
+.frise-coche { position: absolute; right: -2px; bottom: -2px; width: 24px; height: 24px; border-radius: 50%; background: var(--vert-clair); color: #fff; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; }
+.frise-num { margin-top: 10px; font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--gris); }
+.frise-libelle { font-family: var(--serif); font-weight: 600; font-size: .92rem; line-height: 1.2; }
+.frise-etape.courant .frise-libelle { color: var(--braise-fonce); }
+.frise-etape.avenir .frise-libelle { color: var(--gris); }
+.frise-detail { display: flex; flex-direction: column; align-items: center; gap: 3px; margin-top: 4px; font-size: .74rem; color: var(--gris); line-height: 1.3; }
+.frise-compte { font-weight: 600; color: var(--encre); }
+@media (prefers-reduced-motion: no-preference) {
+  .frise-etape.courant .frise-pastille { animation: halo-braise 2.6s ease-in-out infinite; }
+  @keyframes halo-braise { 50% { box-shadow: 0 0 0 9px rgba(232, 135, 30, .22), 0 0 0 16px rgba(232, 135, 30, .08); } }
+}
+@media (max-width: 700px) {
+  .frise-defile { overflow: visible; }
+  .frise-etapes { display: flex; flex-direction: column; gap: 16px; }
+  .frise-etape { text-align: left; padding: 0 0 0 72px; min-height: 58px; }
+  .frise-etape:not(:last-child)::after { top: 64px; bottom: -14px; left: 27px; right: auto; width: 4px; height: auto; }
+  .frise-etape.courant:not(:last-child)::after { background: linear-gradient(to bottom, var(--braise), var(--trait)); }
+  .frise-lien { position: static; align-items: stretch; padding: 0; min-width: 0; }
+  .frise-etape { overflow-wrap: anywhere; min-width: 0; }
+  .frise-carte { padding-left: 14px; padding-right: 14px; }
+  .frise-lien .frise-pastille { position: absolute; left: 0; top: 0; width: 58px; height: 58px; }
+  .frise-num { margin-top: 4px; }
+  .frise-detail { align-items: flex-start; }
+}
+
+/* Mini-frise, cartes « Mes dossiers », compteur par étape */
+.mini-frise { display: flex; align-items: center; margin: 8px 0; }
+.mini-point { position: relative; width: 13px; height: 13px; border-radius: 50%; flex: none; background: #fff; border: 2px solid #8A8475; }
+.mini-point:not(:first-child) { margin-left: 13px; }
+.mini-point:not(:first-child)::before { content: ''; position: absolute; right: calc(100% + 2px); top: 50%; width: 13px; height: 3px; margin-top: -1.5px; background: var(--trait); }
+.mini-point.fait { background: var(--noir); border-color: var(--noir); }
+.mini-point.fait + .mini-point::before { background: var(--noir); }
+.mini-point.courant { background: var(--braise); border-color: var(--braise-fonce); width: 18px; height: 18px; box-shadow: 0 0 0 4px rgba(232, 135, 30, .25); }
+.dossiers-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 18px; }
+.dossier-carte { background: var(--papier); border: 1px solid var(--trait); border-top: 4px solid var(--noir); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+.dossier-carte.reception, .dossier-carte.analyse, .dossier-carte.attribution, .dossier-carte.notification { border-top-color: var(--braise); }
+.dossier-tete { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.dossier-ref { font-weight: 700; font-size: .85rem; color: var(--gris); letter-spacing: .03em; }
+.dossier-carte h3 { font-size: 1.05rem; } .dossier-carte h3 a { color: var(--encre); text-decoration: none; } .dossier-carte h3 a:hover { text-decoration: underline; }
+.dossier-etape { display: flex; gap: 8px; align-items: center; margin: 0; color: var(--braise-fonce); } .dossier-etape b { color: var(--encre); }
+.dossier-echeance { margin: 0; font-size: .86rem; }
+.dossier-alertes { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; } .dossier-alertes .badge { white-space: normal; }
+.dossier-ouvrir { align-self: flex-start; margin-top: 8px; text-decoration: none; }
+.bascule-vue { display: flex; gap: 4px; }
+.filtre-actif { margin: 12px 0 0; font-size: .88rem; }
+.compteur-etapes { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 8px; }
+.compteur-etapes a { display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none; color: var(--gris); padding: 8px 2px 6px; border-radius: 10px; text-align: center; }
+.compteur-etapes a:hover { background: var(--fond-doux); }
+.compteur-etapes .frise-pastille { width: 62px; height: 62px; background: #fff; border: 2px dashed #8A8475; color: var(--gris); }
+.compteur-etapes li.occupe .frise-pastille { background: var(--noir); border: 2px solid var(--noir); color: #fff; }
+.compteur-etapes li.actif .frise-pastille { background: var(--braise); border: 2px solid var(--braise-fonce); color: var(--brun); box-shadow: 0 0 0 6px rgba(232, 135, 30, .25); }
+.compteur-etapes li.occupe a, .compteur-etapes li.actif a { color: var(--encre); }
+.compteur-nb { position: absolute; top: -6px; right: -6px; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px; background: #fff; color: var(--encre); border: 2px solid var(--trait); font-size: .85rem; display: flex; align-items: center; justify-content: center; font-family: var(--sans); }
+.compteur-etapes li.occupe .compteur-nb { background: var(--braise); color: var(--brun); border-color: #fff; }
+.compteur-libelle { font-size: .8rem; font-weight: 600; }
+@media (max-width: 1000px) { .compteur-etapes { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (max-width: 700px) { .compteur-etapes { grid-template-columns: repeat(3, minmax(0, 1fr)); } .dossiers-grille { grid-template-columns: 1fr; } }

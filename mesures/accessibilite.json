@@ -1,5 +1,5 @@
 {
- "date": "2026-11-18T22:27:40.194Z",
+ "date": "2026-11-19T00:11:20.336Z",
  "outil": "axe-core 4.10.2",
  "regles": "WCAG 2.1 A et AA",
  "ecrans": [
@@ -19,31 +19,31 @@
    "ecran": "Tableau de bord",
    "chemin": "/",
    "violations": [],
-   "passes": 24
+   "passes": 26
   },
   {
    "ecran": "Consultations",
    "chemin": "/consultations",
    "violations": [],
-   "passes": 23
+   "passes": 24
   },
   {
    "ecran": "Candidatures et offres",
    "chemin": "/consultation/c1/offres",
    "violations": [],
-   "passes": 28
+   "passes": 31
   },
   {
    "ecran": "Analyse — saisie des notes",
    "chemin": "/consultation/c1/analyse?vue=notation",
    "violations": [],
-   "passes": 27
+   "passes": 29
   },
   {
    "ecran": "Analyse — synthèse",
    "chemin": "/consultation/c1/analyse?vue=synthese",
    "violations": [],
-   "passes": 28
+   "passes": 29
   },
   {
    "ecran": "Fiche d'un marché",

@@ -1,0 +1,367 @@
+{
+  "etabli_le": "2026-11-19",
+  "taux_change": {
+    "usd_pour_1_eur": 1.1014,
+    "date": "2026-11-16",
+    "source": "change_bdf"
+  },
+  "montants": "hors taxes, en euros",
+  "sources": {
+    "supabase_tarifs": {
+      "url": "https://supabase.com/pricing",
+      "consulte_le": "2026-11-19"
+    },
+    "supabase_calcul": {
+      "url": "https://supabase.com/docs/guides/platform/compute-and-disk",
+      "consulte_le": "2026-11-19"
+    },
+    "supabase_pitr": {
+      "url": "https://supabase.com/docs/guides/platform/manage-your-usage/point-in-time-recovery",
+      "consulte_le": "2026-11-19"
+    },
+    "supabase_sauvegardes": {
+      "url": "https://supabase.com/docs/guides/platform/backups",
+      "consulte_le": "2026-11-19"
+    },
+    "supabase_regions": {
+      "url": "https://supabase.com/docs/guides/platform/regions",
+      "consulte_le": "2026-11-19"
+    },
+    "scaleway_bdd": {
+      "url": "https://www.scaleway.com/en/pricing/managed-databases/",
+      "consulte_le": "2026-11-19"
+    },
+    "scaleway_stockage": {
+      "url": "https://www.scaleway.com/en/pricing/storage/",
+      "consulte_le": "2026-11-19"
+    },
+    "scaleway_instances": {
+      "url": "https://www.scaleway.com/en/pricing/virtual-instances/",
+      "consulte_le": "2026-11-19"
+    },
+    "scaleway_reseau": {
+      "url": "https://www.scaleway.com/en/pricing/network/",
+      "consulte_le": "2026-11-19"
+    },
+    "scaleway_tem": {
+      "url": "https://www.scaleway.com/en/pricing/managed-services/",
+      "consulte_le": "2026-11-19"
+    },
+    "ovh_snc_tarifs": {
+      "url": "https://www.ovhcloud.com/sites/default/files/external_files/snc-cloud-platform-price-list_fr_20261106.pdf",
+      "consulte_le": "2026-11-19",
+      "note": "grille « prix applicables à compter du 30 septembre 2026 »"
+    },
+    "ovh_support_business": {
+      "url": "https://www.ovhcloud.com/fr/support-levels/business/",
+      "consulte_le": "2026-11-19",
+      "note": "page ouverte le 19/11/2026 : 10 % de la facture mensuelle, seuil minimum 250 € HT/mois ; la grille SNC indique que Business est le niveau minimum requis"
+    },
+    "ovh_domaine_fr": {
+      "url": "https://www.ovhcloud.com/fr/domains/tld/",
+      "consulte_le": "2026-11-19",
+      "note": ".fr : création 4,99 € HT, renouvellement 7,79 € HT"
+    },
+    "anssi_catalogue": {
+      "url": "https://messervices.cyber.gouv.fr/visas/catalogue-produits-services-profils-de-protection-sites-certifies-qualifies-agrees-anssi.pdf",
+      "consulte_le": "2026-11-19",
+      "note": "catalogue mis à jour le 18/11/2026, § 3.3 SecNumCloud ; OVH SNC Cloud Platform qualifié du 31/07/2026 au 31/07/2029"
+    },
+    "uptimerobot": {
+      "url": "https://uptimerobot.com/pricing/",
+      "consulte_le": "2026-11-19"
+    },
+    "github_pages_limites": {
+      "url": "https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits",
+      "consulte_le": "2026-11-19"
+    },
+    "pentest_fourchettes": {
+      "url": "https://kolonell.com/fr/blog/prix-pentest-application-web-pme-france-2026",
+      "consulte_le": "2026-11-19",
+      "note": "blog commercial d'un prestataire publié le 01/10/2026, page ouverte le 19/11/2026 : ordre de grandeur seulement"
+    },
+    "change_bdf": {
+      "url": "https://www.banque-france.fr/fr/statistiques/taux-et-cours/taux-de-change-parites-quotidiennes-2026-11-16",
+      "consulte_le": "2026-11-19"
+    },
+    "github_actions_planification": {
+      "url": "https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows",
+      "consulte_le": "2026-11-19"
+    },
+    "github_actions_desactivation_60j": {
+      "url": "https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-workflow-runs/disabling-and-enabling-a-workflow",
+      "consulte_le": "2026-11-19"
+    },
+    "cloudflare_dls": {
+      "url": "https://developers.cloudflare.com/data-localization/",
+      "consulte_le": "2026-11-19",
+      "note": "Enterprise-only paid add-on"
+    }
+  },
+  "prix_unitaires": {
+    "supabase_pro_usd_mois": 25,
+    "supabase_credit_calcul_usd_mois": 10,
+    "supabase_calcul_usd_mois": {
+      "Micro_1Go": 10,
+      "Small_2Go": 15,
+      "Medium_4Go": 60,
+      "Large_8Go": 110
+    },
+    "supabase_disque_inclus_go": 8,
+    "supabase_disque_usd_go_mois": 0.125,
+    "supabase_fichiers_inclus_go": 100,
+    "supabase_fichiers_usd_go_mois": 0.0213,
+    "supabase_sortie_incluse_go": 250,
+    "supabase_sortie_usd_go": 0.09,
+    "supabase_pitr_usd_mois": {
+      "7_jours": 100,
+      "14_jours": 200,
+      "28_jours": 400
+    },
+    "supabase_sauvegardes_quotidiennes_jours": {
+      "Pro": 7,
+      "Team": 14,
+      "Enterprise": 30
+    },
+    "supabase_sso_saml_mau_inclus_pro": 50,
+    "supabase_sso_saml_usd_par_mau": 0.015,
+    "supabase_domaine_perso_usd_mois": 10,
+    "supabase_team_usd_mois": 599,
+    "scaleway_instance_eur_mois": {
+      "DEV1-S_2vCPU_2Go": 6.55,
+      "PRO2-XXS_2vCPU_8Go": 40.95,
+      "POP2-2C-8G": 53.65
+    },
+    "scaleway_ipv4_eur_heure": 0.005,
+    "scaleway_bloc_5k_eur_go_heure": 0.00013,
+    "scaleway_bdd_DB-DEV-S_eur_heure": 0.0156,
+    "scaleway_bdd_stockage_5k_eur_go_mois": 0.0993,
+    "scaleway_bdd_sauvegardes_eur_go_mois": 0.03,
+    "scaleway_objet_eur_go_mois": {
+      "multi_az": 0.01606,
+      "une_zone": 0.00803,
+      "glacier": 0.00246
+    },
+    "scaleway_objet_sortie": "75 Go gratuits par mois puis 0,01 €/Go",
+    "scaleway_edge_starter_eur_mois": 0.99,
+    "scaleway_waf_starter_eur_mois": 4.0,
+    "scaleway_tem": {
+      "gratuit_par_mois": 300,
+      "eur_par_1000": 0.25,
+      "offre_scale_eur_mois": 80,
+      "sla_scale": "99,9 %"
+    },
+    "ovh_snc_b3-8_eur_mois": 66.67,
+    "ovh_snc_bloc_eur_gio_mois": 0.1047,
+    "ovh_snc_objet_eur_gio_mois": 0.0234,
+    "ovh_snc_ipv4_bloc_28_eur_mois": 35.66,
+    "ovh_snc_spn_eur_mois": 1120.0,
+    "ovh_support_business": "10 % de la facture, minimum 250 € HT/mois (à vérifier)",
+    "domaine_fr_ovh_eur_an": {
+      "premiere_annee": 4.99,
+      "renouvellement": 7.79
+    },
+    "uptimerobot_solo_usd_mois_annuel": 9,
+    "uptimerobot_solo_usd_mois_mensuel": 10,
+    "pentest_eur_ht": {
+      "appli_simple_1_role": [
+        4000,
+        6000
+      ],
+      "appli_metier_2_3_roles": [
+        6000,
+        10000
+      ],
+      "appli_plus_api_rest": [
+        8000,
+        12000
+      ],
+      "appli_api_infra_cloud": [
+        11000,
+        15000
+      ],
+      "test_annuel_architecture_inchangee": [
+        5000,
+        7000
+      ],
+      "tjm_non_qualifie": [
+        900,
+        1200
+      ],
+      "tjm_PASSI": [
+        1200,
+        1500
+      ],
+      "budget_retenu_initial": 10000,
+      "budget_retenu_annuel": 7000
+    },
+    "scaleway_edge_starter_domaine_perso": "facturé par Secret Manager (montant à vérifier)"
+  },
+  "hypotheses_volume": {
+    "agents": [
+      20,
+      60
+    ],
+    "consultations_an": 150,
+    "pieces_go_an": [
+      5,
+      20
+    ],
+    "duree_marche_ans": 3,
+    "fichiers_go_fin_annee_3_max": 60,
+    "base_go_estimee": "moins de 2 Go (hypothèse non mesurée)",
+    "sortie_go_an_hypothese": 100,
+    "courriels_mois_hypothese": 1500,
+    "sauvegardes_externes_go_max": 300,
+    "bloc_go_auto_hebergement": 100
+  },
+  "marge_securite": 0.25,
+  "scenarios": {
+    "A1": {
+      "lignes_eur_mois": {
+        "supabase_pro": 22.7,
+        "calcul_Small_moins_credit": 4.54,
+        "domaine_perso_api_supabase": 9.08,
+        "pages_statiques_edge_starter": 0.99,
+        "tache_sauvegarde_DEV1-S_plus_IPv4": 10.2,
+        "sauvegardes_externes_12_mois_300Go": 4.82,
+        "courriels_TEM": 1.0,
+        "supervision_uptimerobot_solo": 8.17,
+        "disque_systeme_DEV1-S_10Go_provision_a_verifier": 0.95
+      },
+      "total_eur_mois": 62.45,
+      "total_eur_an_avec_domaine": 757.19,
+      "cloud_avec_marge_25pct_eur_an": 946.49,
+      "mise_en_service": {
+        "heures": 32,
+        "taux_horaire": "à fixer",
+        "test_intrusion_initial_eur_ht": 10000
+      },
+      "recurrent_annuel": {
+        "cloud_avec_marge_eur_ht": 946.49,
+        "test_intrusion_annuel_eur_ht": 7000,
+        "heures_mco": 58,
+        "taux_horaire": "à fixer",
+        "test_intrusion_annuel_note": "à partir de la 2e année"
+      }
+    },
+    "A2": {
+      "lignes_eur_mois": {
+        "supabase_pro": 22.7,
+        "calcul_Small_moins_credit": 4.54,
+        "domaine_perso_api_supabase": 9.08,
+        "pages_statiques_edge_starter": 0.99,
+        "tache_sauvegarde_DEV1-S_plus_IPv4": 10.2,
+        "sauvegardes_externes_12_mois_300Go": 4.82,
+        "courriels_TEM": 1.0,
+        "supervision_uptimerobot_solo": 8.17,
+        "pitr_7_jours": 90.79,
+        "disque_systeme_DEV1-S_10Go_provision_a_verifier": 0.95
+      },
+      "total_eur_mois": 153.24,
+      "total_eur_an_avec_domaine": 1846.67,
+      "cloud_avec_marge_25pct_eur_an": 2308.34,
+      "mise_en_service": {
+        "heures": 32,
+        "taux_horaire": "à fixer",
+        "test_intrusion_initial_eur_ht": 10000
+      },
+      "recurrent_annuel": {
+        "cloud_avec_marge_eur_ht": 2308.34,
+        "test_intrusion_annuel_eur_ht": 7000,
+        "heures_mco": 58,
+        "taux_horaire": "à fixer",
+        "test_intrusion_annuel_note": "à partir de la 2e année"
+      }
+    },
+    "B1": {
+      "lignes_eur_mois": {
+        "instance_PRO2-XXS": 40.95,
+        "ipv4": 3.65,
+        "bloc_100Go": 9.49,
+        "objet_fichiers_60Go": 0.96,
+        "sauvegardes_externes_autre_fournisseur_300Go_a_verifier": 4.82,
+        "courriels_TEM": 1.0,
+        "supervision_uptimerobot_solo": 8.17
+      },
+      "total_eur_mois": 69.04,
+      "total_eur_an_avec_domaine": 836.27,
+      "cloud_avec_marge_25pct_eur_an": 1045.34,
+      "mise_en_service": {
+        "heures": 48,
+        "taux_horaire": "à fixer",
+        "test_intrusion_initial_eur_ht": 10000
+      },
+      "recurrent_annuel": {
+        "cloud_avec_marge_eur_ht": 1045.34,
+        "test_intrusion_annuel_eur_ht": 7000,
+        "heures_mco": 106,
+        "taux_horaire": "à fixer",
+        "test_intrusion_annuel_note": "à partir de la 2e année"
+      }
+    },
+    "B2": {
+      "lignes_eur_mois": {
+        "snc_b3-8": 66.67,
+        "snc_bloc_100Gio": 10.47,
+        "snc_objet_60Gio": 1.4,
+        "snc_ipv4_bloc_28_a_verifier": 35.66,
+        "support_business_minimum_a_verifier": 250.0,
+        "sauvegardes_externes_300Go": 4.82,
+        "courriels_TEM": 1.0,
+        "supervision_uptimerobot_solo": 8.17
+      },
+      "total_eur_mois": 378.19,
+      "total_eur_an_avec_domaine": 4546.07,
+      "cloud_avec_marge_25pct_eur_an": 5682.59,
+      "mise_en_service": {
+        "heures": 64,
+        "taux_horaire": "à fixer",
+        "test_intrusion_initial_eur_ht": 10000
+      },
+      "recurrent_annuel": {
+        "cloud_avec_marge_eur_ht": 5682.59,
+        "test_intrusion_annuel_eur_ht": 7000,
+        "heures_mco": 120,
+        "taux_horaire": "à fixer",
+        "test_intrusion_annuel_note": "à partir de la 2e année"
+      },
+      "si_spn_obligatoire_eur_an_avec_marge": 22482.59
+    }
+  },
+  "a_verifier": [
+    "nécessité du bloc IPv4 /28 et du réseau SPN sur SNC Cloud Platform (la grille ne le dit pas)",
+    "coût Secret Manager lié au domaine perso d'Edge Services",
+    "compatibilité de vavang avec Supabase auto-hébergé (non testé)",
+    "prix d'un stockage objet chez un second fournisseur pour B1",
+    "disque système de l'instance DEV1-S (provision de 0,95 €/mois retenue)",
+    "fourchettes de test d'intrusion (source commerciale, à remplacer par un devis)",
+    "engagement de disponibilité (SLA) des instances Scaleway : page SLA non lisible par nos outils (403)",
+    "renouvellement de la qualification SecNumCloud d'Outscale (30/11/2026) et d'OVH Hosted Private Cloud (29/12/2026)",
+    "taille réelle de la base et volume réel de courriels (hypothèses non mesurées)"
+  ],
+  "relecture_contradictoire": {
+    "date": "2026-11-19",
+    "verifie_sur_source": [
+      "Supabase (tarifs, calcul, PITR, sauvegardes, régions)",
+      "Scaleway (réseau, stockage, instances, bases gérées, courriels)",
+      "OVHcloud (grille SNC, support Business, domaine .fr)",
+      "catalogue ANSSI",
+      "UptimeRobot",
+      "Banque de France 16/11/2026",
+      "GitHub Pages et Actions",
+      "Cloudflare DLS",
+      "kolonell.com"
+    ],
+    "corrections": [
+      "test d'intrusion : fourchettes citées fausses (5 000-8 000 et 6 000-18 000 € absents de la source ; surcoût PASSI 15-30 % absent) ; budget porté à 10 000 € initial et 7 000 €/an",
+      "ajout d'une provision de 0,95 €/mois pour le disque de l'instance DEV1-S (A1, A2)",
+      "support Business OVH et domaine .fr : vérifiés sur la page officielle, mention « à vérifier » retirée",
+      "PITR : la documentation officielle dit toutes tailles de calcul, contradiction levée",
+      "Edge Services : le domaine personnalisé n'est pas inclus, il est facturé par Secret Manager",
+      "Cloudflare DLS Enterprise : désormais sourcé",
+      "part en dollars de A2 : 88 % et non 90 %",
+      "B2 avec SPN : 22 480 € avec marge (18 000 € avant marge)"
+    ]
+  }
+}

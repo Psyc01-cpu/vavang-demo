@@ -36,6 +36,43 @@
     return { pretes, anomalies };
   }
 
+  /* ---------- Plan de sauvegarde (rotation à plusieurs échéances, voir .github/workflows/sauvegarde.yml) ---------- */
+  const DEPOT = (window.CONFIG && CONFIG.depotSauvegarde) || 'Psyc01-cpu/vavang-demo';
+  const GH = 'https://github.com/' + DEPOT;
+  // [échéance, fréquence, conservation, lieu de stockage, chiffrement, perte maximale si on remonte à cette échéance]
+  const ECHEANCES = [
+    ['Courante', 'Toutes les 3 heures (minute 17, heure UTC)', '3 jours', 'Artefact GitHub Actions', 'Oui si le secret SAUVEGARDE_CLE existe, sinon non', '3 h'],
+    ['Quotidienne', 'Chaque jour à 02:17 UTC (06:17 à La Réunion), sauf le dimanche', '30 jours', 'Artefact GitHub Actions', 'Oui si le secret SAUVEGARDE_CLE existe, sinon non', '24 h (au-delà de 3 jours)'],
+    ['Hebdomadaire', 'Le dimanche à 02:17 UTC', '90 jours (maximum de GitHub pour un dépôt public)', 'Artefact GitHub Actions', 'Oui si le secret SAUVEGARDE_CLE existe, sinon non', '7 jours (au-delà de 30 jours)'],
+    ['Mensuelle', 'Le premier dimanche du mois, seulement si le secret SAUVEGARDE_CLE existe', '12 mois (les 12 dernières)', 'Release GitHub', 'Oui, toujours : rien n\'est publié sans chiffrement', '1 mois (au-delà de 90 jours)']
+  ];
+  const ACTIONS_SAUVEGARDE = ['Sauvegarde exportée', 'Export complet des données', 'Restauration de sauvegarde', 'Restauration d\'une sauvegarde'];
+  async function cartePlanSauvegarde(genererExport) {
+    const enLigne = D.mode === 'supabase';
+    let dernieres = null;
+    if (D.peut('journal.lire')) {
+      try { dernieres = (await D.lister('journal', {}, { ordre: 'date', desc: true, limite: 1000 })).filter(l => ACTIONS_SAUVEGARDE.includes(l.action)).slice(0, 8); } catch (e) { dernieres = null; }
+    }
+    const lienExterne = (href, texte) => h('a', { href, target: '_blank', rel: 'noopener' }, texte);
+    return U.carte('Plan de sauvegarde', [
+      h('p', enLigne
+        ? 'Version en ligne : la base et les fichiers sont sauvegardés automatiquement, hors de l\'hébergeur, par une action GitHub planifiée. Chaque sauvegarde porte son échéance dans son nom (par exemple « sauvegarde-quotidienne-20261119-0217 », heure UTC).'
+        : 'Version installée sur un poste : les données vivent dans ce navigateur et ne sont pas sauvegardées automatiquement. La seule sauvegarde est l\'export complet (archive ZIP), à conserver hors du poste. Le plan ci-dessous s\'applique à la version en ligne.'),
+      U.tableau([{ titre: 'Échéance', valeur: e => h('b', e[0]) }, { titre: 'Fréquence', valeur: e => e[1] }, { titre: 'Conservation', valeur: e => e[2] }, { titre: 'Lieu de stockage', valeur: e => e[3] }, { titre: 'Chiffrement', valeur: e => e[4] }, { titre: 'Perte maximale (RPO)', valeur: e => e[5] }], ECHEANCES, { legende: 'Échéances de sauvegarde de la version en ligne' }),
+      h('p.aide', 'Le stockage chez GitHub est séparé de la base (Supabase). Les horaires de GitHub ne sont pas garantis : une exécution peut être retardée. À ce jour, le secret SAUVEGARDE_CLE n\'est pas défini sur la démonstration : les artefacts sont en clair (données fictives) et aucune copie mensuelle n\'est publiée. Coût : 0 € (dépôt public).'),
+      h('h3', { style: { marginTop: '16px' } }, 'Sauvegarder maintenant'),
+      enLigne
+        ? h('div', h('p', 'La sauvegarde se lance depuis GitHub, avec un compte qui a les droits d\'écriture sur le dépôt : ouvrez la page de l\'action, cliquez sur « Run workflow », choisissez l\'échéance (courante par défaut) puis confirmez. Elle dure environ une minute et demie ; l\'artefact apparaît en bas de la page de l\'exécution.'),
+          h('div.actions', h('a.bouton.accent', { href: GH + '/actions/workflows/sauvegarde.yml', target: '_blank', rel: 'noopener', style: { textDecoration: 'none' } }, 'Sauvegarder maintenant (GitHub)')))
+        : h('div', h('p', 'Génère l\'export complet de ce poste (archive ZIP) et le télécharge. Le résultat s\'affiche dans la carte « Export complet des données » ci-dessous.'), h('div.actions', U.bouton('Sauvegarder maintenant', genererExport, 'accent'))),
+      h('h3', { style: { marginTop: '16px' } }, 'Dernières sauvegardes'),
+      enLigne ? h('p', 'Les sauvegardes elles-mêmes se téléchargent depuis GitHub : ', lienExterne(GH + '/actions/workflows/sauvegarde.yml', 'exécutions de l\'action de sauvegarde'), ' (artefacts ; connexion à GitHub demandée) et ', lienExterne(GH + '/releases', 'releases'), ' (copies mensuelles chiffrées). Leur liste n\'est pas chargée ici : la politique de sécurité de l\'application n\'autorise que les échanges avec son propre serveur.') : null,
+      dernieres == null ? h('p.aide', 'Le journal n\'est pas accessible avec votre profil.') : U.tableau([{ titre: 'Date', valeur: l => U.dateHeure(l.date) }, { titre: 'Action', valeur: l => l.action }, { titre: 'Détail', valeur: l => l.objet_libelle || '' }, { titre: 'Par', valeur: l => l.auteur_nom || '' }], dernieres,
+        { legende: 'Sauvegardes, exports et restaurations inscrits au journal', vide: enLigne ? 'Aucune sauvegarde inscrite au journal depuis la dernière remise à zéro de la démonstration.' : 'Aucun export ni restauration inscrit au journal.' }),
+      dernieres && enLigne ? h('p.aide', 'Ce tableau vient du journal de l\'application. Sur la démonstration, les données sont remises à zéro chaque nuit : il ne montre que les sauvegardes faites depuis.') : null
+    ]);
+  }
+
   E.reprise = async function () {
     const peutImporter = D.peut('reprise.importer'), peutExporter = D.peut('export.complet');
     const [reprises, marches, consultations, fournisseurs] = await Promise.all([D.lister('reprises', {}, { ordre: 'date', desc: true }), D.lister('marches', {}, { ordre: 'numero' }), E.consultationsVisibles(), D.lister('fournisseurs')]);
@@ -78,7 +115,12 @@
       U.message(n + ' élément(s) supprimé(s), ' + gardes + ' conservé(s).'); U.recharger();
     };
     const zoneExport = h('div');
+    const genererExport = async () => { zoneExport.replaceChildren(h('p.aide', 'Préparation de l\'archive…')); const r = await Docs.exportComplet(t => { zoneExport.firstChild.textContent = t; });
+      U.telechargerBlob(r.blob, 'export-complet-' + D.aujourdhui() + '.zip');
+      zoneExport.replaceChildren(h('div.note-info.ok', 'Archive générée (' + U.taille(r.blob.size) + '). Inventaire de contrôle :'), U.tableau([{ titre: 'Table', valeur: i => i.libelle }, { titre: 'Éléments', num: true, valeur: i => i.nombre_de_lignes }, { titre: 'Fichiers', valeur: i => i.fichiers }], r.inventaire)); };
+    const planSauvegarde = peutExporter ? await cartePlanSauvegarde(genererExport) : null;
     return h('div', U.titrePage('Reprise et export', 'Reprise des dossiers existants et restitution complète des données.'),
+      planSauvegarde,
       peutImporter ? U.carte('Reprendre un tableau de suivi (XLSX, XLS, ODS, CSV)', [h('p', 'Déposez un tableau de marchés ou de fournisseurs. La reprise se fait en deux temps : une reprise à blanc qui contrôle les données sans rien écrire, puis la reprise définitive. Un retour arrière reste possible.'),
         h('label.bouton.accent', 'Choisir un fichier', h('input', { type: 'file', hidden: true, id: 'fichier-reprise', accept: '.xlsx,.xls,.ods,.csv', onchange: U.agir(e => importerTableur(e.target.files[0])) }))]) : null,
       zoneImport,
@@ -103,9 +145,7 @@
         : peutExporter && D.mode === 'supabase' ? U.carte('Restaurer une sauvegarde', h('div.note-info', h('b', 'Indisponible dans la version en ligne. '), 'La restauration remplacerait les données partagées par tous les utilisateurs du serveur : elle n\'est proposée que dans la version installée sur un poste. Les données de démonstration sont remises à zéro automatiquement chaque nuit (vers 3 h, heure de La Réunion). L\'export complet ci-dessous reste disponible.')) : null,
       peutExporter ? U.carte('Export complet des données (réversibilité)', [h('p', 'Archive ZIP contenant toutes les tables (JSON et CSV), les fichiers sources déposés, le texte extrait des pièces, les journaux, les utilisateurs et habilitations, un inventaire et un dictionnaire des données. Aucun format propriétaire.'),
         D.mode === 'supabase' ? h('p.aide', 'Version en ligne : l\'archive ne contient que les données que votre profil a le droit de consulter (règles d\'accès du serveur). Les comptes de connexion, mots de passe et facteurs de double authentification n\'en font pas partie.') : null, zoneExport],
-        [U.bouton('Générer l\'export complet', async () => { zoneExport.replaceChildren(h('p.aide', 'Préparation de l\'archive…')); const r = await Docs.exportComplet(t => { zoneExport.firstChild.textContent = t; });
-          U.telechargerBlob(r.blob, 'export-complet-' + D.aujourdhui() + '.zip');
-          zoneExport.replaceChildren(h('div.note-info.ok', 'Archive générée (' + U.taille(r.blob.size) + '). Inventaire de contrôle :'), U.tableau([{ titre: 'Table', valeur: i => i.libelle }, { titre: 'Éléments', num: true, valeur: i => i.nombre_de_lignes }, { titre: 'Fichiers', valeur: i => i.fichiers }], r.inventaire)); }, 'accent')]) : null);
+        [U.bouton('Générer l\'export complet', genererExport, 'accent')]) : null);
   };
   U.route('/reprise', E.reprise);
 })();

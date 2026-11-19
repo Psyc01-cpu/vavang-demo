@@ -51,7 +51,7 @@
       h('nav', { 'aria-label': 'Menu principal' },
         lien('/', 'Tableau de bord'), lien('/notifications', 'Notifications'),
         h('div.groupe', 'Préparation'), lien('/besoins', 'Besoins et seuils'), lien('/procedure', 'Aide au choix de la procédure'),
-        h('div.groupe', 'Passation'), lien('/consultations', 'Consultations'), lien('/modeles', 'Modèles'),
+        h('div.groupe', 'Passation'), lien('/consultations', 'Consultations (mes dossiers)'), lien('/modeles', 'Modèles'),
         h('div.groupe', 'Exécution'), lien('/marches', 'Marchés'), lien('/fournisseurs', 'Fournisseurs'), lien('/evaluations', 'Évaluations des titulaires'),
         h('div.groupe', 'Administration'),
         lien('/support', 'Demandes d\'assistance', ['support.declarer', 'support.traiter']),
@@ -83,6 +83,7 @@
     for (const a of analyses) { const l = lotsVis.find(x => x.id === a.lot_id); if (l && a.statut === 'en_relecture') alertes.push({ ton: 'alerte', quand: a.soumise_le, texte: 'Analyse à valider — ' + parId[l.consultation_id].reference + ', lot ' + l.numero, lien: '/consultation/' + l.consultation_id + '/analyse?lot=' + l.id }); }
     const circuit = await D.circuitDce();
     for (const d of docs) { const e = circuit.find(x => x.id === d.statut); if (ids.includes(d.consultation_id) && e) alertes.push({ ton: 'alerte', texte: 'DCE en attente (' + e.libelle.toLowerCase() + ') — ' + d.titre + ' (' + parId[d.consultation_id].reference + ')', lien: '/consultation/' + d.consultation_id + '/dce/' + d.id }); }
+    for (const d of demandes) if (ids.includes(d.consultation_id) && d.statut === 'sans_reponse' && !d.decision) alertes.push({ ton: 'danger', texte: 'Candidat sans réponse : décision à prendre — ' + E.L.demande[d.type] + ' (' + parId[d.consultation_id].reference + ')', lien: '/consultation/' + d.consultation_id + '/offres' });
     for (const d of demandes) if (ids.includes(d.consultation_id) && d.statut === 'envoyee' && d.echeance) { const j = Calcul.joursAvant(d.echeance, auj); if (j < 0) alertes.push({ ton: 'danger', texte: 'Réponse attendue depuis le ' + U.date(d.echeance) + ' — ' + E.L.demande[d.type] + ' (' + parId[d.consultation_id].reference + ')', lien: '/consultation/' + d.consultation_id + '/offres' }); else if (j <= 3) alertes.push({ ton: 'alerte', texte: 'Échéance de réponse dans ' + j + ' j — ' + E.L.demande[d.type] + ' (' + parId[d.consultation_id].reference + ')', lien: '/consultation/' + d.consultation_id + '/offres' }); }
     for (const c of consultations) {
       if (c.date_limite_offres && ['preparation', 'publiee'].includes(c.statut)) { const j = Calcul.joursAvant(c.date_limite_offres, auj); if (j >= 0 && j <= 15) alertes.push({ ton: 'info', texte: 'Date limite de remise des offres dans ' + j + ' j — ' + c.reference, lien: '/consultation/' + c.id }); }
@@ -102,7 +103,7 @@
   };
 
   E.tableauDeBord = async function () {
-    const r = await E.alertes();
+    const [r, donneesFrise] = await Promise.all([E.alertes(), E.chargerDonneesFrise ? E.chargerDonneesFrise() : null]);
     const enCours = r.consultations.filter(c => !['close', 'attribuee'].includes(c.statut));
     const marchesEnCours = r.marches.filter(m => m.statut === 'en_cours');
     const parStatut = Object.keys(E.L.consultation).map(s => [s, r.consultations.filter(c => c.statut === s).length]);
@@ -117,6 +118,8 @@
         h('div.indicateur', h('b', marchesEnCours.length), h('span', 'marchés en cours d\'exécution')),
         h('div.indicateur', h('b', U.nombre(Calcul.somme(marchesEnCours.map(m => m.montant_notifie)) / 1000, 0) + ' k€'), h('span', 'montant notifié des marchés en cours (HT)')),
         h('div.indicateur', h('b', r.alertes.filter(a => a.ton !== 'info').length), h('span', 'alertes à traiter'))),
+      donneesFrise ? U.carte('Où en sont mes dossiers', [h('p.aide', 'Nombre de dossiers à chaque étape du parcours. Cliquez sur une pastille pour afficher les dossiers concernés.'),
+        E.compteurEtapes(r.consultations.map(c => E.etapeConsultation(c, donneesFrise)))], U.bouton('Voir mes dossiers', () => U.aller('/consultations'), 'secondaire')) : null,
       h('div.grille2',
         U.carte('Alertes et échéances', r.alertes.length ? U.tableau([
           { titre: 'Niveau', classe: 'etroit', valeur: a => U.badge({ danger: 'Urgent', alerte: 'À traiter', info: 'Information' }[a.ton], a.ton) },

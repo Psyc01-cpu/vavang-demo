@@ -22,18 +22,37 @@
     return c;
   };
 
+  // Vue « Mes dossiers » : un dossier = une carte avec sa mini-frise ; bascule « Cartes / Tableau » (choix mémorisé sur ce poste) ; filtre ?etape=… depuis les pastilles.
+  const lireVue = () => { try { return localStorage.getItem('vavang-vue-dossiers') === 'tableau' ? 'tableau' : 'cartes'; } catch (e) { return 'cartes'; } };
+  const ecrireVue = v => { try { localStorage.setItem('vavang-vue-dossiers', v); } catch (e) { /* stockage indisponible : choix non mémorisé */ } };
   E.consultations = async function () {
-    const liste = await E.consultationsVisibles();
-    const nouveau = D.peut('consultations.ecrire') ? U.bouton('Nouvelle consultation', async () => {
+    const [liste, donnees] = await Promise.all([E.consultationsVisibles(), E.chargerDonneesFrise()]);
+    const etats = Object.fromEntries(liste.map(c => [c.id, E.etapeConsultation(c, donnees)]));
+    const filtre = U.param('etape'); const etapeFiltre = E.ETAPES_PARCOURS.find(e => e.cle === filtre);
+    const affichees = etapeFiltre ? liste.filter(c => etats[c.id].cle === filtre) : liste;
+    const nouveau = D.peut('consultations.ecrire') ? U.bouton('Nouveau dossier', async () => {
       const n = (await D.lister('consultations')).length + 1;
-      U.editer('Nouvelle consultation', E.champsConsultation(), { reference: new Date().getFullYear() + '-' + String(n).padStart(3, '0') }, async v => { const c = await E.creerConsultation(v); location.hash = '/consultation/' + c.id; });
+      U.editer('Nouveau dossier de consultation', E.champsConsultation(), { reference: new Date().getFullYear() + '-' + String(n).padStart(3, '0') }, async v => { const c = await E.creerConsultation(v); location.hash = '/consultation/' + c.id; });
     }, 'accent') : null;
-    return h('div', U.titrePage('Consultations', D.peut('consultations.toutes') ? 'Tous les dossiers de passation.' : 'Les dossiers qui vous sont affectés.', nouveau),
-      U.carte(null, U.tableau([
-        { titre: 'Référence', valeur: c => h('b', c.reference) }, { titre: 'Objet', valeur: c => c.objet }, { titre: 'Nature', valeur: c => E.L.nature[c.nature] || '—' },
-        { titre: 'Procédure', valeur: c => c.procedure }, { titre: 'Estimation HT', num: true, valeur: c => U.euros(c.montant_estime) },
-        { titre: 'Remise des offres', valeur: c => U.date(c.date_limite_offres) }, { titre: 'Étape', valeur: c => E.badge('consultation', c.statut) }],
-        liste, { surClic: c => U.aller('/consultation/' + c.id), vide: 'Aucune consultation ne vous est accessible.' })));
+    const zone = h('div');
+    let vue = lireVue();
+    const bascule = h('div.bascule-vue', { role: 'group', 'aria-label': 'Affichage des dossiers' });
+    const dessiner = () => {
+      bascule.replaceChildren(...[['cartes', 'Cartes'], ['tableau', 'Tableau']].map(x => h('button.bouton.petit' + (vue === x[0] ? '' : '.secondaire'), { type: 'button', 'aria-pressed': vue === x[0] ? 'true' : 'false', 'data-vue': x[0], onclick: () => { vue = x[0]; ecrireVue(vue); dessiner(); } }, x[1])));
+      if (!affichees.length) { zone.replaceChildren(U.carte(null, U.vide(etapeFiltre ? 'Aucun dossier à l\'étape « ' + etapeFiltre.libelle + ' ».' : 'Aucune consultation ne vous est accessible.'))); return; }
+      zone.replaceChildren(vue === 'cartes' ? h('div.dossiers-grille', affichees.map(c => E.carteDossier(c, etats[c.id])))
+        : U.carte(null, U.tableau([
+          { titre: 'Référence', valeur: c => h('b', c.reference) }, { titre: 'Objet', valeur: c => c.objet }, { titre: 'Nature', valeur: c => E.L.nature[c.nature] || '—' },
+          { titre: 'Procédure', valeur: c => c.procedure }, { titre: 'Estimation HT', num: true, valeur: c => U.euros(c.montant_estime) },
+          { titre: 'Remise des offres', valeur: c => U.date(c.date_limite_offres) }, { titre: 'Statut', valeur: c => E.badge('consultation', c.statut) },
+          { titre: 'Étape du parcours', valeur: c => [E.miniFrise(etats[c.id]), h('div.aide', etats[c.id].courante.libelle)] }],
+          affichees, { surClic: c => U.aller('/consultation/' + c.id) })));
+    };
+    dessiner();
+    return h('div', U.titrePage('Mes dossiers', D.peut('consultations.toutes') ? 'Tous les dossiers de passation, étape par étape.' : 'Les dossiers qui vous sont affectés, étape par étape.', nouveau),
+      U.carte('Où en sont mes dossiers', [E.compteurEtapes(Object.values(etats), filtre),
+        etapeFiltre ? h('p.filtre-actif', 'Filtre : étape « ' + etapeFiltre.libelle + ' » — ' + affichees.length + ' dossier(s). ', h('a', { href: '#/consultations' }, 'Afficher tous les dossiers')) : null], bascule),
+      zone);
   };
   U.route('/consultations', E.consultations);
 
@@ -48,6 +67,7 @@
     const f = D.fonctionSurDossier(c.id);
     return [U.fil([['Consultations', '/consultations'], [c.reference]]),
       U.titrePage(c.objet, c.reference + ' · ' + (E.L.nature[c.nature] || '') + ' · ' + c.procedure, [E.badge('consultation', c.statut), f ? U.badge('Votre fonction sur ce dossier : ' + f, 'info') : null]),
+      E.friseConsultation ? E.friseConsultation(c) : null,
       U.onglets(E.ONGLETS, onglet, o => U.aller('/consultation/' + c.id + (o === 'fiche' ? '' : '/' + o)))];
   };
 

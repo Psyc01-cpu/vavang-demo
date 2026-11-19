@@ -241,7 +241,7 @@ try {
 
   const zevi = CANDIDATS[2]; const oz = await page.evaluate(async (id, n) => (await D.lister('offres', { consultation_id: id })).find(o => o.candidat === n).id, cid, zevi.nom);
   await aller('/consultation/' + cid + '/offre/' + oz, 'Demandes adressées à ce candidat'); await (await page.$('#contenu label.bouton input[type=file]')).uploadFile(zevi.dc2Tardif); await attendre('Pièces du pli (' + (zevi.fichiers.length + 1) + ')', 30000);
-  await clic('Saisir la réponse'); await remplir('Réponse reçue', 'DC2 transmis par le candidat dans le délai imparti ; pièce versée au pli.'); await valider(); await pause(500);
+  await clic('Saisir la réponse'); await remplir('Le candidat a-t-il répondu', 'oui'); await remplir('Réponse reçue', 'DC2 transmis par le candidat dans le délai imparti ; pièce versée au pli.'); await valider(); await pause(500);
   ok(!(await present('Pièce obligatoire absente : DC2')), 'réponse à la demande de complément enregistrée : le DC2 versé au pli lève le signalement');
 
   titre('Valideur : contrôle, renvoi d\'une note, validation des montants et des notes');
@@ -568,6 +568,59 @@ try {
   await page.evaluate(() => [...document.querySelectorAll('h2')].find(x => x.textContent.startsWith('Seuils en vigueur')).scrollIntoView());
   ok(await present('à vérifier') && await present('Décret n° 2025-1386'), 'seuils affichés avec leur source et leur état (« vérifié » ou « à vérifier »)');
   await capture('aide-procedure-seuils-et-sources', { entier: false });
+
+  titre('Frise du parcours : étape de chaque dossier, pastilles cliquables, vue « Mes dossiers », compteur du tableau de bord');
+  // Captures à numéro fixe (78 à 82), hors de la numérotation automatique du scénario.
+  const captureN = async (n, nom, options = {}) => { await pause(400); await page.evaluate(() => { const z = document.getElementById('messages'); if (z) z.replaceChildren(); }); const f = n + '-' + nom + '.png'; await page.screenshot({ path: path.join(CAPTURES, f), fullPage: !!options.entier }); console.log('   📷 ' + f); };
+  const regles = await page.evaluate(() => {
+    const auj = '2026-06-01'; const c = (statut, o) => Object.assign({ id: 'x', statut, procedure: 'Procédure adaptée (MAPA)' }, o || {});
+    const lots = [{ id: 'L', consultation_id: 'x' }];
+    const e = (cc, d) => Ecrans.etapeConsultation(cc, d || {}, auj);
+    const rec = e(c('publiee', { date_limite_offres: '2026-06-06' }));
+    const sus = e(c('attribuee', { procedure: 'Appel d\'offres ouvert' }), { lots, rapports: [{ consultation_id: 'x', statut: 'valide', valide_le: '2026-05-28T10:00:00' }] });
+    const r = [e(c('preparation')).cle, e(c('preparation'), { documents_dce: [{ consultation_id: 'x', statut: 'valide' }] }).cle, rec.cle, e(c('publiee', { date_limite_offres: '2026-05-30' })).cle,
+      e(c('analyse'), { lots }).cle, e(c('analyse'), { lots, analyses: [{ lot_id: 'L', statut: 'validee' }] }).cle, sus.cle,
+      e(c('attribuee'), { marches: [{ id: 'M', consultation_id: 'x', statut: 'en_cours', date_debut: '2026-01-01', duree_mois: 12 }] }).cle, e(c('close')).cle];
+    return r.join(',') + '|' + rec.etapes[3].rebours + '|' + sus.etapes[6].date + '|' + rec.etapes.filter(x => x.etat === 'courant').length;
+  });
+  ok(regles === 'dce,publication,reception,analyse,analyse,attribution,notification,execution,cloture|J-5|2026-06-08|1',
+    'étape déduite des données : DCE en préparation, DCE validé → publication, offres attendues (J-5), date limite passée → analyse, analyses validées → attribution, attribuée → délai de suspension (fin estimée 11 j après le rapport), marché rattaché → exécution, close → clôture — ' + regles);
+  await connecter('gestionnaire');
+  await aller('/consultation/c1', 'Parcours du dossier');
+  await page.waitForFunction(() => document.querySelectorAll('.frise-etapes > li').length === 9, { timeout: 15000 });
+  const frise = await page.evaluate(async () => { const c = await D.lire('consultations', 'c1'); const attendu = Ecrans.etapeConsultation(c, await Ecrans.chargerDonneesFrise('c1')).cle;
+    const cour = [...document.querySelectorAll('.frise-etapes [aria-current="step"]')];
+    const avantOnglets = !!(document.querySelector('.frise-carte').compareDocumentPosition(document.querySelector('.onglets')) & Node.DOCUMENT_POSITION_FOLLOWING);
+    return { n: cour.length, cle: cour[0] && cour[0].dataset.etape, attendu, rang: Ecrans.ETAPES_PARCOURS.findIndex(e => e.cle === attendu), ol: document.querySelector('.frise-etapes').tagName,
+      libelles: [...document.querySelectorAll('.frise-libelle')].every(x => x.textContent.trim().length > 3), avantOnglets, faits: document.querySelectorAll('.frise-etape.fait').length, svg: document.querySelectorAll('.frise-etape svg').length >= 9 }; });
+  ok(frise.n === 1 && frise.cle === frise.attendu && frise.ol === 'OL' && frise.libelles && frise.avantOnglets && frise.svg && frise.faits === frise.rang,
+    'frise en tête de la consultation, au-dessus des onglets : liste ordonnée de 9 étapes avec pictogrammes et libellés, une seule étape aria-current="step" (« ' + frise.cle + ' »), ' + frise.faits + ' étape(s) franchie(s) avant elle');
+  await captureN(78, 'frise-parcours-consultation');
+  await page.evaluate(() => document.querySelector('.frise-etapes a[data-etape="reception"]').click()); await pause(600);
+  await page.waitForFunction(() => document.querySelectorAll('.frise-etapes > li').length === 9, { timeout: 15000 });
+  ok(await page.evaluate(() => location.hash === '#/consultation/c1/offres' && document.querySelector('.onglets button.actif').textContent === 'Candidatures et offres'), 'pastille « Questions et réception des offres » cliquée : ouvre l\'onglet Candidatures et offres, frise toujours en tête');
+  await page.setViewport({ width: 640, height: 960 }); await aller('/consultation/c1', 'Parcours du dossier'); await page.waitForFunction(() => document.querySelectorAll('.frise-etapes > li').length === 9, { timeout: 15000 });
+  ok(await page.evaluate(() => { const li = [...document.querySelectorAll('.frise-etapes > li')].map(x => x.getBoundingClientRect()); return li.every((r, i) => !i || (r.top > li[i - 1].top && Math.abs(r.left - li[0].left) < 2)); }), 'sous 700 px de large, la frise passe à la verticale (étapes empilées)');
+  await page.evaluate(() => document.querySelector('.frise-carte').scrollIntoView()); await captureN(79, 'frise-parcours-mobile-verticale');
+  await page.setViewport({ width: 1440, height: 960 });
+  await page.evaluate(() => { try { localStorage.removeItem('vavang-vue-dossiers'); } catch (e) { /* sans effet */ } });
+  await aller('/consultations', 'Où en sont mes dossiers');
+  const cartes = await page.evaluate(async () => { const n = (await Ecrans.consultationsVisibles()).length; const k = [...document.querySelectorAll('.dossier-carte')];
+    return { n, k: k.length, mini: k.every(x => x.querySelector('.mini-frise') && x.querySelector('.dossier-etape')), bouton: [...document.querySelectorAll('button')].some(b => b.textContent === 'Nouveau dossier') }; });
+  ok(cartes.n > 0 && cartes.k === cartes.n && cartes.mini && cartes.bouton, 'vue « Mes dossiers » en cartes : ' + cartes.k + ' dossier(s), chacun avec sa mini-frise et son étape en clair ; bouton « Nouveau dossier »');
+  await captureN(80, 'mes-dossiers-cartes-et-mini-frises', { entier: true });
+  await page.evaluate(() => document.querySelector('.bascule-vue [data-vue="tableau"]').click()); await pause(300);
+  ok(await page.evaluate(() => !!document.querySelector('table') && !document.querySelector('.dossier-carte') && [...document.querySelectorAll('th')].some(x => x.textContent === 'Étape du parcours')), 'bascule « Tableau » : la liste s\'affiche en tableau avec la colonne « Étape du parcours »');
+  await page.evaluate(() => document.querySelector('.bascule-vue [data-vue="cartes"]').click()); await pause(300);
+  await aller('/', 'Où en sont mes dossiers');
+  const compteur = await page.evaluate(async () => { const n = (await Ecrans.consultationsVisibles()).length; const v = [...document.querySelectorAll('.compteur-etapes li')].map(li => Number(li.querySelector('.compteur-nb').textContent));
+    const premier = [...document.querySelectorAll('.compteur-etapes li.occupe a')][0]; return { n, total: v.reduce((a, b) => a + b, 0), pastilles: v.length, cle: premier && premier.dataset.etape, nb: premier ? Number(premier.querySelector('.compteur-nb').textContent) : 0 }; });
+  ok(compteur.pastilles === 9 && compteur.total === compteur.n && !!compteur.cle, 'tableau de bord « Où en sont mes dossiers » : 9 pastilles, ' + compteur.total + ' dossier(s) répartis par étape');
+  await page.evaluate(() => document.querySelector('.compteur-etapes').scrollIntoView({ block: 'center' })); await captureN(81, 'tableau-de-bord-ou-en-sont-mes-dossiers');
+  await page.evaluate(k => document.querySelector('.compteur-etapes a[data-etape="' + k + '"]').click(), compteur.cle); await pause(800); await attendre('Filtre : étape');
+  ok(await page.evaluate((k, nb) => location.hash === '#/consultations?etape=' + k && [...document.querySelectorAll('.dossier-carte')].length === nb && [...document.querySelectorAll('.dossier-carte')].every(x => x.dataset.etape === k), compteur.cle, compteur.nb),
+    'pastille du tableau de bord cliquée : la liste est filtrée sur l\'étape « ' + compteur.cle + ' » (' + compteur.nb + ' dossier(s))');
+  await captureN(82, 'mes-dossiers-filtre-par-etape', { entier: true });
 
   await pause(1500);
   const fichiers = fs.readdirSync(EXPORTS);

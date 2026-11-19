@@ -1,4 +1,4 @@
-Scénario joué le 19/11/2026 02:35:23 — mode local
+Scénario joué le 19/11/2026 04:10:54 — mode local
 Navigateur : C:/Program Files/Google/Chrome/Application/chrome.exe
 
 1. page d'accueil : onglets, support, annonces et actualités affichés avant connexion
@@ -50,8 +50,8 @@ Navigateur : C:/Program Files/Google/Chrome/Application/chrome.exe
 47. tableau d'analyse exporté en XLSX (21206 octets)
 48. règle vérifiée : après validation de l'analyse, les notes sont figées
 49. projet de rapport généré, modifié à la main et enregistré
-50. rapport exporté en PDF (46022 octets)
-51. rapport exporté en Word modifiable (13907 octets)
+50. rapport exporté en PDF (46025 octets)
+51. rapport exporté en Word modifiable (13911 octets)
 52. courrier type prérempli avec la note, le rang et l'attributaire pressenti
 53. courrier exporté en Word
 54. règle vérifiée : un rapport validé est figé
@@ -59,8 +59,8 @@ Navigateur : C:/Program Files/Google/Chrome/Application/chrome.exe
 56. le lecteur ne peut pas déposer d'offre
 57. règle vérifiée : écriture refusée au profil lecteur
 58. accès refusé (et tracé) à un dossier non affecté
-59. dossier d'audit restitué en PDF (73548 octets)
-60. archive d'audit avec les pièces sources (497339 octets)
+59. dossier d'audit restitué en PDF (73506 octets)
+60. archive d'audit avec les pièces sources (497377 octets)
 61. journal du dossier : 75 actions horodatées, 3 auteurs, 38 types d'action
 62. règle vérifiée : le journal ne peut pas être modifié
 63. l'analyste habilité sur le lot 2 ne voit pas le lot 1
@@ -87,7 +87,7 @@ Navigateur : C:/Program Files/Google/Chrome/Application/chrome.exe
 84. reprise à blanc d'un CSV : 3 lignes prêtes, 2 anomalies détectées (titulaire manquant, montant et date illisibles)
 85. reprise définitive : 3 marchés créés, fichier source conservé
 86. reprise de documents PDF et DOCX rattachés à un marché repris
-87. export complet généré (487960 octets) : tables JSON et CSV, pièces sources, inventaire, dictionnaire
+87. export complet généré (487956 octets) : tables JSON et CSV, pièces sources, inventaire, dictionnaire
 88. retour arrière : les 3 marchés repris sont supprimés, le rapport de contrôle est conservé
 89. état modifié après la sauvegarde (un besoin ajouté, trois marchés retirés)
 90. archive contrôlée par rapport à son inventaire avant toute écriture
@@ -109,7 +109,7 @@ Navigateur : C:/Program Files/Google/Chrome/Application/chrome.exe
 106. collage depuis une source extérieure : HTML assaini avant insertion (aucun script exécuté, aucun attribut conservé)
 107. version 2 enregistrée : HTML assaini (contenu_html) et texte brut dérivé (contenu, lu par les contrôles et le circuit) conservés ensemble, y compris dans l'historique des versions
 108. mise en forme restituée à la réouverture du document
-109. export Word du document mis en forme : titre de niveau 1, liste à puces, paragraphe en italique et tableau Word (11219 octets)
+109. export Word du document mis en forme : titre de niveau 1, liste à puces, paragraphe en italique et tableau Word (11218 octets)
 110. export PDF du document mis en forme (26447 octets ; contenu du PDF non relu automatiquement)
 111. document soumis : éditeur en lecture seule, barre d'outils retirée
 112. circuit de validation inchangé sur un document mis en forme : soumis, relu, visa, validé (4 étapes tracées), mise en forme intacte
@@ -124,5 +124,13 @@ Navigateur : C:/Program Files/Google/Chrome/Application/chrome.exe
 121. aide ouverte depuis la consultation : lots et montants estimés repris
 122. écran : procédure formalisée affichée pour 290 000 € HT, justification proposée
 123. seuils affichés avec leur source et leur état (« vérifié » ou « à vérifier »)
-124. fichiers exportés présents sur le disque : 14 fichiers dans captures/exports
-125. aucune erreur JavaScript pendant tout le scénario
+124. étape déduite des données : DCE en préparation, DCE validé → publication, offres attendues (J-5), date limite passée → analyse, analyses validées → attribution, attribuée → délai de suspension (fin estimée 11 j après le rapport), marché rattaché → exécution, close → clôture — dce,publication,reception,analyse,analyse,attribution,notification,execution,cloture|J-5|2026-06-08|1
+125. frise en tête de la consultation, au-dessus des onglets : liste ordonnée de 9 étapes avec pictogrammes et libellés, une seule étape aria-current="step" (« analyse »), 4 étape(s) franchie(s) avant elle
+126. pastille « Questions et réception des offres » cliquée : ouvre l'onglet Candidatures et offres, frise toujours en tête
+127. sous 700 px de large, la frise passe à la verticale (étapes empilées)
+128. vue « Mes dossiers » en cartes : 3 dossier(s), chacun avec sa mini-frise et son étape en clair ; bouton « Nouveau dossier »
+129. bascule « Tableau » : la liste s'affiche en tableau avec la colonne « Étape du parcours »
+130. tableau de bord « Où en sont mes dossiers » : 9 pastilles, 3 dossier(s) répartis par étape
+131. pastille du tableau de bord cliquée : la liste est filtrée sur l'étape « dce » (1 dossier(s))
+132. fichiers exportés présents sur le disque : 14 fichiers dans captures/exports
+133. aucune erreur JavaScript pendant tout le scénario

@@ -1,6 +1,6 @@
 # vavang — guide de l'administrateur
 
-Version du prototype du 18 novembre 2026, mode démonstration locale.
+Version du prototype du 19 novembre 2026, mode démonstration locale (la section 6 décrit aussi la version en ligne).
 
 ## 1. Comptes et profils
 
@@ -37,7 +37,26 @@ Chaque modification est tracée au journal.
 
 ## 6. Reprise, export, sauvegarde
 
-Voir `SAUVEGARDE-ET-REPRISE.md` et `FORMATS-ECHANGE.md`.
+Menu **Reprise, export et sauvegarde**, carte **Plan de sauvegarde** :
+- **Les échéances** de la version en ligne, avec leur fréquence, leur durée de conservation, leur lieu de stockage et leur chiffrement :
+
+| Échéance | Fréquence | Conservée | Perte maximale si l'on y remonte |
+|---|---|---|---|
+| Courante | toutes les 3 h | 3 jours | 3 h |
+| Quotidienne | chaque jour à 02:17 UTC (06:17 à La Réunion) | 30 jours | 24 h |
+| Hebdomadaire | le dimanche à 02:17 UTC | 90 jours (maximum de GitHub pour un dépôt public) | 7 jours |
+| Mensuelle | le premier dimanche du mois, **seulement si le secret `SAUVEGARDE_CLE` existe** (archive chiffrée en release GitHub) | 12 mois | 1 mois |
+
+- **Sauvegarder maintenant** : en version locale, produit l'export complet (archive ZIP) à ranger hors du poste. En version en ligne, ouvre la page de l'action GitHub : « Run workflow », choisir l'échéance, confirmer (droits d'écriture sur le dépôt nécessaires). Environ une minute et demie.
+- **Dernières sauvegardes** : celles inscrites au journal de l'application, et les liens vers les exécutions (artefacts) et les releases GitHub.
+
+**Retrouver la sauvegarde d'un jour donné** : moins de 3 jours → courante ; 3 à 30 jours → quotidienne ; 30 à 90 jours → hebdomadaire ; au-delà → mensuelle. Sur la page des exécutions de l'action, prendre l'exécution réussie la plus proche avant la date voulue et télécharger l'artefact `sauvegarde-<échéance>-AAAAMMJJ-HHMM` (heure UTC, ajouter 4 h pour La Réunion).
+
+**Restaurer** : en version locale, carte « Restaurer une sauvegarde » (archive ZIP). En version en ligne, la restauration se fait hors de l'application, par `node tests/restauration.mjs <dossier> --confirmer`.
+
+À faire pour chiffrer : créer le secret de dépôt `SAUVEGARDE_CLE` (Settings → Secrets and variables → Actions), avec une phrase de passe longue conservée hors de GitHub. Sans lui, les artefacts sont en clair (admis seulement pour des données fictives) et aucune copie mensuelle n'est publiée.
+
+Le détail (procédure pas à pas, RPO, RTO mesuré, limites) est dans `SAUVEGARDE-ET-REPRISE.md` ; les formats dans `FORMATS-ECHANGE.md`.
 
 ## 7. Demandes d'assistance
 
