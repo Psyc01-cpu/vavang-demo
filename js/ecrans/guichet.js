@@ -1,4 +1,4 @@
-/* Guichet du support : pas de ligne directe, ni courriel ni téléphone de l'éditeur.
+/* Guichet du support : pas de ligne directe affichée aux agents (canal d'urgence remis aux seuls référents, hors application).
    Le demandeur choisit un type de panne, écrit un commentaire, laisse son numéro de rappel ; un ticket est créé
    (numéro, date et heure de dépôt) et l'équipe support le rappelle aux horaires du guichet. Accessible sans connexion. */
 (function () {

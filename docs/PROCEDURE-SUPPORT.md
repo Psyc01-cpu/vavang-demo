@@ -22,7 +22,7 @@ Qui peut déclarer : gestionnaire, prescripteur, valideur, lecteur, administrate
 
 ### 1.2 Sans connexion : le guichet du support
 
-Il n’y a **pas de ligne directe** (ni courriel ni téléphone du support). Si vous ne pouvez pas vous connecter, ou sans compte, passez par le **guichet** : page d’accueil, onglet « Échanges », « Contacter le support » (adresse `#/guichet`).
+Il n’y a **pas de ligne directe affichée aux agents** : ni courriel ni téléphone du support dans l’application. Pour les seuls incidents critiques, les référents de la collectivité disposent d’un canal d’urgence (courriel et téléphone) qui leur est remis au lancement (CCTP 3.3.4). Si vous ne pouvez pas vous connecter, ou sans compte, passez par le **guichet** : page d’accueil, onglet « Échanges », « Contacter le support » (adresse `#/guichet`).
 
 1. Choisissez le **type de panne** dans la grille (connexion, compte bloqué, écran en erreur, lenteur, fichiers, documents, analyse, droits, évolution, autre).
 2. Écrivez votre **commentaire**, indiquez l’**urgence** (bloquant, gênant, sans urgence) et le **numéro où vous rappeler** (obligatoire), votre courriel si vous le souhaitez, et le créneau de rappel souhaité.
@@ -36,7 +36,7 @@ Délais repris de l’article 3.3.3 du CCTP et codés dans `Calcul.DELAIS_SUPPOR
 
 | Criticité | Définition | Prise en charge | Diagnostic initial | Contournement | Rétablissement |
 |---|---|---|---|---|---|
-| **P1 — Critique** | Indisponibilité totale, perte de données, incident de sécurité majeur, fonction essentielle bloquée sans contournement | 1 heure | 2 heures | 4 heures | 8 heures |
+| **P1 — Critique** | Indisponibilité totale, perte de données, incident de sécurité majeur, fonction essentielle bloquée sans contournement | 30 minutes | 2 heures | 4 heures | 8 heures |
 | **P2 — Majeur** | Fonction essentielle en panne pour plusieurs utilisateurs, sans contournement acceptable | 4 heures ouvrées | 1 jour ouvré | 1 jour ouvré | 2 jours ouvrés |
 | **P3 — Mineur** | Anomalie non bloquante, avec contournement | 1 jour ouvré | 3 jours ouvrés | sans objet | 5 jours ouvrés |
 | **P4 — Demande** | Question, assistance, paramétrage, évolution | 1 jour ouvré | sans objet | sans objet | sans objet |

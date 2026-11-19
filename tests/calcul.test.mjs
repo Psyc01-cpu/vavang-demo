@@ -95,7 +95,7 @@ t('délais de support en heures ouvrées (lundi-vendredi, 8 h-17 h)', () => {
   const ven16 = new Date(2026, 10, 20, 16, 0); // vendredi 20/11/2026 16:00
   const r = C.ajouterHeuresOuvrees(ven16, 4); assert.equal(r.getDay(), 1); assert.equal(r.getHours(), 11); // lundi 11:00
   const sam = new Date(2026, 10, 21, 10, 0); assert.equal(C.ajouterHeuresOuvrees(sam, 1).getHours(), 9); // lundi 9:00
-  const e = C.echeancesSupport('P1', new Date(2026, 10, 21, 22, 0)); assert.equal(new Date(e.prise_en_charge).getHours(), 23); // P1 : en continu, la nuit et le week-end
+  const e = C.echeancesSupport('P1', new Date(2026, 10, 21, 22, 0)); assert.equal(new Date(e.prise_en_charge).getHours(), 22); assert.equal(new Date(e.prise_en_charge).getMinutes(), 30); // P1 : en continu, la nuit et le week-end
   const p3 = C.echeancesSupport('P3', new Date(2026, 10, 18, 10, 0)); assert.equal(p3.contournement, null); assert.equal(new Date(p3.retablissement).getDate(), 25); // 5 jours ouvrés
 });
 t('consolidation : moyenne des contributions validées, si la grille le prévoit', () => {

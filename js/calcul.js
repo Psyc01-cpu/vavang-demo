@@ -243,7 +243,7 @@
   }
   // Délais contractuels du CCTP (article 3.3.3). h = heures continues, ho = heures ouvrées, jo = jours ouvrés (9 heures ouvrées).
   const DELAIS_SUPPORT = {
-    P1: { libelle: 'P1 — Critique', prise_en_charge: [1, 'h'], diagnostic: [2, 'h'], contournement: [4, 'h'], retablissement: [8, 'h'] },
+    P1: { libelle: 'P1 — Critique', prise_en_charge: [30, 'min'], diagnostic: [2, 'h'], contournement: [4, 'h'], retablissement: [8, 'h'] },
     P2: { libelle: 'P2 — Majeur', prise_en_charge: [4, 'ho'], diagnostic: [1, 'jo'], contournement: [1, 'jo'], retablissement: [2, 'jo'] },
     P3: { libelle: 'P3 — Mineur', prise_en_charge: [1, 'jo'], diagnostic: [3, 'jo'], contournement: null, retablissement: [5, 'jo'] },
     P4: { libelle: 'P4 — Demande', prise_en_charge: [1, 'jo'], diagnostic: null, contournement: null, retablissement: null }
@@ -253,7 +253,7 @@
     const r = {};
     for (const k of ['prise_en_charge', 'diagnostic', 'contournement', 'retablissement']) {
       const v = d[k]; if (!v) { r[k] = null; continue; }
-      r[k] = (v[1] === 'h' ? new Date(new Date(depart).getTime() + v[0] * 3600000) : ajouterHeuresOuvrees(depart, v[1] === 'jo' ? v[0] * 9 : v[0])).toISOString();
+      r[k] = (v[1] === 'min' ? new Date(new Date(depart).getTime() + v[0] * 60000) : v[1] === 'h' ? new Date(new Date(depart).getTime() + v[0] * 3600000) : ajouterHeuresOuvrees(depart, v[1] === 'jo' ? v[0] * 9 : v[0])).toISOString();
     }
     return r;
   }

@@ -9,7 +9,7 @@
   const CRIT = Object.entries(Calcul.DELAIS_SUPPORT).map(([k, v]) => [k, v.libelle]);
   const DEFINITIONS = { P1: 'Indisponibilité totale, perte de données, incident de sécurité majeur, fonction essentielle bloquée sans contournement. Délais courus 24 h/24, 7 j/7.',
     P2: 'Fonction essentielle en panne pour plusieurs utilisateurs, sans contournement acceptable.', P3: 'Anomalie non bloquante, avec contournement.', P4: 'Question, demande d\'assistance, de paramétrage ou d\'évolution.' };
-  const delaiTexte = v => !v ? 'Sans objet' : v[0] + ' ' + (v[1] === 'h' ? 'heure' + (v[0] > 1 ? 's' : '') : v[1] === 'ho' ? 'heures ouvrées' : 'jour' + (v[0] > 1 ? 's' : '') + ' ouvré' + (v[0] > 1 ? 's' : ''));
+  const delaiTexte = v => !v ? 'Sans objet' : v[1] === 'min' ? v[0] + ' minutes' : v[0] + ' ' + (v[1] === 'h' ? 'heure' + (v[0] > 1 ? 's' : '') : v[1] === 'ho' ? 'heures ouvrées' : 'jour' + (v[0] > 1 ? 's' : '') + ' ouvré' + (v[0] > 1 ? 's' : ''));
   const voitTout = () => D.peut('support.traiter') || D.peut('admin.utilisateurs');
   E.delaiSupport = delaiTexte;
   // Demandes déposées au guichet (sans compte) : coordonnées de rappel dans « demandeur », échéances recalculées si le serveur ne les a pas posées.
