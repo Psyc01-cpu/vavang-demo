@@ -98,7 +98,7 @@
     };
     ONGLETS.forEach(o => onglets.appendChild(h('button', { type: 'button', role: 'tab', 'data-cle': o[0], onclick: () => choisir(o[0]), onmouseenter: () => choisir(o[0]) }, o[1])));
     choisir(ongletActif || 'solutions');
-    return h('header.accueil-tete', h('div.frise.accueil-frise', { 'aria-hidden': 'true' }),
+    return h('header.accueil-tete',
       h('div.accueil-haut', await E.blocMarques(),
         h('div.bloc-support', h('div', h('b', 'Besoin d\'aide ?'), h('span', (CFG.support || {}).horaires || '')), h('button.bouton.support-bouton', { type: 'button', onclick: E.contacterSupport }, '→ Contacter le support'))),
       h('div.barre-onglets', onglets, sousBarre));
