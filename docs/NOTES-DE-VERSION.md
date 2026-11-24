@@ -24,7 +24,7 @@ En mode hébergé, la même logique s’appliquerait au site statique. Le retour
 
 ## Version 0.6 — module d'analyse complet, chiffrement des sauvegardes, support (24 novembre 2026)
 
-Objectif : lever les trois couvertures partielles du module d'analyse (CCTP 2.1.4), implémenter le chiffrement des sauvegardes et aligner le support sur le CCTP 3.3.3 et 3.3.4. **Validée dans Git le 24 novembre 2026 ; non publiée sur la démo en ligne à ce jour.**
+Objectif : lever les trois couvertures partielles du module d'analyse (CCTP 2.1.4), implémenter le chiffrement des sauvegardes et aligner le support sur le CCTP 3.3.3 et 3.3.4. **Validée dans Git le 24 novembre 2026 ; publiée sur la démo en ligne le 24 novembre 2026.**
 
 ### Évolutions
 - **Détection des pièces incomplètes ou incohérentes** : ligne de bordereau sans quantité ou sans prix (signalée au lieu d'être ignorée), montant de ligne différent de quantité × prix unitaire, ligne présente dans les autres offres et absente de celle-ci, quantité différente de celle de toutes les autres offres, plusieurs SIREN dans les déclarations d'un même candidat, pli enregistré après la date limite, montant de l'offre absent. Toujours présentées comme des alertes à vérifier.
