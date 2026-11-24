@@ -26,7 +26,7 @@
     const mot = i > 0 ? [nom.slice(0, i), h('i', nom.slice(i))] : [nom, h('i', '.')];
     return h('span.logo' + (variante === 'clair' ? '.clair' : ''),
       h('img', { src: variante === 'clair' ? 'img/vavang-clair.svg' : 'img/vavang.svg', alt: '' }),
-      h('span.logo-texte', h('b', mot), h('small', 'par ' + (CFG.editeur || 'l\'entreprise.ai'))));
+      h('span.logo-texte', h('b', mot), h('small', 'par ' + (CFG.editeur || 'L\'entreprise.ai'))));
   };
   document.title = (CFG.nomLogiciel || 'Gestion des marchés publics') + ' — gestion des marchés publics';
 
@@ -71,13 +71,13 @@
   E.contacterSupport = () => U.aller('/guichet');
   const PIED = {
     'Accessibilité': 'La conformité aux règles d\'accessibilité numérique n\'a pas encore été évaluée : aucun audit n\'a été réalisé à ce jour. Signalez au support toute difficulté d\'accès.',
-    'Mentions légales': () => 'Éditeur : ' + (CFG.editeur || 'l\'entreprise.ai') + ', entreprise individuelle, Saint-Paul (La Réunion).\nContact : ' + ((CFG.support || {}).email || '') + '.\nVersion de démonstration : les données affichées sont fictives.',
+    'Mentions légales': () => 'Éditeur : ' + (CFG.editeur || 'L\'entreprise.ai') + ', entreprise individuelle, Saint-Paul (La Réunion).\nContact : ' + ((CFG.support || {}).email || '') + '.\nVersion de démonstration : les données affichées sont fictives.',
     'Données personnelles': 'Les données saisies appartiennent à la collectivité. Elles ne sont utilisées pour aucune autre fin et ne servent à entraîner aucun modèle d\'intelligence artificielle. L\'administrateur peut en obtenir l\'export complet à tout moment.',
     'Cookies': 'Ce site ne dépose aucun cookie de mesure d\'audience ni de publicité. La session de connexion est conservée dans le stockage de votre navigateur.'
   };
   function pied() {
     return [h('div.frise.accueil-pied-frise', { 'aria-hidden': 'true' }), h('footer.accueil-pied', h('a.lien', { href: '#/guichet' }, 'Contacter le support'), h('a.lien', { href: '#/info/credits-photos' }, 'Crédits photos'), Object.keys(PIED).map(k => h('button.lien', { type: 'button', onclick: () => U.modale(k, E.texteRiche(typeof PIED[k] === 'function' ? PIED[k]() : PIED[k])) }, k)),
-      h('span', '© ' + new Date().getFullYear() + ' ' + (CFG.nomLogiciel ? CFG.nomLogiciel + ', une solution de ' : ''), h('a.lien-editeur', { href: CFG.siteEditeur || 'https://lentreprise.ai/', target: '_blank', rel: 'noopener' }, CFG.editeur || 'l\'entreprise.ai')))];
+      h('span', '© ' + new Date().getFullYear() + ' ' + (CFG.nomLogiciel ? CFG.nomLogiciel + ', une solution de ' : ''), h('a.lien-editeur', { href: CFG.siteEditeur || 'https://lentreprise.ai/', target: '_blank', rel: 'noopener' }, CFG.editeur || 'L\'entreprise.ai')))];
   }
 
   /* ---------- En-tête et onglets ---------- */

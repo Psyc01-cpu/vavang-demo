@@ -2,6 +2,16 @@
 
 Supervision **à zéro euro, sans compte tiers** de la démonstration en ligne : une tâche planifiée GitHub Actions contrôle le service toutes les 15 minutes, conserve l'historique dans le dépôt, et une page publique (`statut.html`) en affiche la disponibilité.
 
+## 0. Démonstration et instance de production
+
+Ce document décrit la supervision **de la démonstration en ligne**, installée et vérifiée. Pour l’instance de production d’une collectivité, l’engagement est le suivant (rien n’est encore en service, aucun client n’étant en exploitation) :
+
+- contrôle **au moins toutes les 5 minutes** de la page, de l’API et du service d’authentification, depuis un serveur distinct de l’hébergement principal ;
+- **alerte sur le téléphone du titulaire** dès qu’un contrôle échoue (en plus du courriel) ;
+- **disponibilité mensuelle de 99,5 %**, calculée selon la formule de l’article 3.3.1 du CCTP, mesurée par cette supervision et rapportée chaque mois dans le rapport de service (un modèle de rapport mensuel est fourni) ;
+- temps de réponse mesurés côté service et rapportés chaque mois (objectif : 95 % des interactions courantes en 3 secondes au plus) ;
+- maintenances planifiées annoncées au moins 5 jours ouvrés à l’avance, faites hors heures ouvrées, 4 heures par mois au plus.
+
 ## 1. Ce qui est contrôlé
 
 | Contrôle | Requête | Réussi si |
@@ -54,7 +64,7 @@ En cas d'erreur réseau : `"code":0` et `"erreur":"délai dépassé (20 s)"` (ou
 | `statut.html` dans Chrome sans interface, historique vide | « Aucune mesure enregistrée pour l'instant », aucune erreur JavaScript |
 | `statut.html` avec 30 jours synthétiques (2 880 contrôles, 2 pannes injectées) | 24 h 100 %, 7 j 99,55 %, 30 j 99,86 %, 2 incidents (45 min et 15 min) correctement regroupés ; pas de défilement horizontal à 375 px |
 
-**Non vérifié** (ne peut l'être qu'après envoi du dépôt sur GitHub) : exécution réelle de l'Action par GitHub, commit par le `GITHUB_TOKEN`, courriel d'échec, régularité réelle de la planification, publication de `statut.html` par GitHub Pages.
+**Exécution réelle** (historique public des exécutions, relevé le 24/11/2026) : l'Action tourne depuis le 18/11/2026 (lancement manuel), puis par planification. Du 19/11 03:50 au 24/11 04:52 UTC : **18 exécutions planifiées, toutes réussies**, au lieu d'environ 480 prévues (une toutes les 15 minutes) ; écart entre deux contrôles de 4 h 12 à 12 h 03. La planification gratuite de GitHub est donc **très irrégulière** : sur la démonstration, la page d'état ne mesure qu'un échantillon. C'est pourquoi la supervision de production part d'un serveur dédié (section 0). Non vérifié : courriel d'échec (aucun échec survenu).
 
 ## 5. Réglages à faire par le propriétaire du dépôt
 

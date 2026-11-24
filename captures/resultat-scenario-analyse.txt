@@ -1,0 +1,41 @@
+Scénario complémentaire du module d'analyse — 2026-11-24T10:56:12.548Z
+27 vérifications réussies, 9 captures, 0 erreur JavaScript.
+
+✓ grille paramétrée : plusieurs analystes sur un même critère, consolidation par moyenne des contributions validées (option activée par la collectivité)
+✓ bordereau : montant de ligne inscrit (22 000 €) différent de quantité × prix unitaire (21 600 €), signalé
+✓ bordereau : quantité modifiée par le candidat (12 au lieu de 24 dans les autres offres), signalée
+✓ bordereau : ligne sans prix unitaire, non importée et signalée comme incomplète
+✓ bordereau : ligne présente dans les autres offres et absente de celle-ci, signalée
+✓ déclarations : SIREN de l'acte d'engagement différent de celui de la lettre de candidature, signalé
+✓ signalements présentés comme des alertes à vérifier, sans aucune décision automatique
+✓ pli enregistré le 12/11/2026, après la date limite du 10/11/2026 : signalé
+✓ pli conforme (Bassin Bleu) : aucun signalement sur le bordereau ni sur les déclarations
+✓ le second analyste voit la contribution du premier, qui reste distincte de la sienne
+✓ deux contributions individuelles enregistrées, chacune au nom de son auteur (Camille Morel 8/10, Sacha Leroy 6/10)
+✓ règle vérifiée : un analyste ne peut pas modifier la contribution d'un autre
+✓ le valideur voit les deux contributions sur le critère
+✓ note consolidée affichée : moyenne des deux contributions validées, 7 / 10
+✓ calcul : (8 + 6) ÷ 2 = 7 ; 7 ÷ 10 × 60 = 42 points pour la valeur technique
+✓ contrôle des calculs : moyenne détaillée et auteur de chaque contribution validée
+✓ historique conservé pour chaque contribution individuelle (notes_historique)
+✓ tour 1 tracé : montant avant le tour 93 000 €, montant proposé 90 600 €, décision nominative du valideur
+✓ journal : envoi du tour 1, réponse et décision inscrits
+✓ suivi des négociations : écart de -2,6 % entre le montant avant le tour et le montant proposé
+✓ appel d'offres ouvert : la demande de négociation est refusée par l'application (« Négociation impossible : Appel d'offres : aucune négociation avec les soumission… »)
+✓ appel d'offres : une demande de précisions reste possible
+✓ écran des demandes : portail, courriel (adresse affichée à tous les agents) et téléphone d'astreinte pour les P1
+✓ tableau des délais : P1, prise en charge en 1 heure
+✓ demande T-2026-0002 reçue par courriel : enregistrée par le support, rattachée au compte de l'agent, échéance de prise en charge à réception + 60 minutes
+✓ l'agent est notifié dans l'application de l'enregistrement de sa demande
+✓ aucune erreur JavaScript pendant le scénario
+
+Captures :
+88-analyse-pli-incoherent-signalements.png
+89-analyse-tableau-comparatif-alertes-par-pli.png
+90-analyse-deux-contributions-sur-un-critere.png
+91-analyse-note-consolidee-moyenne-des-contributions.png
+92-analyse-controle-des-calculs-deux-analystes.png
+93-analyse-negociation-tours-et-montants.png
+94-analyse-negociation-refusee-en-appel-d-offres.png
+95-support-canaux-de-declaration-et-delais.png
+96-support-demande-recue-par-courriel-p1.png

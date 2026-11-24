@@ -1,6 +1,6 @@
 # vavang — guide de l'administrateur
 
-Version du prototype du 19 novembre 2026, mode démonstration locale (la section 6 décrit aussi la version en ligne).
+Version du 19 novembre 2026, mode démonstration locale (la section 6 décrit aussi la version en ligne).
 
 ## 1. Comptes et profils
 
@@ -60,4 +60,4 @@ Le détail (procédure pas à pas, RPO, RTO mesuré, limites) est dans `SAUVEGAR
 
 ## 7. Demandes d'assistance
 
-L'administrateur voit toutes les demandes de la collectivité et peut valider une clôture à la place du demandeur. Le profil « Support éditeur » est réservé à l'équipe de l'entreprise.ai : il prend en charge les demandes, communique le diagnostic, propose une solution, mais ne peut pas clore une demande à la place de la collectivité.
+L'administrateur voit toutes les demandes de la collectivité et peut valider une clôture à la place du demandeur. Le profil « Support éditeur » est réservé à l'équipe de L'entreprise.ai : il prend en charge les demandes, communique le diagnostic, propose une solution, mais ne peut pas clore une demande à la place de la collectivité.

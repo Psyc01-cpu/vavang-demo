@@ -728,6 +728,11 @@
       if (table === 'analyses' && op === 'creer') D.exiger('analyse.saisir');
       if (['notes_historique', 'documents_versions', 'validations', 'calculs'].includes(table) && op !== 'creer') throw new Error('Les historiques ne peuvent pas être modifiés.');
       if (table === 'demandes' && !(D.peut('analyse.saisir') || D.peut('analyse.valider'))) D.exiger('analyse.saisir');
+      // Négociation : refusée lorsque la procédure ne la permet pas (appel d'offres)
+      if (table === 'demandes' && apres && apres.type === 'negociation' && (op === 'creer' || (avant && avant.type !== 'negociation'))) {
+        const cons = await D.lire('consultations', apres.consultation_id);
+        if (cons && Calcul.negociationAutorisee(cons.procedure).autorisee === false) throw new Error('Négociation impossible : ' + Calcul.negociationAutorisee(cons.procedure).motif);
+      }
       // Offres : validation du montant, décisions sur la candidature et sur l'offre réservées aux valideurs
       if (table === 'offres' && op === 'modifier') {
         const decisions = ['montant_valide', 'candidature_statut', 'ecartee'];

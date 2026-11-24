@@ -146,7 +146,7 @@
       h('a.marque-organisme', { href: '#/', 'aria-label': 'Accueil — ' + id.nom }, id.logo ? h('img.logo-organisme', { src: id.logo, alt: 'Logo — ' + id.nom }) : h('span.sigle-organisme', id.sigle),
         h('span.nom-organisme', id.logo && (window.CONFIG.logoContientNom && id.logoDefaut) ? null : h('b', id.nom), h('small', 'Espace marchés publics'), window.CONFIG.maquette ? h('span.mention-maquette', window.CONFIG.maquette) : null)),
       h('span.separateur-marques', { 'aria-hidden': 'true' }),
-      h('span.marque-vavang', h('img', { src: clair ? 'img/vavang-clair.svg' : 'img/vavang.svg', alt: '' }), h('span', h('b', window.CONFIG.nomLogiciel || 'vavang', h('i', '.')), h('small', 'par ' + (window.CONFIG.editeur || 'l\'entreprise.ai')))));
+      h('span.marque-vavang', h('img', { src: clair ? 'img/vavang-clair.svg' : 'img/vavang.svg', alt: '' }), h('span', h('b', window.CONFIG.nomLogiciel || 'vavang', h('i', '.')), h('small', 'par ' + (window.CONFIG.editeur || 'L\'entreprise.ai')))));
   };
   E.majIdentiteMenu = async function () { const z = document.getElementById('identite-menu'); if (z) z.replaceChildren(await E.blocMarques('clair')); };
   E.carteIdentite = async function () {

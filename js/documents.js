@@ -67,13 +67,19 @@
         const cp = l.findIndex(x => /prix unitaire|p\.?u\.?|unitaire/.test(x));
         if (cd >= 0 && cq >= 0 && cp >= 0) {
           const cu = l.findIndex(x => /^unite|^u$/.test(x));
-          const lignes = [];
+          const cm = l.findIndex((x, j) => j !== cp && /^(montant|total|prix total)/.test(x));
+          const nb = v => (v === undefined || v === null || String(v).trim() === '') ? null : Number(String(v).replace(/[\s €]/g, '').replace(',', '.'));
+          const lignes = [], incompletes = [];
           for (const r of f.lignes.slice(i + 1)) {
-            const q = Number(String(r[cq]).replace(',', '.')), pu = Number(String(r[cp]).replace(/\s/g, '').replace(',', '.'));
-            if (!String(r[cd]).trim() || isNaN(q) || isNaN(pu) || r[cq] === '' || r[cp] === '') continue;
-            lignes.push({ designation: String(r[cd]).trim(), unite: cu >= 0 ? String(r[cu]).trim() : '', quantite: q, prix_unitaire: pu });
+            const des = String(r[cd] == null ? '' : r[cd]).trim(); if (!des) continue;
+            const q = nb(r[cq]), pu = nb(r[cp]);
+            // ligne désignée mais sans quantité ou sans prix : non importée, mais signalée (bordereau incomplet)
+            if (q === null || pu === null || isNaN(q) || isNaN(pu)) { if (!/^total/i.test(des)) incompletes.push(des); continue; }
+            const ligne = { designation: des, unite: cu >= 0 ? String(r[cu]).trim() : '', quantite: q, prix_unitaire: pu };
+            const m = cm >= 0 ? nb(r[cm]) : null; if (m !== null && !isNaN(m)) ligne.montant_declare = m;
+            lignes.push(ligne);
           }
-          return { feuille: f.nom, lignes };
+          return { feuille: f.nom, lignes, incompletes };
         }
       }
     }
@@ -124,7 +130,7 @@
         enfants.push(P(''));
       }
     }
-    const d = new X.Document({ creator: 'l\'entreprise.ai — gestion des marchés publics', title: doc.titre,
+    const d = new X.Document({ creator: 'L\'entreprise.ai — gestion des marchés publics', title: doc.titre,
       sections: [{ properties: { page: { size: { orientation: doc.paysage ? X.PageOrientation.LANDSCAPE : X.PageOrientation.PORTRAIT } } },
         footers: { default: new X.Footer({ children: [P(doc.pied || '', { run: { size: 15, color: '666666' } })] }) }, children: enfants }] });
     return X.Packer.toBlob(d);
@@ -171,7 +177,7 @@
     if (limite) inventaire.push({ table: '(perimetre)', libelle: 'Périmètre de l\'export', nombre_de_lignes: 0, fichiers: limite });
     zip.file('inventaire.csv', Docs.csv(inventaire));
     zip.file('dictionnaire-des-donnees.csv', Docs.csv(dictionnaire));
-    zip.file('LISEZMOI.txt', ['EXPORT COMPLET — gestion des marchés publics (l\'entreprise.ai)', 'Date de l\'export : ' + U.dateHeure(D.maintenant()), 'Réalisé par : ' + D.utilisateur.nom, '',
+    zip.file('LISEZMOI.txt', ['EXPORT COMPLET — gestion des marchés publics (L\'entreprise.ai)', 'Date de l\'export : ' + U.dateHeure(D.maintenant()), 'Réalisé par : ' + D.utilisateur.nom, '',
       'Contenu de l\'archive', '- donnees/ : une table par fichier, en JSON (UTF-8) et en CSV (séparateur point-virgule, UTF-8 avec BOM, lisible dans un tableur).',
       '- documents/ : les fichiers sources déposés, non modifiés. Le chemin de chaque fichier figure dans la colonne « chemin » de la table pieces.',
       '- documents-texte/ : le texte extrait de chaque pièce, page par page.', '- inventaire.csv : nombre de lignes par table, pour contrôler l\'exhaustivité.',

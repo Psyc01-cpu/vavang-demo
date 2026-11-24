@@ -1,6 +1,6 @@
 # vavang — guide de l'utilisateur
 
-Version du prototype du 18 novembre 2026. Ce guide décrit les gestes courants, profil par profil. Les captures citées sont dans le dossier `captures/`.
+Version du 18 novembre 2026. Ce guide décrit les gestes courants, profil par profil. Les captures citées sont dans le dossier `captures/`.
 
 ## 1. Se connecter
 

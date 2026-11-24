@@ -177,8 +177,9 @@
       h('p.aide.frise-note', 'Chaque pastille ouvre l\'écran de l\'étape. L\'étape est déduite des données du dossier (statut, DCE, offres, analyses, rapports, marché rattaché).'));
     const remplir = d => {
       const etat = E.etapeConsultation(c, d);
-      resume.replaceChildren(h('span', 'Étape en cours : '), h('b', etat.courante.libelle), h('span', ' — ' + (etat.index + 1) + ' sur ' + etat.etapes.length),
-        etat.prochaineEcheance ? h('span.frise-echeance', ' · Prochaine échéance : ' + etat.prochaineEcheance.libelle + ', ' + U.date(etat.prochaineEcheance.date) + (etat.prochaineEcheance.jours != null ? ' (' + E.compteARebours(etat.prochaineEcheance.jours) + ')' : '')) : null);
+      // replaceChildren(null) afficherait le texte « null » : l'échéance n'est ajoutée que si elle existe
+      resume.replaceChildren(...[h('span', 'Étape en cours : '), h('b', etat.courante.libelle), h('span', ' — ' + (etat.index + 1) + ' sur ' + etat.etapes.length),
+        etat.prochaineEcheance ? h('span.frise-echeance', ' · Prochaine échéance : ' + etat.prochaineEcheance.libelle + ', ' + U.date(etat.prochaineEcheance.date) + (etat.prochaineEcheance.jours != null ? ' (' + E.compteARebours(etat.prochaineEcheance.jours) + ')' : '')) : null].filter(Boolean));
       corps.replaceChildren(dessinerFrise(etat));
       zone.dataset.etape = etat.cle;
     };

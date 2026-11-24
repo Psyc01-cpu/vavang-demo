@@ -2,7 +2,9 @@
 // ATTENTION : remplace TOUTES les données métier et TOUS les fichiers (compartiments pieces et accueil) de la base visée.
 // Les comptes de connexion (auth.*) ne sont pas touchés.
 //
-//   node tests/restauration.mjs <dossier de sauvegarde | fichier sauvegarde-AAAAMMJJ-HHMM.json> --confirmer
+//   node tests/restauration.mjs <dossier de sauvegarde | fichier sauvegarde-AAAAMMJJ-HHMM.json | archive chiffrée .vvs> --confirmer
+//   node tests/restauration.mjs <…> --controle-seul   déchiffrement et contrôle d'intégrité (étape 0) seulement, sans connexion ni écriture
+// Une archive chiffrée (.vvs, voir tests/chiffrement-sauvegarde.mjs) est déchiffrée avec SAUVEGARDE_CLE dans un dossier temporaire.
 // Mêmes variables d'environnement que tests/sauvegarde.mjs (VAVANG_URL, CHROME, CHROME_ARGS, VAVANG_ADMIN, VAVANG_MDP, VAVANG_TOTP).
 //
 // Étapes chronométrées :
@@ -13,7 +15,8 @@
 //   4. vérification : nouvel export, comparaison table par table (nombre de lignes + SHA-256), fichiers retéléchargés et comparés
 // RTO mesuré = durée totale des étapes 1 à 4 (la décision de restaurer et le choix de la sauvegarde ne sont pas comptés).
 // Un rapport restauration-<date>.json est écrit à côté de la sauvegarde ; code de sortie 1 au moindre écart.
-import fs from 'node:fs'; import path from 'node:path';
+import fs from 'node:fs'; import path from 'node:path'; import os from 'node:os';
+import { dechiffrerFichier, EXTENSION } from './chiffrement-sauvegarde.mjs';
 import { connecter, client, sha256, empreinteTable, cheminSur, maintenant, secondes } from './sauvegarde.mjs';
 
 // Lignes du journal ajoutées par la restauration et les exports de vérification eux-mêmes : seules différences admises.
@@ -48,9 +51,28 @@ function lireSauvegarde(cible) {
   return { s, dossier, fichier, sha256: sha256(texte) };
 }
 
-async function restaurer(cible) {
+// Archive chiffrée : déchiffrée (AES-256-GCM, clé SAUVEGARDE_CLE) dans un dossier temporaire avant le contrôle.
+async function preparer(cible) {
+  if (!cible || !cible.endsWith(EXTENSION)) return { cible, chiffree: false };
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vavang-restauration-'));
+  try { return { cible: await dechiffrerFichier(cible, process.env.SAUVEGARDE_CLE, tmp), chiffree: true, tmp }; }
+  catch (e) { fs.rmSync(tmp, { recursive: true, force: true }); throw e; } // clé fausse ou archive altérée : rien ne reste sur le poste
+}
+
+async function controler(cibleBrute) {
+  const t = maintenant(); const p = await preparer(cibleBrute);
+  try {
+    const { s, fichier, sha256: hJson } = lireSauvegarde(p.cible);
+    const r = { controle: 'réussi', archive: path.basename(cibleBrute), chiffree: p.chiffree, sauvegarde: fichier, sha256_json: hJson, date_sauvegarde: s.date,
+      tables: Object.keys(s.tables).length, lignes: Object.values(s.tables).reduce((a, l) => a + l.length, 0), fichiers: (s.fichiers || []).length, duree_s: secondes(maintenant() - t) };
+    console.log(JSON.stringify(r, null, 1)); return r;
+  } finally { if (p.tmp) fs.rmSync(p.tmp, { recursive: true, force: true }); }
+}
+
+async function restaurer(cibleBrute) {
   const rapport = { debut: new Date().toISOString(), durees: {}, verification: {} }, d = rapport.durees;
   let t = maintenant();
+  const p = await preparer(cibleBrute); const cible = p.cible; rapport.archive_chiffree = p.chiffree;
   const { s, dossier, fichier, sha256: hJson } = lireSauvegarde(cible);
   d.controle_local_s = secondes(maintenant() - t);
   Object.assign(rapport, { sauvegarde: fichier, sha256_sauvegarde: hJson, date_sauvegarde: s.date, lignes_sauvegarde: s.lignes, fichiers_sauvegarde: (s.fichiers || []).length });
@@ -119,7 +141,8 @@ async function restaurer(cible) {
 
   rapport.fin = new Date().toISOString();
   const sortie = path.join(dossier, 'restauration-' + rapport.fin.replace(/[-:]/g, '').replace('T', '-').slice(0, 15) + '.json');
-  fs.writeFileSync(sortie, JSON.stringify(rapport, null, 1));
+  fs.writeFileSync(p.chiffree ? path.join(path.dirname(path.resolve(cibleBrute)), path.basename(sortie)) : sortie, JSON.stringify(rapport, null, 1));
+  if (p.tmp) fs.rmSync(p.tmp, { recursive: true, force: true }); // aucune copie en clair laissée sur le poste
   const tables = Object.values(rapport.verification.tables);
   console.log(JSON.stringify({ rapport: sortie, reussie: rapport.verification.reussie, tables_identiques: tables.filter(x => x.identique).length + '/' + tables.length,
     lignes: rapport.lignes_restaurees, fichiers: rapport.verification.fichiers_identiques, durees: d, ecarts: rapport.verification.ecarts }, null, 1));
@@ -127,9 +150,10 @@ async function restaurer(cible) {
 }
 
 const args = process.argv.slice(2);
-if (!args.includes('--confirmer')) {
+if (args.includes('--controle-seul')) {
+  controler(args.find(a => !a.startsWith('--'))).catch(e => { console.error('ÉCHEC du contrôle : ' + e.message); process.exit(1); });
+} else if (!args.includes('--confirmer')) {
   console.error('Cette commande REMPLACE toutes les données et tous les fichiers de ' + (process.env.VAVANG_URL || 'la démonstration en ligne') + '.\n'
     + 'Relancer avec --confirmer : node tests/restauration.mjs <dossier ou fichier> --confirmer');
   process.exit(2);
-}
-restaurer(args.find(a => a !== '--confirmer')).catch(e => { console.error('ÉCHEC de la restauration : ' + e.message); process.exit(1); });
+} else restaurer(args.find(a => a !== '--confirmer')).catch(e => { console.error('ÉCHEC de la restauration : ' + e.message); process.exit(1); });

@@ -1,0 +1,30 @@
+{
+ "date": "2026-11-24T10:56:18.997Z",
+ "outil": "tests/essai-chiffrement.mjs",
+ "algorithme": "AES-256-GCM ; clé dérivée de SAUVEGARDE_CLE par scrypt (N=32768, r=8, p=1), sel aléatoire par archive",
+ "cle": "clé de test aléatoire de 256 bits, générée en mémoire pour l'essai, jamais écrite ni publiée",
+ "source": "jeu de démonstration local (supabase/seed), au format de tests/sauvegarde.mjs",
+ "sauvegarde": {
+  "tables": 29,
+  "lignes": 220,
+  "fichiers": 14,
+  "octets_zip": 27837,
+  "octets_chiffres": 27889
+ },
+ "limites": "Essai local. La restauration en base (étapes 1 à 4 de tests/restauration.mjs) n'a pas été rejouée : elle écrirait sur la démo en ligne. Le chiffrement n'est pas activé sur la démo en ligne (aucun secret créé sur GitHub).",
+ "constats": [
+  "chiffrement de la sauvegarde (AES-256-GCM, clé dérivée par scrypt) : commande réussie",
+  "archive sauvegarde-20261124-1056.vvs écrite (27889 octets) ; dossier en clair supprimé",
+  "aucune donnée lisible dans l'archive (nom de candidat et structure JSON introuvables)",
+  "empreinte SHA-256 de l'archive chiffrée écrite à côté",
+  "restauration.mjs --controle-seul : archive déchiffrée, SHA256SUMS et empreintes des 29 tables conformes",
+  "contenu retrouvé : 220 lignes et 14 fichiers, comme à la sauvegarde",
+  "aucune copie déchiffrée laissée dans le dossier temporaire après le contrôle",
+  "clé fausse : déchiffrement refusé",
+  "archive modifiée d'un seul octet : déchiffrement refusé (chiffrement authentifié)",
+  "clé absente : déchiffrement refusé",
+  "mode « obligatoire » sans clé : sauvegarde refusée avant toute connexion, rien n'est écrit",
+  "phrase de passe de moins de 32 caractères refusée",
+  "archive déchiffrée : 16 fichiers sur 16 identiques à l'original (SHA-256)"
+ ]
+}

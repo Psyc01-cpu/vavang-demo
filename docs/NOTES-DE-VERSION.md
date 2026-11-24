@@ -1,12 +1,12 @@
 # vavang — notes de version
 
-Éditeur : l’entreprise.ai, Saint-Paul, La Réunion.
+Éditeur : L’entreprise.ai, Saint-Paul, La Réunion.
 
 ## Avertissement
 
-- vavang est un **prototype**. Aucune version n’est en service chez une collectivité. Toutes les données sont fictives.
+- Aucune version de vavang n’est en exploitation chez un client à ce jour. Toutes les données sont fictives.
 - Les versions 0.1 à 0.4 ont été **reconstituées après coup**, d’après `README.md` et `COUVERTURE-CCTP.md`. Le dépôt Git n’existe que depuis la mise en ligne (version 0.5) ; aucune étiquette de version. Seules les dates écrites dans ces documents sont reprises ; les autres ne sont pas connues.
-- Le numéro de `package.json` est resté à `0.1.0`. Il sera aligné à la prochaine livraison.
+- Le numéro de `package.json` est aligné sur la dernière version de ces notes (`0.6.0`) depuis le 24 novembre 2026 ; il était resté à `0.1.0` jusqu’à la version 0.5.
 - Jusqu’à la version 0.4, les vérifications citées portent sur le **mode local** (données dans le navigateur). À partir de la version 0.5, la démo en ligne (mode hébergé, données fictives) est aussi vérifiée côté serveur.
 
 ## Méthode de mise à jour (toutes versions)
@@ -19,6 +19,48 @@ Le site est statique : une mise à jour remplace des fichiers. Il n’y a pas de
 3. Si les données ont été modifiées par la nouvelle version : restaurer l’export complet pris à l’étape 1.
 
 En mode hébergé, la même logique s’appliquerait au site statique. Le retour arrière du schéma Postgres n’est pas écrit.
+
+---
+
+## Version 0.6 — module d'analyse complet, chiffrement des sauvegardes, support (24 novembre 2026)
+
+Objectif : lever les trois couvertures partielles du module d'analyse (CCTP 2.1.4), implémenter le chiffrement des sauvegardes et aligner le support sur le CCTP 3.3.3 et 3.3.4. **Validée dans Git le 24 novembre 2026 ; non publiée sur la démo en ligne à ce jour.**
+
+### Évolutions
+- **Détection des pièces incomplètes ou incohérentes** : ligne de bordereau sans quantité ou sans prix (signalée au lieu d'être ignorée), montant de ligne différent de quantité × prix unitaire, ligne présente dans les autres offres et absente de celle-ci, quantité différente de celle de toutes les autres offres, plusieurs SIREN dans les déclarations d'un même candidat, pli enregistré après la date limite, montant de l'offre absent. Toujours présentées comme des alertes à vérifier.
+- **Plusieurs contributeurs** : note consolidée affichée sur le critère (moyenne des contributions validées, si la collectivité a choisi cette option) ; contrôle des calculs détaillant la moyenne et l'auteur de chaque contribution.
+- **Négociation** : numéro de tour, montant avant le tour, montant proposé, écart, décision ; carte « Négociations » ; reprise dans le rapport d'analyse ; demande de négociation refusée en appel d'offres.
+- **Support** : prise en charge des P1 en **1 heure**, 24 h/24 et 7 j/7 (délai du CCTP 3.3.3 ; 30 minutes auparavant). Canaux affichés à tous les agents : portail, courriel, téléphone d'astreinte pour les P1. Enregistrement par le support des demandes reçues par courriel ou téléphone, délais comptés depuis la réception.
+- **Sauvegardes chiffrées** : AES-256-GCM, clé dérivée de `SAUVEGARDE_CLE` (scrypt) ; mode obligatoire pour la production ; restauration et contrôle d'une archive chiffrée.
+- Nom de l'éditeur écrit « L'entreprise.ai » dans l'application et la documentation.
+
+### Corrections
+- Frise du parcours : le résumé affichait « 5 sur 9null » quand aucune échéance n'était prévue ; corrigé (24/11/2026).
+- Lecture des bordereaux : les lignes désignées sans quantité ou sans prix étaient ignorées sans avertissement ; elles sont désormais signalées.
+- Notation : avec la consolidation par moyenne, l'étiquette du critère affichait la première note validée au lieu de la moyenne retenue par le calcul ; corrigé.
+- Restauration : un dossier temporaire pouvait rester sur le poste après un échec de déchiffrement ; il est désormais supprimé.
+
+### Vérifications (24/11/2026, en local)
+- Tests de calcul : 18 groupes réussis (`npm test`).
+- Scénario complet (`tests/scenario.mjs`), rejoué sur une copie : 148 vérifications, 69 captures, aucune erreur JavaScript.
+- Scénario complémentaire (`tests/scenario-analyse.mjs`) : 27 vérifications, captures 88 à 96, aucune erreur JavaScript.
+- Chiffrement (`tests/essai-chiffrement.mjs`, clé de test générée en mémoire) : 13 vérifications (`mesures/chiffrement-sauvegarde-20261124.json`).
+- Compatibilité navigateurs (24/11/2026, après la correction de la frise) : scénario complet (148 vérifications) et scénario d'analyse (27 vérifications) réussis dans **Chrome 158** et dans **Microsoft Edge 158**, sans erreur JavaScript. **Firefox non testé** (non installé sur le poste de test).
+
+### Limites côté serveur (mode hébergé), non levées par cette version
+- **Consolidation par moyenne** : le déclencheur `garde()` de `supabase/schema.sql` refuse encore de valider une seconde contribution sur un même critère (« Une autre contribution est déjà validée pour ce critère »). En mode hébergé, seule la consolidation « retenir une contribution » fonctionne donc aujourd'hui. À adapter (validation multiple autorisée quand la méthode de la grille est la moyenne) et à tester en mode hébergé.
+- **Négociation refusée en appel d'offres** : règle appliquée par l'application, pas encore par le serveur.
+- **Rôles par lot et par service** : vérifiés en mode local ; non couverts par les tests en ligne.
+- La règle « une contribution est saisie et modifiée par son seul auteur » est, elle, déjà écrite dans le déclencheur serveur (non rejouée en ligne le 24/11/2026).
+
+### Impacts
+- Utilisateurs : nouvelles alertes sur les plis ; champ « tour de négociation » dans les demandes ; carte « Comment déclarer une demande ».
+- Données : nouveaux champs dans les documents JSON (`offres.bordereau_controle`, `lignes_prix.montant_declare`, `demandes.tour`, `demandes.montant_initial`, `demandes.montant_propose`, `tickets.origine` = courriel ou telephone, `tickets.date_reception`). Aucune modification du schéma SQL : les tables hébergées stockent un document JSON.
+- Exploitation : pour la production, secret `SAUVEGARDE_CLE` et variable `SAUVEGARDE_CHIFFREMENT=obligatoire` ; numéro d'astreinte à renseigner dans `config.js`.
+- Information des utilisateurs : aucun utilisateur en exploitation à ce jour ; ces notes de version sont le support d'information prévu.
+
+### Retour arrière
+- Procédure commune. Une version antérieure ignore les nouveaux champs. Une archive `.vvs` ne peut être relue que par cette version ou une version ultérieure.
 
 ---
 
@@ -171,7 +213,7 @@ Objectif : combler les manques relevés dans la couverture du CCTP, sans coût e
 
 ---
 
-## Anomalies et limites connues (état au 19 novembre 2026)
+## Anomalies et limites connues (état au 24 novembre 2026)
 
 ### Sécurité
 - **Mode local** : les données et les comptes vivent dans le navigateur d’un poste (mots de passe en empreinte PBKDF2). Le mode local ne doit servir qu’à la démonstration.
@@ -188,16 +230,16 @@ Objectif : combler les manques relevés dans la couverture du CCTP, sans coût e
 ### Fonctions
 - Testé dans Chrome uniquement.
 - Seuils de procédure : certains restent marqués « à vérifier » dans l’application, à contrôler sur les textes en vigueur.
-- Plusieurs analystes : moyenne des contributions vérifiée par un test de calcul ; le scénario dans le navigateur n’en joue qu’un.
+- Négociation : règle de procédure appliquée par l’application, pas encore par le serveur en mode hébergé.
 - Jours fériés non déduits des délais du support.
 - Restauration totale uniquement.
 - Pas de reconnaissance de caractères sur les PDF scannés.
-- Pas d’envoi de courriel.
+- Pas d’envoi automatique de courriel ; les demandes reçues par courriel sont saisies par le support.
 - Pas d’IA.
 - Connexion par GitHub : aller-retour réel à vérifier ; pas de SAML.
 
 ### Exploitation
-- Sauvegardes publiées en clair tant que le secret `SAUVEGARDE_CLE` n’est pas défini.
+- Démo en ligne : sauvegardes publiées en clair (secret `SAUVEGARDE_CLE` non créé, données fictives) ; chiffrement implémenté et testé localement le 24/11/2026, à activer en production.
 - RPO réel non encore mesuré sur la durée (cible 3 h ; exécutions planifiées GitHub non garanties à l'heure).
 - Disponibilité de 99,5 % ni mesurée sur un mois ni garantie (offres gratuites).
 - Artefacts de sauvegarde et pages statiques chez GitHub, sans garantie de localisation dans l’UE.

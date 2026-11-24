@@ -1,0 +1,111 @@
+{
+ "date": "2026-11-24T11:50:14.240Z",
+ "navigateur": "C:/Program Files/Google/Chrome/Application/chrome.exe",
+ "note": "Cache désactivé, serveur local sans compression : poids bruts, majorants de ce que transférerait un hébergement compressé.",
+ "ecrans": [
+  {
+   "ecran": "Page d'accueil (avant connexion)",
+   "requetes": 43,
+   "octets_transferes": 2024730,
+   "ko": 1977,
+   "par_type_ko": {
+    "Document": 3,
+    "Stylesheet": 51,
+    "Script": 599,
+    "Other": 1,
+    "Image": 1323
+   },
+   "dom_content_loaded_ms": 77,
+   "load_ms": 78,
+   "chargement_complet_ms": 1282,
+   "noeuds_dom": 940,
+   "tas_js_mo": 3.1,
+   "plus_lourds": [
+    "img/photos/le-port-vue-du-ciel.jpg : 545 Ko",
+    "img/photos/mafate-depuis-le-grand-benare.jpg : 360 Ko",
+    "img/photos/maido-lever-du-soleil.jpg : 251 Ko",
+    "img/photos/fournaise-vue-du-ciel.jpg : 137 Ko",
+    "js/donnees.js : 63 Ko",
+    "js/ecrans/analyse.js : 44 Ko"
+   ]
+  },
+  {
+   "ecran": "Tableau de bord",
+   "requetes": 39,
+   "octets_transferes": 699292,
+   "ko": 683,
+   "par_type_ko": {
+    "Document": 3,
+    "Stylesheet": 51,
+    "Script": 599,
+    "Other": 1,
+    "Image": 29
+   },
+   "dom_content_loaded_ms": 69,
+   "load_ms": 69,
+   "chargement_complet_ms": 3618,
+   "noeuds_dom": 1036,
+   "tas_js_mo": 3,
+   "plus_lourds": [
+    "js/donnees.js : 63 Ko",
+    "js/ecrans/analyse.js : 44 Ko",
+    "js/ecrans/offres.js : 39 Ko",
+    "js/ecrans/accueil.js : 36 Ko",
+    "js/demo.js : 35 Ko",
+    "img/organismes/cinor.png : 28 Ko"
+   ]
+  },
+  {
+   "ecran": "Analyse d'une consultation",
+   "requetes": 40,
+   "octets_transferes": 700592,
+   "ko": 684,
+   "par_type_ko": {
+    "Document": 3,
+    "Stylesheet": 51,
+    "Script": 599,
+    "Other": 1,
+    "Image": 30
+   },
+   "dom_content_loaded_ms": 78,
+   "load_ms": 78,
+   "chargement_complet_ms": 2025,
+   "noeuds_dom": 1467,
+   "tas_js_mo": 3.1,
+   "plus_lourds": [
+    "js/donnees.js : 63 Ko",
+    "js/ecrans/analyse.js : 44 Ko",
+    "js/ecrans/offres.js : 39 Ko",
+    "js/ecrans/accueil.js : 36 Ko",
+    "js/demo.js : 35 Ko",
+    "img/organismes/cinor.png : 28 Ko"
+   ]
+  },
+  {
+   "ecran": "Fiche d'une offre",
+   "requetes": 39,
+   "octets_transferes": 699292,
+   "ko": 683,
+   "par_type_ko": {
+    "Document": 3,
+    "Stylesheet": 51,
+    "Script": 599,
+    "Other": 1,
+    "Image": 29
+   },
+   "dom_content_loaded_ms": 74,
+   "load_ms": 75,
+   "chargement_complet_ms": 1370,
+   "noeuds_dom": 1351,
+   "tas_js_mo": 3,
+   "plus_lourds": [
+    "js/donnees.js : 63 Ko",
+    "js/ecrans/analyse.js : 44 Ko",
+    "js/ecrans/offres.js : 39 Ko",
+    "js/ecrans/accueil.js : 36 Ko",
+    "js/demo.js : 35 Ko",
+    "img/organismes/cinor.png : 28 Ko"
+   ]
+  }
+ ]
+}

@@ -1,8 +1,8 @@
 # vavang — procédure de support
 
-Version du prototype du 19 novembre 2026. Éditeur : l’entreprise.ai, Saint-Paul, La Réunion.
+Version du 24 novembre 2026. Éditeur : L’entreprise.ai, Saint-Paul, La Réunion.
 
-Ce document décrit le support **prévu** pour l’exploitation de vavang. L’outil de déclaration existe et a été vérifié dans le prototype (mode local). L’organisation humaine décrite ici (horaires, astreinte, escalade) est l’**engagement prévu** : elle n’est pas encore en service, faute de collectivité utilisatrice. Aucun délai n’a encore été mesuré en conditions réelles.
+Ce document décrit le support de vavang. L’outil de déclaration existe et a été vérifié en démonstration (mode local). L’organisation humaine décrite ici (horaires, astreinte, escalade) est l’**engagement** pris pour l’instance de production de la collectivité ; aucun client n’est en exploitation à ce jour, aucun délai n’a donc encore été mesuré en conditions réelles.
 
 ## 1. Déclarer une demande
 
@@ -20,9 +20,21 @@ L’outil attribue un **numéro unique** (`T-AAAA-NNNN`), horodate la demande, e
 
 Qui peut déclarer : gestionnaire, prescripteur, valideur, lecteur, administrateur. Chaque agent voit ses demandes. L’administrateur voit toutes celles de la collectivité.
 
-### 1.2 Sans connexion : le guichet du support
+### 1.2 Par courriel (tous les agents) et par téléphone (incidents critiques)
 
-Il n’y a **pas de ligne directe affichée aux agents** : ni courriel ni téléphone du support dans l’application. Pour les seuls incidents critiques, les référents de la collectivité disposent d’un canal d’urgence (courriel et téléphone) qui leur est remis au lancement (CCTP 3.3.4). Si vous ne pouvez pas vous connecter, ou sans compte, passez par le **guichet** : page d’accueil, onglet « Échanges », « Contacter le support » (adresse `#/guichet`).
+Conformément au CCTP 3.3.4, trois canaux sont ouverts à **tous les agents** ; ils sont rappelés dans l’application, menu **Demandes d’assistance**, carte « Comment déclarer une demande » (capture 95) :
+
+| Canal | Pour qui, pour quoi | Coordonnées |
+|---|---|---|
+| Portail (application) | Toutes les demandes, P1 à P4 | Menu « Demandes d’assistance » |
+| Courriel | Toutes les demandes | Adresse affichée dans l’application (`CONFIG.support.courrielDemandes`, aujourd’hui contact@lentreprise.ai) |
+| Téléphone d’astreinte | Incidents critiques (P1), 24 h/24 et 7 j/7 | Numéro communiqué à la collectivité au lancement, puis affiché dans l’application (`CONFIG.support.telephoneAstreinte`, vide tant qu’aucun numéro n’est attribué) |
+
+Une demande reçue par courriel ou par téléphone est **enregistrée par le support dans l’outil** (« Enregistrer une demande reçue par courriel ou téléphone ») : canal, date et heure de réception, demandeur et coordonnées, objet, criticité, contenu. Les délais courent **depuis la réception**, pas depuis l’enregistrement. Si l’adresse du demandeur correspond à un compte, la demande y est rattachée : l’agent est notifié, la suit et valide sa clôture. Vérifié en démonstration locale le 24/11/2026 (`tests/scenario-analyse.mjs`, capture 96).
+
+### 1.3 Sans connexion : le guichet du support
+
+Sur les pages publiques (page d’accueil, guichet), aucune coordonnée directe n’est affichée. Si vous ne pouvez pas vous connecter, ou sans compte, passez par le **guichet** : page d’accueil, onglet « Échanges », « Contacter le support » (adresse `#/guichet`), ou écrivez à l’adresse de courriel du support.
 
 1. Choisissez le **type de panne** dans la grille (connexion, compte bloqué, écran en erreur, lenteur, fichiers, documents, analyse, droits, évolution, autre).
 2. Écrivez votre **commentaire**, indiquez l’**urgence** (bloquant, gênant, sans urgence) et le **numéro où vous rappeler** (obligatoire), votre courriel si vous le souhaitez, et le créneau de rappel souhaité.
@@ -36,7 +48,7 @@ Délais repris de l’article 3.3.3 du CCTP et codés dans `Calcul.DELAIS_SUPPOR
 
 | Criticité | Définition | Prise en charge | Diagnostic initial | Contournement | Rétablissement |
 |---|---|---|---|---|---|
-| **P1 — Critique** | Indisponibilité totale, perte de données, incident de sécurité majeur, fonction essentielle bloquée sans contournement | 30 minutes | 2 heures | 4 heures | 8 heures |
+| **P1 — Critique** | Indisponibilité totale, perte de données, incident de sécurité majeur, fonction essentielle bloquée sans contournement | 1 heure | 2 heures | 4 heures | 8 heures |
 | **P2 — Majeur** | Fonction essentielle en panne pour plusieurs utilisateurs, sans contournement acceptable | 4 heures ouvrées | 1 jour ouvré | 1 jour ouvré | 2 jours ouvrés |
 | **P3 — Mineur** | Anomalie non bloquante, avec contournement | 1 jour ouvré | 3 jours ouvrés | sans objet | 5 jours ouvrés |
 | **P4 — Demande** | Question, assistance, paramétrage, évolution | 1 jour ouvré | sans objet | sans objet | sans objet |
@@ -52,7 +64,7 @@ Le support peut proposer de requalifier une criticité. Il l’écrit dans l’h
 ## 3. Heures de support
 
 - **Support courant** : du lundi au vendredi, de 8 h à 17 h, heure de La Réunion.
-- **Astreinte P1** : engagement prévu de traiter les P1 24 h/24, 7 j/7, dès la mise en service. Elle n’existe pas aujourd’hui. Ses modalités (numéro d’astreinte, rotation) seront communiquées à la collectivité avant la mise en service.
+- **Astreinte P1** : engagement de prendre en charge les P1 **en 1 heure, 24 h/24 et 7 j/7**, dès la mise en service de l’instance de production (délai du CCTP 3.3.3). Elle n’est pas en service aujourd’hui, faute de client en exploitation. Ses modalités (numéro d’astreinte, alerte sur téléphone, remplacement en cas d’absence) seront communiquées à la collectivité avant la mise en service.
 
 ## 4. Traitement d’une demande
 
@@ -70,13 +82,13 @@ Chaque action est datée, signée et notifiée à l’autre partie. Les échange
 
 Les niveaux désignent des **fonctions**. Le nom des titulaires est communiqué à la collectivité à la notification du marché, puis à chaque changement.
 
-### 5.1 Côté l’entreprise.ai
+### 5.1 Côté L’entreprise.ai
 
 | Niveau | Fonction | Rôle | Quand |
 |---|---|---|---|
 | **1** | Support applicatif (profil « Support éditeur ») | Prise en charge, qualification, réponses d’usage et de paramétrage, contournements connus | Toute demande |
 | **2** | Responsable technique de la solution | Diagnostic approfondi, correction, restauration, lien avec l’hébergeur | Pas de solution au niveau 1 ; P1 dès la prise en charge ; délai de diagnostic menacé |
-| **3** | Direction de l’entreprise.ai, responsable du contrat | Arbitrage, moyens supplémentaires, communication officielle, pénalités | P1 non rétabli dans les 8 heures ; délai dépassé en P2 ; incident de sécurité ; désaccord persistant |
+| **3** | Direction de L’entreprise.ai, responsable du contrat | Arbitrage, moyens supplémentaires, communication officielle, pénalités | P1 non rétabli dans les 8 heures ; délai dépassé en P2 ; incident de sécurité ; désaccord persistant |
 
 ### 5.2 Côté collectivité
 
@@ -119,7 +131,7 @@ Le rapport est transmis par courriel à l’administrateur fonctionnel, et son e
 
 ## 9. Limites actuelles
 
-- Outil vérifié en mode local uniquement (scénario automatique). En mode local, support et collectivité doivent partager le même poste : l’outil ne devient utilisable à distance qu’en mode hébergé.
-- Pas de déclaration par courriel ou par téléphone dans l’outil : la saisie est faite par le support.
+- Outil vérifié en mode local uniquement (scénarios automatiques). En mode local, support et collectivité doivent partager le même poste : l’outil ne devient utilisable à distance qu’en mode hébergé.
+- Demandes reçues par courriel ou par téléphone : saisies par le support dans l’outil (pas de lecture automatique de la boîte aux lettres).
 - Jours fériés non déduits du calcul des délais.
 - Pas de rapport mensuel de service automatique.

@@ -1,8 +1,8 @@
 {
   "name": "logiciel-acheteur",
   "private": true,
-  "version": "0.1.0",
-  "description": "Prototype de gestion des marchés publics côté acheteur — l'entreprise.ai",
+  "version": "0.6.0",
+  "description": "vavang — gestion des marchés publics côté acheteur — L'entreprise.ai",
   "scripts": {
     "test": "node tests/calcul.test.mjs",
     "scenario": "node tests/scenario.mjs",

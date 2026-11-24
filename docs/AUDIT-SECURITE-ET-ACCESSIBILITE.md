@@ -1,6 +1,6 @@
 # vavang — audit de sécurité et d'accessibilité
 
-État au 19 novembre 2026, sur le prototype en démonstration locale et sur la **démo publique en ligne** (https://psyc01-cpu.github.io/vavang-demo/, GitHub Pages, base Supabase). Ce document distingue ce qui a été **mesuré** de ce qui **reste à faire**.
+État au 19 novembre 2026, sur la démonstration locale et sur la **démo publique en ligne** (https://psyc01-cpu.github.io/vavang-demo/, GitHub Pages, base Supabase). Ce document distingue ce qui a été **mesuré** de ce qui **reste à faire**.
 
 ## 1. Dépendances (npm audit)
 

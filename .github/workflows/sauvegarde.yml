@@ -9,9 +9,12 @@
 #                 « release » GitHub (sans limite de durée), les 12 plus récentes sont gardées. Sans le secret : rien.
 # Deux planifications seulement : l'échéance est déduite de celle qui a déclenché l'exécution (github.event.schedule).
 #
-# Si le secret SAUVEGARDE_CLE existe, l'archive est chiffrée (openssl AES-256-CBC, dérivation PBKDF2) ; sinon elle est
-# publiée en clair et le journal le signale (données fictives). Sur un dépôt public, les artefacts sont téléchargeables
-# par toute personne connectée à GitHub, et les releases par tout le monde : c'est pourquoi la release exige le chiffrement.
+# Si le secret SAUVEGARDE_CLE existe, la sauvegarde est chiffrée par tests/chiffrement-sauvegarde.mjs (AES-256-GCM, clé dérivée
+# par scrypt), puis l'archive chiffrée est relue et contrôlée (tests/restauration.mjs --controle-seul) avant publication.
+# Sans le secret : si la variable de dépôt SAUVEGARDE_CHIFFREMENT vaut « obligatoire » (instance de production), l'exécution
+# échoue et rien n'est publié ; sinon (démonstration, données fictives) l'archive est publiée en clair avec un avertissement.
+# Sur un dépôt public, les artefacts sont téléchargeables par toute personne connectée à GitHub, et les releases par tout le
+# monde : c'est pourquoi la release exige le chiffrement.
 name: Sauvegarde de la base
 
 on:
@@ -82,24 +85,29 @@ jobs:
           echo "Échéance : $ECHEANCE ; conservation : $JOURS jours ; artefact : $ARTEFACT"
           { echo "echeance=$ECHEANCE"; echo "jours=$JOURS"; echo "artefact=$ARTEFACT"; echo "mois=$(date -u +%Y%m)"; } >> "$GITHUB_OUTPUT"
 
-      - name: Archive (chiffrée si le secret SAUVEGARDE_CLE existe)
+      - name: Archive (chiffrée si le secret SAUVEGARDE_CLE existe ; obligatoire en production)
         id: archive
         env:
           SAUVEGARDE_CLE: ${{ secrets.SAUVEGARDE_CLE }}
+          SAUVEGARDE_CHIFFREMENT: ${{ vars.SAUVEGARDE_CHIFFREMENT }}
           NOM: ${{ steps.sauvegarde.outputs.nom }}
           ECHEANCE: ${{ steps.echeance.outputs.echeance }}
         run: |
           mkdir -p artefact
-          tar -C sauvegardes -czf "artefact/$NOM.tar.gz" "$NOM"
           MENSUELLE=non
           if [ -n "$SAUVEGARDE_CLE" ]; then
-            openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -in "artefact/$NOM.tar.gz" -out "artefact/$NOM.tar.gz.enc" -pass env:SAUVEGARDE_CLE
-            rm "artefact/$NOM.tar.gz"
-            echo "Archive chiffrée (AES-256-CBC, PBKDF2 200 000 itérations)."
-            echo "Déchiffrer : openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in $NOM.tar.gz.enc -out $NOM.tar.gz"
+            node tests/chiffrement-sauvegarde.mjs chiffrer "sauvegardes/$NOM" --sortie artefact --supprimer-clair
+            node tests/restauration.mjs "artefact/$NOM.vvs" --controle-seul
+            rm -f "artefact/$NOM.vvs.sha256"
+            echo "Archive chiffrée (AES-256-GCM, clé dérivée par scrypt) et contrôlée après déchiffrement."
+            echo "Déchiffrer : SAUVEGARDE_CLE=… node tests/chiffrement-sauvegarde.mjs dechiffrer $NOM.vvs <destination>"
             # copie mensuelle : la sauvegarde hebdomadaire du premier dimanche du mois (jour 1 à 7), chiffrée uniquement
             if [ "$ECHEANCE" = "hebdomadaire" ] && [ "$(date -u +%-d)" -le 7 ]; then MENSUELLE=oui; fi
+          elif [ "$SAUVEGARDE_CHIFFREMENT" = "obligatoire" ]; then
+            echo "::error title=Sauvegarde refusée::Chiffrement obligatoire et secret SAUVEGARDE_CLE absent : rien n'est publié."
+            rm -rf sauvegardes; exit 1
           else
+            tar -C sauvegardes -czf "artefact/$NOM.tar.gz" "$NOM"
             echo "::warning title=Sauvegarde non chiffrée::Secret SAUVEGARDE_CLE absent : archive publiée EN CLAIR (acceptable uniquement parce que les données de la démonstration sont fictives). Aucune copie mensuelle en release."
           fi
           echo "mensuelle=$MENSUELLE" >> "$GITHUB_OUTPUT"
@@ -135,7 +143,7 @@ jobs:
       - name: Contrôle (archive chiffrée et empreinte)
         working-directory: artefact
         run: |
-          ls *.tar.gz.enc >/dev/null 2>&1 || { echo "Aucune archive chiffrée : rien n'est publié."; exit 1; }
+          ls *.vvs >/dev/null 2>&1 || { echo "Aucune archive chiffrée : rien n'est publié."; exit 1; }
           if ls *.tar.gz >/dev/null 2>&1; then echo "Archive en clair présente : publication refusée."; exit 1; fi
           sha256sum -c --quiet *.archive.sha256 && echo "Empreinte de l'archive vérifiée."
 
@@ -144,7 +152,7 @@ jobs:
           if gh release view "$ETIQUETTE" >/dev/null 2>&1; then echo "La release $ETIQUETTE existe déjà : rien à faire."; exit 0; fi
           gh release create "$ETIQUETTE" artefact/* --target "$GITHUB_SHA" --latest=false \
             --title "Sauvegarde mensuelle $ETIQUETTE (chiffrée)" \
-            --notes "Archive chiffrée (AES-256-CBC, PBKDF2 200 000 itérations) de la base de démonstration. Déchiffrement : openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in <fichier>.tar.gz.enc -out <fichier>.tar.gz (phrase de passe SAUVEGARDE_CLE, conservée hors de GitHub)."
+            --notes "Archive chiffrée (AES-256-GCM, clé dérivée par scrypt) de la base. Déchiffrement : SAUVEGARDE_CLE=… node tests/chiffrement-sauvegarde.mjs dechiffrer <fichier>.vvs <destination> (phrase de passe conservée hors de GitHub)."
           gh release list --limit 200 --json tagName --jq '.[].tagName' | grep '^sauvegarde-mensuelle-' | sort -r | tail -n +13 | while read -r ancienne; do
             echo "Suppression de la release de plus de 12 mois : $ancienne"
             gh release delete "$ancienne" --yes --cleanup-tag

@@ -45,9 +45,18 @@
     return resultats;
   };
 
-  // Alertes de complétude : constats automatiques, toujours « à vérifier » par l'agent.
-  E.alertesOffre = function (offre, pieces, attendues) {
-    const mes = pieces.filter(p => p.offre_id === offre.id); const a = [];
+  // Alertes de complétude et de cohérence : constats automatiques, toujours « à vérifier » par l'agent.
+  // ctx (facultatif) = { consultation, offres, lignes } : date limite, lignes de prix de l'offre et des autres offres du même lot.
+  E.alertesOffre = function (offre, pieces, attendues, ctx) {
+    const mes = pieces.filter(p => p.offre_id === offre.id); const a = []; ctx = ctx || {};
+    if (offre.montant_ht == null || offre.montant_ht === '') a.push({ ton: 'alerte', texte: 'Montant de l\'offre non renseigné : offre financière incomplète ou montant à saisir.' });
+    const limite = ctx.consultation && ctx.consultation.date_limite_offres;
+    if (limite && offre.date_depot && String(offre.date_depot).slice(0, 10) > String(limite).slice(0, 10)) a.push({ ton: 'danger', texte: 'Pli enregistré comme déposé le ' + U.date(offre.date_depot) + ', après la date limite du ' + U.date(limite) + ' : à vérifier.' });
+    if (ctx.lignes) {
+      const lignesDe = id => ctx.lignes.filter(l => l.offre_id === id);
+      const autres = (ctx.offres || []).filter(o => o.id !== offre.id && o.lot_id === offre.lot_id && !o.ecartee && (o.type_offre || 'base') === (offre.type_offre || 'base')).map(o => ({ candidat: o.candidat, lignes: lignesDe(o.id) }));
+      for (const s of Calcul.controleBordereau(lignesDe(offre.id), autres, offre.bordereau_controle)) a.push({ ton: s.type === 'incoherence' ? 'danger' : 'alerte', texte: 'Bordereau — ' + s.texte });
+    }
     for (const att of attendues) if (!mes.some(p => p.type_piece === att.type_piece)) a.push({ ton: att.obligatoire ? 'alerte' : 'neutre', texte: 'Pièce ' + (att.obligatoire ? 'obligatoire' : 'facultative') + ' absente : ' + att.type_piece });
     for (const p of mes) {
       if (!p.lisible) a.push({ ton: 'alerte', texte: 'Texte non lisible automatiquement (document scanné ou format non pris en charge) : ' + p.nom_fichier });
@@ -63,6 +72,9 @@
       if (!norm(decl).includes(nomSansExemple)) a.push({ ton: 'alerte', texte: 'Le nom du candidat (« ' + offre.candidat + ' ») ne figure pas dans les déclarations : vérifier l\'identité du signataire.' });
       const sirets = (decl.match(/\b\d{3}\s?\d{3}\s?\d{3}\s?\d{5}\b/g) || []);
       for (const x of sirets) if (!Calcul.siretValide(x)) a.push({ ton: 'alerte', texte: 'SIRET « ' + x + ' » : clé de contrôle incorrecte, à vérifier.' });
+      // le même candidat doit déclarer le même SIREN d'une pièce à l'autre
+      const sirens = Array.from(new Set(sirets.filter(x => Calcul.siretValide(x)).map(x => x.replace(/\s/g, '').slice(0, 9))));
+      if (sirens.length > 1) a.push({ ton: 'danger', texte: 'Les déclarations citent ' + sirens.length + ' entreprises différentes (SIREN ' + sirens.join(', ') + ') : vérifier l\'identité du candidat et la forme de la candidature (groupement, sous-traitance).' });
       const lotNum = offre.lot_numero; if (lotNum && !new RegExp('lot\\s*(n\\s*[°o]\\s*)?' + lotNum + '\\b', 'i').test(decl)) a.push({ ton: 'neutre', texte: 'Le lot ' + lotNum + ' n\'est pas cité dans les déclarations : à vérifier.' });
       const ae = texteDe(/Acte d'engagement/);
       if (ae.trim() && offre.montant_ht != null) { const montants = (ae.match(/\d{1,3}(?:[\s\u202f.]\d{3})*(?:,\d{2})?(?=\s*(?:€|euros))/g) || []).map(x => Number(x.replace(/[\s\u202f.]/g, '').replace(',', '.'))); if (montants.length && !montants.some(x => Math.abs(x - offre.montant_ht) < 0.01)) a.push({ ton: 'danger', texte: 'Le montant de l\'acte d\'engagement (' + montants.map(x => Calcul.euros(x)).join(', ') + ') diffère du montant saisi (' + Calcul.euros(offre.montant_ht) + ').' }); }
@@ -129,6 +141,8 @@
     const c = await E.chargerConsultation(id);
     const [lots, offres, pieces, attendues, demandes, fournisseurs] = await Promise.all([D.lister('lots', { consultation_id: id }, { ordre: 'numero' }), D.lister('offres', { consultation_id: id }, { ordre: 'date_depot' }).then(async l => { const lt = await D.lister('lots', { consultation_id: id }); return l.filter(o => D.lotAutorise(id, o.lot_id)).map(o => Object.assign(o, { lot_numero: (lt.find(x => x.id === o.lot_id) || {}).numero })); }),
       D.lister('pieces', { consultation_id: id }).then(l => l.filter(p => !p.marche_id)), D.lister('pieces_attendues', { consultation_id: id }), D.lister('demandes', { consultation_id: id }, { ordre: 'date_envoi' }), D.lister('fournisseurs', {}, { ordre: 'raison_sociale' })]);
+    const lignesPrix = offres.length ? await D.lister('lignes_prix', { offre_id: offres.map(o => o.id) }) : [];
+    const ctx = { consultation: c, offres, lignes: lignesPrix };
     const peut = D.peut('analyse.saisir');
     const lotDe = o => lots.find(l => l.id === o.lot_id) || {};
     const deposer = () => {
@@ -164,35 +178,54 @@
         h('p.aide', 'Colonnes « pièces » et « alertes » : constats et signalements automatiques, à vérifier. Colonne « décision » : uniquement ce qu\'un agent habilité a décidé.'),
         U.tableau([{ titre: 'Candidat', valeur: o => [h('b', o.candidat), h('div.aide', 'Lot ' + lotDe(o).numero + ' · ' + ({ base: 'offre de base', variante: 'variante', pse: 'PSE', negociee: 'offre négociée' }[o.type_offre] || '') + ' · déposée le ' + U.date(o.date_depot))] }]
           .concat(attendues.map(a => ({ titre: a.type_piece.replace(/ —.*/, ''), valeur: o => pieces.some(p => p.offre_id === o.id && p.type_piece === a.type_piece) ? U.badge('Présente', 'ok') : U.badge('Absente', a.obligatoire ? 'danger' : 'neutre') })))
-          .concat([{ titre: 'Alertes à vérifier', valeur: o => { const a = E.alertesOffre(o, pieces, attendues).filter(x => x.ton !== 'neutre'); return a.length ? U.badge(a.length + ' alerte(s)', 'alerte') : U.badge('Aucune', 'ok'); } },
+          .concat([{ titre: 'Alertes à vérifier', valeur: o => { const a = E.alertesOffre(o, pieces, attendues, ctx).filter(x => x.ton !== 'neutre'); return a.length ? U.badge(a.length + ' alerte(s)', 'alerte') : U.badge('Aucune', 'ok'); } },
             { titre: 'Constat / décision', valeur: o => [E.badge('candidature', o.candidature_statut), o.ecartee ? [' ', U.badge('Offre écartée par décision', 'danger')] : null] },
             { titre: 'Montant HT', num: true, valeur: o => U.euros(o.montant_ht) }]), offres, { surClic: o => U.aller('/consultation/' + id + '/offre/' + o.id), vide: 'Aucune offre enregistrée pour cette consultation.' })],
         [peut ? U.bouton('Déposer une offre', deposer, 'accent') : null]),
       U.carte('Recherche dans les pièces', [recherche, resultats]),
-      U.carte('Demandes aux candidats', E.tableauDemandes(demandes, offres, c)));
+      U.carte('Demandes aux candidats', E.tableauDemandes(demandes, offres, c)),
+      Calcul.negociationAutorisee(c.procedure).autorisee !== false || demandes.some(d => d.type === 'negociation') ? E.carteNegociations(demandes, offres, c) : null);
   };
   U.route('/consultation/:id/offres', E.ongletOffres);
 
   E.tableauDemandes = function (demandes, offres, c) {
     const peut = D.peut('analyse.saisir') || D.peut('analyse.valider');
     return U.tableau([
-      { titre: 'Candidat', valeur: d => (offres.find(o => o.id === d.offre_id) || {}).candidat }, { titre: 'Nature', valeur: d => E.L.demande[d.type] }, { titre: 'Objet', valeur: d => d.objet },
+      { titre: 'Candidat', valeur: d => (offres.find(o => o.id === d.offre_id) || {}).candidat }, { titre: 'Nature', valeur: d => [E.L.demande[d.type], d.type === 'negociation' && d.tour ? h('div.aide', 'Tour n° ' + d.tour) : null] }, { titre: 'Objet', valeur: d => d.objet },
       { titre: 'Envoyée le', valeur: d => U.date(d.date_envoi) }, { titre: 'Échéance', valeur: d => [U.date(d.echeance), d.statut === 'envoyee' && d.echeance && Calcul.joursAvant(d.echeance, D.aujourdhui()) < 0 ? [' ', U.badge('Dépassée', 'danger')] : null] },
       { titre: 'Réponse', valeur: d => d.a_repondu === 'non' ? [U.badge('Pas de réponse', 'danger'), h('div.aide', 'Constaté le ' + U.date(d.date_reponse))]
-          : d.reponse ? [U.badge('Répondu', 'ok'), h('div', d.reponse), h('div.aide', 'Reçue le ' + U.date(d.date_reponse))] : U.badge('En attente', 'alerte') },
+          : d.reponse ? [U.badge('Répondu', 'ok'), h('div', d.reponse), d.type === 'negociation' && d.montant_propose != null && d.montant_propose !== '' ? h('div', h('b', 'Montant proposé : ' + U.euros(d.montant_propose) + ' HT')) : null, h('div.aide', 'Reçue le ' + U.date(d.date_reponse))] : U.badge('En attente', 'alerte') },
       { titre: 'Décision de l\'agent', valeur: d => d.decision ? [d.decision, h('div.aide', d.decision_par_nom + ', ' + U.dateHeure(d.decision_le))] : '—' },
       { titre: '', classe: 'etroit', valeur: d => peut && !d.decision ? U.bouton(d.reponse || d.a_repondu ? 'Décider' : 'Saisir la réponse', () => U.editer('Suivi de la demande', [
         { nom: 'a_repondu', libelle: 'Le candidat a-t-il répondu ?', type: 'choix', options: [['oui', 'Oui, réponse reçue'], ['non', 'Non, aucune réponse']], requis: true,
           aide: 'Sans réponse à l\'échéance, la décision (offre irrégulière, non-admission…) revient à l\'agent habilité et doit être motivée.' },
         { nom: 'reponse', libelle: 'Réponse reçue (résumé)', type: 'long', aide: 'À remplir si le candidat a répondu.' },
+        d.type === 'negociation' ? { nom: 'montant_propose', libelle: 'Montant proposé à l\'issue de ce tour (€ HT)', type: 'nombre', aide: 'Montant remis par le candidat dans sa réponse. Il ne remplace pas le montant de l\'offre : l\'offre négociée est enregistrée et validée à part.' } : null,
         { nom: 'date_reponse', libelle: 'Date de réception ou du constat', type: 'date', defaut: D.aujourdhui() },
-        { nom: 'decision', libelle: 'Décision prise par l\'agent habilité', type: 'long', aide: 'Laissez vide tant qu\'aucune décision n\'est prise.' }], Object.assign({}, d, { a_repondu: d.a_repondu || (d.reponse ? 'oui' : '') }), async v => {
+        { nom: 'decision', libelle: 'Décision prise par l\'agent habilité', type: 'long', aide: 'Laissez vide tant qu\'aucune décision n\'est prise.' }].filter(Boolean), Object.assign({}, d, { a_repondu: d.a_repondu || (d.reponse ? 'oui' : '') }), async v => {
         if (v.a_repondu === 'oui' && !v.reponse) throw new Error('Résumez la réponse du candidat, ou indiquez qu\'il n\'a pas répondu.');
-        if (v.a_repondu === 'non') v.reponse = '';
+        if (v.a_repondu === 'non') { v.reponse = ''; if ('montant_propose' in v) v.montant_propose = null; }
         const patch = Object.assign({}, v, { statut: v.decision ? 'close' : v.a_repondu === 'non' ? 'sans_reponse' : 'reponse_recue' });
         if (v.decision) { D.exiger('analyse.valider'); patch.decision_par_nom = D.utilisateur.nom; patch.decision_le = D.maintenant(); }
         await D.modifier('demandes', d.id, patch, { action: v.decision ? 'Décision sur une demande au candidat' : v.a_repondu === 'non' ? 'Absence de réponse du candidat constatée' : 'Réponse du candidat enregistrée', libelle: E.L.demande[d.type] + ' — ' + ((offres.find(o => o.id === d.offre_id) || {}).candidat || ''), consultation_id: c.id }); }), 'secondaire.petit') : null }],
       demandes, { vide: 'Aucune demande de complément, de précision ou de justification.' });
+  };
+
+  // Suivi des négociations : tours, montants avant et après chaque tour, décisions. Rien n'est appliqué automatiquement à l'offre.
+  E.carteNegociations = function (demandes, offres, c) {
+    const regle = Calcul.negociationAutorisee(c.procedure);
+    const neg = demandes.filter(d => d.type === 'negociation').sort((a, b) => ((a.offre_id || '') + String(a.tour || 0).padStart(3, '0')).localeCompare((b.offre_id || '') + String(b.tour || 0).padStart(3, '0')));
+    const cand = d => offres.find(o => o.id === d.offre_id) || {};
+    const ecart = d => { const i = Number(d.montant_initial), p = Number(d.montant_propose); return d.montant_propose == null || d.montant_propose === '' || !(i > 0) ? '—' : (p - i > 0 ? '+' : '') + U.nombre((p - i) / i * 100, 1) + ' %'; };
+    return U.carte('Négociations', [
+      h('div.note-info' + (regle.autorisee === false ? '.alerte' : regle.autorisee ? '.ok' : '.alerte'), h('b', 'Procédure : ' + (c.procedure || 'non renseignée') + '. '), regle.motif,
+        regle.autorisee === false ? ' Une demande de négociation est refusée par l\'application.' : ''),
+      U.tableau([{ titre: 'Candidat', valeur: d => cand(d).candidat }, { titre: 'Tour', classe: 'etroit', valeur: d => d.tour || '—' }, { titre: 'Points négociés', valeur: d => d.objet },
+        { titre: 'Envoyée le', valeur: d => U.date(d.date_envoi) }, { titre: 'Montant avant ce tour', num: true, valeur: d => U.euros(d.montant_initial) },
+        { titre: 'Montant proposé', num: true, valeur: d => d.a_repondu === 'non' ? 'Pas de réponse' : U.euros(d.montant_propose) }, { titre: 'Écart', num: true, valeur: ecart },
+        { titre: 'Décision de l\'agent', valeur: d => d.decision ? [d.decision, h('div.aide', d.decision_par_nom + ', ' + U.dateHeure(d.decision_le))] : '—' }], neg,
+        { vide: 'Aucune négociation engagée. Pour négocier, ouvrez l\'offre du candidat puis « Nouvelle demande », nature « Négociation ».' }),
+      h('p.aide', 'Chaque tour est une demande tracée au journal (envoi, réponse, montant proposé, décision). L\'offre finale remise après négociation est enregistrée comme « Offre négociée » ; son montant est validé par un agent habilité avant toute notation.')]);
   };
 
   /* ---------- Fiche d'une offre ---------- */
@@ -204,7 +237,9 @@
     const peut = D.peut('analyse.saisir'), valide = D.peut('analyse.valider');
     const tr = (action, detail) => ({ action, libelle: o.candidat + ' — ' + c.reference, consultation_id: id, detail });
     o.lot_numero = lot.numero;
-    const alertes = E.alertesOffre(o, pieces, attendues);
+    const offresLot = (await D.lister('offres', { lot_id: o.lot_id })).filter(x => D.lotAutorise(id, x.lot_id));
+    const lignesLot = await D.lister('lignes_prix', { offre_id: offresLot.map(x => x.id) });
+    const alertes = E.alertesOffre(o, pieces, attendues, { consultation: c, offres: offresLot, lignes: lignesLot });
     const totalLignes = lignes.length ? Calcul.arrondir(Calcul.somme(lignes.map(l => l.quantite * l.prix_unitaire)), { decimales: 2 }) : null;
     const ecartTotal = totalLignes != null && o.montant_ht != null && Math.abs(totalLignes - o.montant_ht) > 0.01;
     const decider = (titre, champs, construire, action) => U.editer(titre, champs, o, async v => D.modifier('offres', oid, construire(v), tr(action)));
@@ -215,10 +250,12 @@
       const blob = await D.telecharger(p.chemin); const feuilles = await Docs.lireTableur(new File([blob], p.nom_fichier));
       const b = Docs.lireBordereau(feuilles);
       if (!b || !b.lignes.length) throw new Error('Les colonnes « désignation », « quantité » et « prix unitaire » n\'ont pas été reconnues dans ' + p.nom_fichier + '. Saisissez les lignes à la main.');
-      if (!(await U.confirmer('Import du bordereau', b.lignes.length + ' ligne(s) de prix lue(s) dans « ' + p.nom_fichier + ' » (feuille ' + b.feuille + '). Remplacer les lignes actuelles ? Le montant déclaré n\'est pas modifié.', 'Importer'))) return;
+      const nbInc = (b.incompletes || []).length;
+      if (!(await U.confirmer('Import du bordereau', b.lignes.length + ' ligne(s) de prix lue(s) dans « ' + p.nom_fichier + ' » (feuille ' + b.feuille + ')' + (nbInc ? ' ; ' + nbInc + ' ligne(s) sans quantité ou sans prix, non importées et signalées' : '') + '. Remplacer les lignes actuelles ? Le montant déclaré n\'est pas modifié.', 'Importer'))) return;
       for (const l of lignes) await D.supprimer('lignes_prix', l.id, false);
       let i = 0; for (const l of b.lignes) await D.creer('lignes_prix', Object.assign({ offre_id: oid, consultation_id: o.consultation_id || id, lot_id: o.lot_id || null, ordre: ++i }, l), false);
-      await D.journal('Import des lignes de prix', 'offres', oid, o.candidat + ' — ' + c.reference, { fichier: p.nom_fichier, lignes: b.lignes.length }, id); U.recharger();
+      await D.modifier('offres', oid, { bordereau_controle: { fichier: p.nom_fichier, lu_le: D.maintenant(), lignes: b.lignes.length, incompletes: b.incompletes || [] } }, false);
+      await D.journal('Import des lignes de prix', 'offres', oid, o.candidat + ' — ' + c.reference, { fichier: p.nom_fichier, lignes: b.lignes.length, lignes_incompletes: nbInc }, id); U.recharger();
     };
     const champsLigne = [{ nom: 'designation', libelle: 'Désignation', requis: true, large: true }, { nom: 'unite', libelle: 'Unité' }, { nom: 'quantite', libelle: 'Quantité', type: 'nombre', requis: true }, { nom: 'prix_unitaire', libelle: 'Prix unitaire (€ HT)', type: 'nombre', requis: true }];
     return h('div', U.fil([['Consultations', '/consultations'], [c.reference, '/consultation/' + id], ['Candidatures et offres', '/consultation/' + id + '/offres'], [o.candidat]]),
@@ -256,8 +293,15 @@
         peut && !o.montant_valide ? [U.bouton('Lire le bordereau déposé', lireBordereau, 'secondaire'), U.bouton('Ajouter une ligne', () => U.editer('Ligne de prix', champsLigne, {}, v => D.creer('lignes_prix', Object.assign({ offre_id: oid, consultation_id: o.consultation_id || id, lot_id: o.lot_id || null, ordre: lignes.length + 1 }, v), tr('Saisie d\'une ligne de prix'))), 'secondaire')] : null),
       U.carte('Demandes adressées à ce candidat', E.tableauDemandes(demandes, [o], c),
         peut ? [U.bouton('Nouvelle demande', () => U.editer('Demande au candidat', [{ nom: 'type', libelle: 'Nature', type: 'choix', requis: true, options: Object.entries(E.L.demande) }, { nom: 'objet', libelle: 'Objet de la demande', type: 'long', requis: true },
+          { nom: 'tour', libelle: 'Tour de négociation (nature « Négociation » seulement)', type: 'nombre', aide: 'Proposé : tour suivant pour ce candidat. ' + Calcul.negociationAutorisee(c.procedure).motif,
+            defaut: demandes.filter(x => x.type === 'negociation').reduce((m, x) => Math.max(m, Number(x.tour) || 0), 0) + 1 },
           { nom: 'date_envoi', libelle: 'Date d\'envoi', type: 'date', defaut: D.aujourdhui() }, { nom: 'echeance', libelle: 'Réponse attendue pour le', type: 'date' }], {},
-          v => D.creer('demandes', Object.assign({ consultation_id: id, lot_id: o.lot_id, offre_id: oid, statut: 'envoyee' }, v), tr('Demande au candidat : ' + E.L.demande[v.type]))), 'secondaire')] : null));
+          v => { const neg = v.type === 'negociation';
+            if (!neg) delete v.tour; else if (!(Number(v.tour) >= 1)) throw new Error('Indiquez le numéro du tour de négociation.');
+            // montant de départ du tour : le dernier montant proposé lors d'un tour précédent, sinon le montant de l'offre
+            const prec = demandes.filter(x => x.type === 'negociation' && x.montant_propose != null && x.montant_propose !== '' && Number(x.tour) < Number(v.tour)).sort((a, b) => b.tour - a.tour)[0];
+            return D.creer('demandes', Object.assign({ consultation_id: id, lot_id: o.lot_id, offre_id: oid, statut: 'envoyee' }, v, neg ? { tour: Number(v.tour), montant_initial: prec ? Number(prec.montant_propose) : o.montant_ht } : {}), tr('Demande au candidat : ' + E.L.demande[v.type] + (neg ? ' (tour ' + v.tour + ')' : ''))); }), 'secondaire')] : null),
+      Calcul.negociationAutorisee(c.procedure).autorisee !== false || demandes.some(d => d.type === 'negociation') ? E.carteNegociations(demandes, [o], c) : null);
   };
   U.route('/consultation/:id/offre/:oid', E.offre);
 })();

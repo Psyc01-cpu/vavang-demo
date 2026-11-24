@@ -1,6 +1,6 @@
 # vavang — sauvegarde, restauration et plan de reprise
 
-Ce document décrit ce qui est **testé en démonstration locale** (section 1) et **en démonstration en ligne** (section 2, exercice réel du 18/11/2026). Tout ce qui n'a pas été mesuré est indiqué comme tel.
+Ce document décrit ce qui est **testé en démonstration locale** (section 1), **en démonstration en ligne** (section 2, exercice réel du 18/11/2026) et le **chiffrement des sauvegardes**, implémenté et testé localement le 24/11/2026 (section 2.8). Tout ce qui n'a pas été mesuré est indiqué comme tel.
 
 ## 1. Ce qui est testé (démonstration locale)
 
@@ -33,6 +33,8 @@ Sources : https://supabase.com/pricing et https://supabase.com/docs/guides/platf
 
 ### 2.2 Notre sauvegarde : une action GitHub planifiée, gratuite et sans secret
 
+**Dispositif de la démonstration uniquement.** L'instance de production d'une collectivité n'utilise pas GitHub : son dispositif est décrit en section 2.9 (scénario A2 de l'étude de coût d'hébergement).
+
 | Élément | Dispositif | Fichier |
 |---|---|---|
 | Déclenchement | Action GitHub planifiée toutes les 3 heures (à la minute 17, UTC) et chaque jour à 02:17 UTC, ou lancée à la main (« Run workflow », avec le choix de l'échéance). Le dépôt `vavang-demo` est public, donc les minutes sont gratuites. Les échéances sont décrites en 2.3. | `.github/workflows/sauvegarde.yml` |
@@ -40,24 +42,26 @@ Sources : https://supabase.com/pricing et https://supabase.com/docs/guides/platf
 | Export de la base | La fonction `exporter_sauvegarde()` (security definer) est réservée à un administrateur (`admin.utilisateurs` via `moi()`) dont la session est en aal2. Elle renvoie les **37 tables métier** de `schema.sql`, ligne par ligne (`id, d, cree_le, cree_par, modifie_le`), avec l'inventaire des fichiers. L'export est inscrit au journal. | `supabase/sauvegarde.sql` |
 | Fichiers | Tous les fichiers des compartiments `pieces` et `accueil` sont téléchargés, et leur taille est contrôlée. | `tests/sauvegarde.mjs` |
 | Intégrité | Le dossier `sauvegarde-AAAAMMJJ-HHMM` (heure UTC) contient : le JSON, le dossier `fichiers/` et `SHA256SUMS`. Ce dernier donne une empreinte SHA-256 par fichier et une pour le JSON. Le JSON contient en plus une empreinte par table et le nombre de lignes de chaque table. L'action vérifie les empreintes (`sha256sum -c`) avant de publier. | — |
-| Chiffrement | L'archive `.tar.gz` est chiffrée avec `openssl enc -aes-256-cbc -pbkdf2` (200 000 itérations) si le secret de dépôt `SAUVEGARDE_CLE` existe. **Sans ce secret, elle est publiée en clair** et l'action affiche un avertissement. C'est admissible seulement parce que les données sont fictives. Sur un dépôt public, les artefacts sont téléchargeables par toute personne connectée à GitHub. | `.github/workflows/sauvegarde.yml` |
+| Chiffrement | **Implémenté et testé localement le 24/11/2026** (section 2.8) : la sauvegarde est chiffrée en AES-256-GCM par `tests/chiffrement-sauvegarde.mjs`, avec une clé dérivée de la phrase de passe `SAUVEGARDE_CLE` (variable d'environnement, secret de dépôt). L'archive chiffrée est relue et contrôlée avant publication. Avec la variable `SAUVEGARDE_CHIFFREMENT=obligatoire` (instance de production), aucune sauvegarde n'est faite ni publiée sans clé. **Sur la démonstration en ligne, le secret n'est pas créé** : les artefacts de démonstration restent en clair (données fictives), avec un avertissement. Le chiffrement sera activé en production au déploiement chez la collectivité. | `tests/chiffrement-sauvegarde.mjs` ; `.github/workflows/sauvegarde.yml` |
 | Conservation | Rotation à plusieurs échéances (2.3) : courante 3 jours, quotidienne 30 jours, hebdomadaire 90 jours, mensuelle 12 mois si le secret `SAUVEGARDE_CLE` existe. Le tout est hors de la plateforme Supabase, donc séparé de la base. | — |
-| Déchiffrement | `openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in sauvegarde-….tar.gz.enc -out sauvegarde-….tar.gz` (la phrase de passe est demandée), puis `tar -xzf`. | — |
+| Déchiffrement | `SAUVEGARDE_CLE=… node tests/chiffrement-sauvegarde.mjs dechiffrer sauvegarde-….vvs <destination>`, ou directement `node tests/restauration.mjs sauvegarde-….vvs --confirmer` (déchiffrement dans un dossier temporaire, supprimé après usage). | `tests/restauration.mjs` |
 
 Limites connues :
 - Les **comptes de connexion** (`auth.*` : adresses, mots de passe, facteurs TOTP) ne sont pas sauvegardés, volontairement. Le profil métier de chaque agent l'est, dans la table `profils`.
 - La **trace technique** (`trace_technique`), le verrouillage des comptes et le jeu de référence de la démonstration (`demo_seed`) ne sont pas sauvegardés.
 - Les horaires de GitHub Actions ne sont pas garantis : une exécution planifiée peut être retardée, voire sautée en cas de forte charge. Sur un dépôt public, GitHub **désactive aussi les planifications après 60 jours sans activité** sur le dépôt. Le RPO réel peut donc dépasser 3 heures.
-- **Exigence du CCTP** : perte maximale de 4 heures (3.7.7). La planification `'17 */3 * * *'` (toutes les 3 heures, gratuite sur un dépôt public) vise 3 heures, avec une marge d'une heure pour un retard d'exécution de GitHub. Le RPO réel reste à mesurer sur plusieurs jours (historique des exécutions).
+- **Exigence du CCTP** : perte maximale de 4 heures (3.7.7). La planification `'17 */3 * * *'` (toutes les 3 heures, gratuite sur un dépôt public) vise 3 heures. **Mesure réelle du 19/11 au 24/11/2026** (historique public des exécutions, relevé le 24/11/2026) : 19 sauvegardes planifiées exécutées, toutes réussies, au lieu d'environ 45 prévues ; jusqu'à **13 h 36** d'écart entre deux sauvegardes (23/11 12:35 → 24/11 02:12 UTC). Sur la démonstration, le RPO réel dépasse donc 4 heures : c'est la raison pour laquelle la production n'utilise pas GitHub (section 2.9).
 - La sauvegarde est logique (contenu des tables) et non physique : les fonctions, règles d'accès et déclencheurs viennent des fichiers `supabase/*.sql` du dépôt, qu'on rejoue sur un projet neuf.
 
 ### 2.3 Plan de sauvegarde à plusieurs échéances (rotation)
+
+Les échéances et durées de conservation ci-dessous sont les mêmes en production ; seul le lieu de stockage change (section 2.9 : stockage objet Scaleway, Paris, au lieu des artefacts et releases GitHub).
 
 L'administrateur dispose de sauvegardes sur plusieurs temporalités. L'échéance est écrite dans le nom de l'artefact : `sauvegarde-<échéance>-AAAAMMJJ-HHMM` (heure UTC). Le dossier contenu dans l'archive garde son nom habituel `sauvegarde-AAAAMMJJ-HHMM` : `tests/restauration.mjs` s'en sert sans changement.
 
 | Échéance | Fréquence | Conservation | Stockage | Chiffrement | Points de reprise disponibles | Perte maximale (RPO) si l'on remonte à cette échéance |
 |---|---|---|---|---|---|---|
-| Courante | Toutes les 3 h, minute 17 (UTC) | 3 jours | Artefact GitHub Actions | Oui si `SAUVEGARDE_CLE` existe, sinon non (avertissement) | environ 24 | 3 h par conception |
+| Courante | Toutes les 3 h, minute 17 (UTC) | 3 jours | Artefact GitHub Actions | Oui si `SAUVEGARDE_CLE` existe (obligatoire en production) ; démonstration : non, avec avertissement | environ 24 | 3 h par conception |
 | Quotidienne | Chaque jour à 02:17 UTC (06:17 à La Réunion), sauf le dimanche | 30 jours | Artefact GitHub Actions | idem | environ 26 | 24 h, pour un point de 3 à 30 jours en arrière |
 | Hebdomadaire | Le dimanche à 02:17 UTC | 90 jours | Artefact GitHub Actions | idem | environ 13 | 7 jours, pour un point de 30 à 90 jours en arrière |
 | Mensuelle | Le premier dimanche du mois (la sauvegarde hebdomadaire de ce jour-là) | 12 mois (les 12 dernières releases ; les plus anciennes sont supprimées automatiquement) | Release GitHub `sauvegarde-mensuelle-AAAAMM` | **Toujours** : la release n'est créée que si `SAUVEGARDE_CLE` existe, et le job refuse de publier une archive en clair | 12 | 1 mois, pour un point de 3 à 12 mois en arrière |
@@ -78,7 +82,7 @@ Remarques :
 1. Choisir l'échéance selon l'ancienneté : moins de 3 jours → courante ; de 3 à 30 jours → quotidienne ; de 30 à 90 jours → hebdomadaire ; au-delà → mensuelle (si elle existe).
 2. **Artefacts** : ouvrir https://github.com/Psyc01-cpu/vavang-demo/actions/workflows/sauvegarde.yml, ouvrir l'exécution réussie la plus proche **avant** la date voulue, et télécharger en bas de page l'artefact `sauvegarde-<échéance>-AAAAMMJJ-HHMM` (connexion à GitHub demandée). L'heure du nom est en UTC : ajouter 4 h pour l'heure de La Réunion. Avec un jeton GitHub, la liste complète se lit aussi par `gh api repos/Psyc01-cpu/vavang-demo/actions/artifacts --paginate --jq '.artifacts[] | select(.name|startswith("sauvegarde-")) | [.name, .created_at, .expires_at] | @tsv'`.
 3. **Releases** (mensuelles) : https://github.com/Psyc01-cpu/vavang-demo/releases, étiquette `sauvegarde-mensuelle-AAAAMM`.
-4. Contrôler l'empreinte de l'archive (`sha256sum -c *.archive.sha256`), la déchiffrer si elle se termine par `.enc` (commande en 2.2), la décompresser (`tar -xzf`), puis restaurer (2.5).
+4. Contrôler l'empreinte de l'archive (`sha256sum -c *.archive.sha256`). Archive chiffrée (`.vvs`) : la restaurer directement (2.5), le déchiffrement est fait par l'outil avec `SAUVEGARDE_CLE`. Archive en clair (démonstration, `.tar.gz`) : la décompresser (`tar -xzf`), puis restaurer (2.5).
 
 ### 2.5 Restauration et vérification
 
@@ -98,13 +102,13 @@ Points non vérifiés : délai maximal d'exécution d'une requête du rôle `aut
 
 | Exigence du CCTP | Dispositif | Statut |
 |---|---|---|
-| Sauvegardes automatisées, chiffrées, séparées (3.7.6) | Action GitHub toutes les 3 h, avec rotation quotidienne (30 j), hebdomadaire (90 j) et mensuelle chiffrée (12 mois, si `SAUVEGARDE_CLE`) ; archive chiffrée si `SAUVEGARDE_CLE` est défini ; stockage chez GitHub, hors de Supabase | **Partiel** : exécution manuelle réussie le 18/11/2026 (1 min 16 s ; 37 tables, 336 lignes, 14 fichiers). Secret `SAUVEGARDE_CLE` non défini à ce jour : artefact en clair (données fictives). |
-| Perte maximale de 4 heures (RPO, 3.7.7) | Cible : 3 h, dans l'exigence (voir 2.2 et 2.3). PITR payant non retenu. | RPO : **3 h par conception** (fréquence des sauvegardes) ; RPO réel à mesurer (retards possibles de GitHub) |
+| Sauvegardes automatisées, chiffrées, séparées (3.7.6) | Action GitHub toutes les 3 h, avec rotation quotidienne (30 j), hebdomadaire (90 j) et mensuelle chiffrée (12 mois) ; chiffrement AES-256-GCM (`SAUVEGARDE_CLE`), obligatoire en production (`SAUVEGARDE_CHIFFREMENT=obligatoire`) | Sauvegarde : exécution manuelle réussie le 18/11/2026 (1 min 16 s ; 37 tables, 336 lignes, 14 fichiers). **Chiffrement implémenté et testé localement le 24/11/2026** (2.8) ; **activé en production au déploiement chez la collectivité**. Démonstration en ligne : secret non créé, artefacts en clair (données fictives). Stockage des sauvegardes de production dans l'EEE : engagement pour l'instance de production, non réalisé à ce jour. |
+| Perte maximale de 4 heures (RPO, 3.7.7) | **Démonstration** : export toutes les 3 h par GitHub (offre gratuite, sans restauration à un instant donné). **Production** (2.9) : restauration à un instant donné (PITR) 7 jours de l'hébergeur, perte maximale d'environ 2 minutes pour la base, plus l'export toutes les 3 h lancé depuis un serveur Scaleway. | Démonstration : 3 h par conception, mais **jusqu'à 13 h 36 constatées** du 19 au 24/11/2026 (planification GitHub irrégulière). Production : engagement 4 h au plus, non encore en service. |
 | Rétablissement en 8 heures (RTO, 3.7.7) | `tests/restauration.mjs` : restauration, vérification et durées mesurées | RTO technique mesuré le 18/11/2026 : **25,8 s** (étapes 1 à 4) ; conforme |
 | Tests de restauration réguliers, au moins un exercice par an | Exercice avec compte rendu (date, sauvegarde utilisée, durées, écarts) | **Premier exercice réalisé le 18/11/2026 à 22:40 UTC** : réussi, 0 écart (section 2.7). Régularité à organiser. |
 | Journaux conservés 12 mois (3.7.5) | Table `journal` en base, sans suppression, incluse dans chaque sauvegarde. La démo est remise à zéro chaque nuit, donc son journal ne dure pas 12 mois. | Non vérifié |
 
-Mise en service : faite. `supabase/sauvegarde.sql` est exécuté, l'action est poussée sur `vavang-demo` et a été lancée une première fois à la main. Reste à faire : créer le secret de dépôt `SAUVEGARDE_CLE` (Settings → Secrets and variables → Actions) avec une phrase de passe longue, conservée hors de GitHub, pour que les artefacts soient chiffrés.
+Mise en service sur la démonstration : faite. `supabase/sauvegarde.sql` est exécuté, l'action est poussée sur `vavang-demo` et a été lancée une première fois à la main. Les modifications du 24/11/2026 (chiffrement par `tests/chiffrement-sauvegarde.mjs`) ne sont **pas encore publiées** sur `vavang-demo`. Pour l'instance de production : créer le secret `SAUVEGARDE_CLE` (phrase de passe d'au moins 32 caractères, générée par `node tests/chiffrement-sauvegarde.mjs generer-cle`, conservée hors de GitHub) et la variable `SAUVEGARDE_CHIFFREMENT=obligatoire`.
 
 ### 2.7 Exercice de restauration du 18/11/2026
 
@@ -121,10 +125,42 @@ Mise en service : faite. `supabase/sauvegarde.sql` est exécuté, l'action est p
 | Rapport de l'exercice | `mesures/restauration-20261118.json` (durées, 37 tables, 14 fichiers, écarts) |
 | Remise à zéro de la démo | Chaque nuit à 3 h (heure de La Réunion), par pg_cron. |
 
+### 2.8 Chiffrement des sauvegardes : implémenté et testé localement (24/11/2026)
+
+| Élément | Dispositif |
+|---|---|
+| Algorithme | AES-256-GCM (chiffrement authentifié : une clé fausse ou un seul octet modifié font échouer le déchiffrement). |
+| Clé | Dérivée de la phrase de passe `SAUVEGARDE_CLE` (32 caractères au moins) par scrypt (N = 32 768, r = 8, p = 1), avec un sel aléatoire propre à chaque archive. La phrase de passe n'est jamais écrite dans l'archive, le dépôt ou les journaux. |
+| Format | Fichier `sauvegarde-AAAAMMJJ-HHMM.vvs` : en-tête `VVSAUV01`, sel, vecteur d'initialisation, étiquette d'authentification, puis l'archive ZIP chiffrée du dossier de sauvegarde (JSON, fichiers, SHA256SUMS). Empreinte SHA-256 de l'archive dans `.vvs.sha256`. |
+| Production | `tests/sauvegarde.mjs` chiffre et supprime le dossier en clair si `SAUVEGARDE_CLE` est fournie ; avec `SAUVEGARDE_CHIFFREMENT=obligatoire`, il refuse de sauvegarder sans clé, avant toute connexion. L'action GitHub chiffre, relit l'archive (`tests/restauration.mjs --controle-seul`) et ne publie la copie mensuelle que chiffrée. |
+| Restauration | `tests/restauration.mjs` accepte l'archive `.vvs` : déchiffrement dans un dossier temporaire, contrôle d'intégrité, restauration, puis suppression du dossier temporaire (y compris en cas d'échec). |
+
+**Essai du 24/11/2026** (`node tests/essai-chiffrement.mjs`, rapport `mesures/chiffrement-sauvegarde-20261124.json`), entièrement local, avec une **clé de test aléatoire générée en mémoire** (jamais écrite ni publiée) :
+- sauvegarde au format de `tests/sauvegarde.mjs`, fabriquée à partir du jeu de démonstration (`supabase/seed`) : 29 tables, 220 lignes, 14 fichiers ;
+- chiffrement réussi, dossier en clair supprimé ; aucune donnée lisible dans l'archive (nom de candidat et structure JSON introuvables) ;
+- déchiffrement et contrôle d'intégrité par l'outil de restauration (`--controle-seul`) : SHA256SUMS et empreintes des 29 tables conformes, 220 lignes et 14 fichiers retrouvés ; aucune copie en clair laissée ;
+- refus vérifiés : clé fausse, archive modifiée d'un octet, clé absente, phrase de passe trop courte ; sauvegarde refusée sans clé en mode « obligatoire » ;
+- restitution complète : 16 fichiers sur 16 identiques à l'original (SHA-256).
+
+**Ce qui n'est pas vérifié** : la restauration en base (étapes 1 à 4 de 2.5) n'a pas été rejouée avec une archive chiffrée, car elle écrirait sur la démonstration en ligne ; le déroulé GitHub modifié n'a pas été exécuté (non publié). **Ce qui est vrai : chiffrement implémenté et testé localement ; activé en production au déploiement chez la collectivité.**
+
+### 2.9 Instance de production d'une collectivité (engagement, rien n'est souscrit à ce jour)
+
+Dispositif retenu : scénario A2 de l'étude de coût d'hébergement (Supabase Pro, région Paris, PITR 7 jours ; pages et sauvegardes chez Scaleway, Paris).
+
+| Élément | Dispositif de production |
+|---|---|
+| Sauvegardes de l'hébergeur | Sauvegarde quotidienne de la base (7 jours, offre Pro) et **restauration à un instant donné (PITR) sur 7 jours** : archivage du journal de la base toutes les 2 minutes environ. Ne couvre pas les fichiers déposés. |
+| Export complet | Base **et fichiers**, toutes les 3 heures, lancé par une tâche planifiée sur un **petit serveur Scaleway (Paris)**, et non plus par GitHub. Chiffré en AES-256-GCM avant écriture (mode « obligatoire »), contrôlé par empreintes SHA-256. |
+| Stockage des exports | Stockage objet Scaleway, Paris : autre fournisseur que l'hébergeur principal (séparation géographique et logique). Conservation : 3 jours (courant), 30 jours (quotidien), 90 jours (hebdomadaire), 12 mois (mensuel). |
+| Protection contre l'altération et la suppression | Compartiment de sauvegarde avec **verrouillage des objets (mode « conformité »)** pendant la durée de conservation : une sauvegarde ne peut être ni modifiée ni supprimée avant son échéance, y compris par le titulaire. Clé d'accès du serveur de sauvegarde limitée à l'écriture. Clé de chiffrement conservée hors de l'hébergeur principal et hors du serveur de sauvegarde. |
+| Contrôles | Chaque export est relu et contrôlé (empreintes, nombre de lignes par table) ; une fois par mois, une sauvegarde est déchiffrée et contrôlée ; exercice de restauration complet au moins une fois par an, avec compte rendu. |
+| Objectifs | RPO : 4 heures au plus (base : environ 2 minutes par la PITR ; fichiers : 3 heures). RTO : 8 heures au plus. |
+
 ## 3. Procédure de reprise après incident
 
 1. **Qualifier** l'incident en P1 dans l'outil de demandes, et informer la collectivité toutes les heures (CCTP 3.3.3).
-2. **Choisir le point de reprise** : en général le dernier artefact « sauvegarde-courante-AAAAMMJJ-HHMM » réussi ; pour revenir avant une erreur ancienne, la sauvegarde de la date voulue (procédure en 2.4). La télécharger, la déchiffrer et contrôler les empreintes (`sha256sum -c SHA256SUMS`).
+2. **Choisir le point de reprise** : en général le dernier artefact « sauvegarde-courante-AAAAMMJJ-HHMM » réussi ; pour revenir avant une erreur ancienne, la sauvegarde de la date voulue (procédure en 2.4). La télécharger et contrôler son empreinte ; une archive chiffrée est déchiffrée et contrôlée par `tests/restauration.mjs` (`--controle-seul` pour un contrôle sans écriture).
 3. **Si le projet Supabase est perdu** : créer un projet dans la même région européenne, rejouer `supabase/schema.sql`, `schema_demo.sql` puis `sauvegarde.sql`, et recréer les comptes de connexion, car `auth.*` n'est pas sauvegardé.
 4. **Restaurer** : `node tests/restauration.mjs <dossier> --confirmer`. Si l'adresse change, renseigner `VAVANG_URL` et mettre à jour `config.js`.
 5. **Contrôler** le rapport `restauration-….json` : toutes les tables et tous les fichiers doivent être identiques. Vérifier ensuite la connexion, la double authentification et l'accès aux pièces dans l'application.

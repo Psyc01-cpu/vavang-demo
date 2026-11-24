@@ -243,7 +243,7 @@
   }
   // Délais contractuels du CCTP (article 3.3.3). h = heures continues, ho = heures ouvrées, jo = jours ouvrés (9 heures ouvrées).
   const DELAIS_SUPPORT = {
-    P1: { libelle: 'P1 — Critique', prise_en_charge: [30, 'min'], diagnostic: [2, 'h'], contournement: [4, 'h'], retablissement: [8, 'h'] },
+    P1: { libelle: 'P1 — Critique', prise_en_charge: [1, 'h'], diagnostic: [2, 'h'], contournement: [4, 'h'], retablissement: [8, 'h'] },
     P2: { libelle: 'P2 — Majeur', prise_en_charge: [4, 'ho'], diagnostic: [1, 'jo'], contournement: [1, 'jo'], retablissement: [2, 'jo'] },
     P3: { libelle: 'P3 — Mineur', prise_en_charge: [1, 'jo'], diagnostic: [3, 'jo'], contournement: null, retablissement: [5, 'jo'] },
     P4: { libelle: 'P4 — Demande', prise_en_charge: [1, 'jo'], diagnostic: null, contournement: null, retablissement: null }
@@ -284,6 +284,46 @@
     return t % 10 === 0;
   }
 
+  /* ---------- Contrôle de cohérence des bordereaux de prix ---------- */
+  // Signalements à vérifier, jamais une décision. lignes : lignes de l'offre contrôlée ;
+  // autres : [{ candidat, lignes }] des autres offres du même lot ; lu : résultat de la lecture du fichier (lignes incomplètes, montants déclarés).
+  const cle = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  function controleBordereau(lignes, autres, lu) {
+    const r = []; lignes = lignes || []; autres = (autres || []).filter(a => a.lignes && a.lignes.length);
+    for (const l of lignes) {
+      if (!(Number(l.quantite) > 0)) r.push({ type: 'incomplet', texte: 'Ligne « ' + l.designation + ' » : quantité nulle ou absente.' });
+      if (l.prix_unitaire === null || l.prix_unitaire === '' || isNaN(Number(l.prix_unitaire))) r.push({ type: 'incomplet', texte: 'Ligne « ' + l.designation + ' » : prix unitaire absent.' });
+      if (l.montant_declare != null && l.montant_declare !== '' && Math.abs(Number(l.quantite) * Number(l.prix_unitaire) - Number(l.montant_declare)) > 0.01)
+        r.push({ type: 'incoherence', texte: 'Ligne « ' + l.designation + ' » : montant inscrit au bordereau (' + euros(l.montant_declare) + ') différent de quantité × prix unitaire (' + euros(Number(l.quantite) * Number(l.prix_unitaire)) + ').' });
+    }
+    for (const x of (lu && lu.incompletes) || []) r.push({ type: 'incomplet', texte: 'Ligne « ' + x + ' » du bordereau déposé : quantité ou prix unitaire non renseigné (ligne non importée).' });
+    if (lignes.length && autres.length) {
+      const miennes = new Map(lignes.map(l => [cle(l.designation), l]));
+      const vues = new Map();
+      for (const a of autres) for (const l of a.lignes) { const k = cle(l.designation); if (!vues.has(k)) vues.set(k, { designation: l.designation, quantites: [], candidats: 0 }); const v = vues.get(k); v.candidats++; v.quantites.push(Number(l.quantite)); }
+      for (const [k, v] of vues) {
+        // ligne présente dans au moins la moitié des autres offres, absente de celle-ci
+        if (!miennes.has(k) && v.candidats * 2 >= autres.length) r.push({ type: 'incomplet', texte: 'Ligne « ' + v.designation + ' » présente dans ' + v.candidats + ' autre(s) offre(s), absente de ce bordereau.' });
+        // quantité différente de celle, identique, de toutes les autres offres (cadre de bordereau modifié ?)
+        const m = miennes.get(k);
+        if (m && v.candidats === autres.length && v.quantites.every(q => q === v.quantites[0]) && Number(m.quantite) !== v.quantites[0])
+          r.push({ type: 'incoherence', texte: 'Ligne « ' + m.designation + ' » : quantité ' + nombre(m.quantite) + ' au lieu de ' + nombre(v.quantites[0]) + ' dans toutes les autres offres (cadre de bordereau modifié ?).' });
+      }
+    }
+    return r;
+  }
+
+  /* ---------- Négociation : la procédure la permet-elle ? ---------- */
+  // Repère indicatif d'après le libellé de la procédure ; l'acheteur reste seul juge (documents de la consultation).
+  function negociationAutorisee(procedure) {
+    const p = cle(procedure);
+    if (/appel d offres/.test(p)) return { autorisee: false, motif: 'Appel d\'offres : aucune négociation avec les soumissionnaires ; seules des précisions sur la teneur de l\'offre peuvent être demandées.' };
+    if (/negociation/.test(p)) return { autorisee: true, motif: 'Procédure avec négociation.' };
+    if (/adaptee|mapa/.test(p)) return { autorisee: true, motif: 'Procédure adaptée : négociation possible si les documents de la consultation la prévoient (à vérifier).' };
+    if (/sans publicite|devis/.test(p)) return { autorisee: true, motif: 'Achat sans mise en concurrence formalisée : négociation possible.' };
+    return { autorisee: null, motif: 'Procédure non reconnue : vérifier que la négociation est permise.' };
+  }
+
   /* ---------- Utilitaires ---------- */
   function somme(t) { return t.reduce((a, b) => a + (Number(b) || 0), 0); }
   function nombre(v, d) {
@@ -293,6 +333,6 @@
   function euros(v) { return (v === null || v === undefined || v === '' || isNaN(v)) ? '—' : nombre(v, 2) + ' €'; }
 
   const api = { arrondir, enfants, feuilles, controleGrille, FORMULES, notePrix, calculLot, indicesPrix, SEUILS_DEFAUT, computation,
-    aideProcedure, ajouterMois, echeancesMarche, joursAvant, somme, nombre, euros, revisionPrix, ajouterHeuresOuvrees, DELAIS_SUPPORT, echeancesSupport, lireCriteres, siretValide };
+    aideProcedure, ajouterMois, echeancesMarche, joursAvant, somme, nombre, euros, revisionPrix, ajouterHeuresOuvrees, DELAIS_SUPPORT, echeancesSupport, lireCriteres, siretValide, controleBordereau, negociationAutorisee };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else racine.Calcul = api;
 })(typeof window !== 'undefined' ? window : globalThis);

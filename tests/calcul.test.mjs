@@ -95,7 +95,7 @@ t('délais de support en heures ouvrées (lundi-vendredi, 8 h-17 h)', () => {
   const ven16 = new Date(2026, 10, 20, 16, 0); // vendredi 20/11/2026 16:00
   const r = C.ajouterHeuresOuvrees(ven16, 4); assert.equal(r.getDay(), 1); assert.equal(r.getHours(), 11); // lundi 11:00
   const sam = new Date(2026, 10, 21, 10, 0); assert.equal(C.ajouterHeuresOuvrees(sam, 1).getHours(), 9); // lundi 9:00
-  const e = C.echeancesSupport('P1', new Date(2026, 10, 21, 22, 0)); assert.equal(new Date(e.prise_en_charge).getHours(), 22); assert.equal(new Date(e.prise_en_charge).getMinutes(), 30); // P1 : en continu, la nuit et le week-end
+  const e = C.echeancesSupport('P1', new Date(2026, 10, 21, 22, 0)); assert.equal(new Date(e.prise_en_charge).getHours(), 23); assert.equal(new Date(e.prise_en_charge).getMinutes(), 0); // P1 : prise en charge en 1 heure, en continu, la nuit et le week-end
   const p3 = C.echeancesSupport('P3', new Date(2026, 10, 18, 10, 0)); assert.equal(p3.contournement, null); assert.equal(new Date(p3.retablissement).getDate(), 25); // 5 jours ouvrés
 });
 t('consolidation : moyenne des contributions validées, si la grille le prévoit', () => {
@@ -114,5 +114,26 @@ t('lecture des critères d’un règlement de consultation', () => {
 });
 t('contrôle de la clé du SIRET', () => {
   assert.equal(C.siretValide('732 829 320 00074'), true); assert.equal(C.siretValide('73282932000075'), false); assert.equal(C.siretValide('1234'), false);
+});
+t('bordereau : lignes incomplètes, montant de ligne faux, ligne absente, quantité modifiée', () => {
+  const L = (designation, quantite, prix_unitaire, montant_declare) => ({ designation, quantite, prix_unitaire, montant_declare });
+  const autres = [{ candidat: 'B', lignes: [L('Visite mensuelle', 24, 100), L('Astreinte', 24, 50), L('Pièces', 1, 900)] }, { candidat: 'C', lignes: [L('Visite  mensuelle', 24, 120), L('Astreinte', 24, 40), L('Pièces', 1, 800)] }];
+  const r = C.controleBordereau([L('Visite mensuelle', 12, 100, 1200), L('Astreinte', 24, 50, 1300)], autres, { incompletes: ['Pièces détachées'] });
+  const textes = r.map(x => x.texte).join(' | ');
+  assert.match(textes, /« Astreinte » : montant inscrit au bordereau \(1 300,00 €\) différent de quantité × prix unitaire \(1 200,00 €\)/);
+  assert.match(textes, /« Pièces » présente dans 2 autre\(s\) offre\(s\), absente de ce bordereau/);
+  assert.match(textes, /« Visite mensuelle » : quantité 12 au lieu de 24/);
+  assert.match(textes, /« Pièces détachées » du bordereau déposé : quantité ou prix unitaire non renseigné/);
+  assert.equal(r.length, 4);
+  assert.deepEqual(C.controleBordereau(autres[0].lignes, autres.slice(1)), []); // bordereau conforme : aucun signalement
+  assert.match(C.controleBordereau([L('X', 0, null)], []).map(x => x.texte).join(' '), /quantité nulle.*prix unitaire absent/);
+});
+t('négociation : permise ou non selon la procédure', () => {
+  assert.equal(C.negociationAutorisee('Appel d\'offres ouvert').autorisee, false);
+  assert.equal(C.negociationAutorisee('Appel d\'offres restreint').autorisee, false);
+  assert.equal(C.negociationAutorisee('Procédure avec négociation').autorisee, true);
+  assert.equal(C.negociationAutorisee('Procédure adaptée (MAPA)').autorisee, true);
+  assert.match(C.negociationAutorisee('Procédure adaptée (MAPA)').motif, /si les documents de la consultation la prévoient/);
+  assert.equal(C.negociationAutorisee('Autre chose').autorisee, null);
 });
 console.log('\n' + n + ' groupes de tests réussis.');

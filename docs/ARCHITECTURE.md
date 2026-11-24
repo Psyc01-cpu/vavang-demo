@@ -1,15 +1,17 @@
 # vavang — documentation d’architecture
 
-Version du prototype du 19 novembre 2026. Éditeur : l’entreprise.ai, Saint-Paul, La Réunion.
+Version du 19 novembre 2026. Éditeur : L’entreprise.ai, Saint-Paul, La Réunion.
 
 ## 0. À lire d’abord : vérifié ou seulement écrit
 
 | Partie | État | Preuve |
 |---|---|---|
-| Application dans le navigateur, **mode local** (données dans IndexedDB) | **Vérifiée** | Scénario automatique `tests/scenario.mjs` : 95 vérifications réussies, 57 captures, aucune erreur JavaScript (`captures/resultat-du-scenario.txt`). Règles de calcul : `npm test`. |
-| **Mode hébergé** (Supabase : Postgres, authentification, stockage) | **Écrit, jamais exécuté** | `supabase/schema.sql` et `supabase/functions/gerer-compte/index.ts`. Aucun projet créé, aucun déploiement. |
+| Application dans le navigateur, **mode local** (données dans IndexedDB) | **Vérifiée** | Scénario automatique `tests/scenario.mjs` : 148 vérifications réussies, 69 captures, aucune erreur JavaScript (dernier passage le 24/11/2026), et scénario complémentaire `tests/scenario-analyse.mjs` (27 vérifications). Règles de calcul : `npm test`. |
+| **Mode hébergé** (Supabase : Postgres, authentification, stockage) | **Vérifié sur la démonstration en ligne** | Projet Supabase de démonstration, région UE (Irlande), données fictives : 93 contrôles côté serveur (`mesures/en-ligne.json`, 18/11/2026), exercice de restauration réel le 18/11/2026. Aucune instance de production à ce jour. |
 
-Tout ce qui est dit du mode hébergé décrit donc un **dispositif prévu**. Rien n’y a été testé.
+La démonstration en ligne ne reçoit que des données fictives. L’instance de production d’une collectivité est une installation séparée, créée au déploiement (voir `SOUS-TRAITANTS.md`).
+
+*Mise à jour du 24/11/2026 : cette section remplaçait un état du 19/11 (« mode hébergé écrit, jamais exécuté ») devenu faux depuis la mise en ligne de la démonstration.*
 
 ## 1. Vue d’ensemble
 

@@ -1,6 +1,6 @@
 # vavang — formats d'import et d'export
 
-Ces formats tiennent lieu d'interface d'échange avec le système d'information de la collectivité. Le prototype ne propose pas d'interface de programmation (API) documentée : les échanges passent par des fichiers ouverts.
+Ces formats servent aux échanges par fichiers avec le système d'information de la collectivité. En mode hébergé, une interface de programmation (API REST) est aussi disponible et documentée à part (`API.md`, `openapi.json`).
 
 ## 1. Imports
 
@@ -35,7 +35,7 @@ PDF, DOCX, ODT, XLSX, XLS, ODS, CSV, TXT : le texte est extrait pour la recherch
 
 ### 1.5 Bordereau de prix d'une offre
 
-Feuille contenant des colonnes « désignation », « quantité » et « prix unitaire » (et, si elle existe, « unité »). Les lignes sans quantité ou sans prix sont ignorées.
+Feuille contenant des colonnes « désignation », « quantité » et « prix unitaire » (et, si elle existe, « unité »). Les lignes sans quantité ou sans prix ne sont pas importées : elles sont signalées comme incomplètes, avec les autres contrôles du bordereau (montant de ligne différent de quantité × prix unitaire, ligne absente par rapport aux autres offres, quantité modifiée, total différent du montant déclaré). Ces signalements sont des alertes à vérifier par l'agent, jamais une décision.
 
 ## 2. Export complet (archive ZIP)
 

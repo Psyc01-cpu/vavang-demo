@@ -1,6 +1,6 @@
-# vavang — gestion des marchés publics côté acheteur (prototype)
+# vavang — gestion des marchés publics côté acheteur
 
-Prototype de l'entreprise.ai. Données de démonstration entièrement fictives.
+Logiciel édité par L'entreprise.ai. Données de démonstration entièrement fictives.
 
 Nom et identité : **vavang** (du créole « vavanguer », faire le tour : le marché public de bout en bout). Direction artistique « case créole » : vert lontan #1F5B3F, crème #F6F1E4, rouge brique #B4472B, accent braise #E8871E, titres en serif, frise de lambrequins (`css/app.css`, classe `.frise`), logo `img/vavang.svg` et `img/vavang-clair.svg`. Le nom se change dans `config.js`.
 
@@ -34,8 +34,10 @@ Puis ouvrir http://127.0.0.1:4173 dans Chrome, Edge ou Firefox. Les six comptes 
 
 ## Vérifier
 
-- `npm test` : règles de calcul (16 groupes : arrondi, formules de prix, classement, consolidation, signalement des prix bas, seuils, échéances).
+- `npm test` : règles de calcul (18 groupes : arrondi, formules de prix, classement, consolidation, signalement des prix bas, seuils, échéances, contrôle des bordereaux, négociation selon la procédure).
 - `npm run scenario` : joue le scénario complet dans Chrome sans interface, avec six profils, refait les captures de `captures/` et écrit `captures/resultat-du-scenario.txt` (19/11/2026 : 125 vérifications, 69 captures, 0 erreur JavaScript). Les plis fictifs sont fabriqués dans `demo/plis/`.
+- `node tests/scenario-analyse.mjs` : scénario complémentaire du module d'analyse et du support (24/11/2026 : 27 vérifications, captures 88 à 96, 0 erreur JavaScript) → `captures/resultat-scenario-analyse.txt`.
+- `node tests/essai-chiffrement.mjs` : essai local du chiffrement des sauvegardes, avec une clé de test générée en mémoire → `mesures/chiffrement-sauvegarde-AAAAMMJJ.json`.
 - `node tests/en-ligne.mjs` : contrôles de sécurité et de droits sur la démo en ligne → `mesures/en-ligne.json`.
 - `node tests/restauration.mjs` : exercice de restauration de la démo en ligne (voir `docs/SAUVEGARDE-ET-REPRISE.md` ; rapport du 18/11/2026 : `mesures/restauration-20261118.json`).
 - `node tests/accessibilite.mjs` et `node tests/scan-securite.mjs` : accessibilité (axe-core) et contrôle de sécurité passif → `mesures/`.
@@ -62,9 +64,9 @@ Puis ouvrir http://127.0.0.1:4173 dans Chrome, Edge ou Firefox. Les six comptes 
 
 Déployé sur la démo en ligne, sans coût (voir « Démo en ligne »). Restent ouverts :
 1. Faille F2 (un tiers peut verrouiller un compte non administrateur) : atténuée ; la correction complète exige une offre Supabase payante.
-2. Secret `SAUVEGARDE_CLE` à créer pour chiffrer les artefacts de sauvegarde.
+2. Chiffrement des sauvegardes : implémenté et testé localement le 24/11/2026 (`tests/chiffrement-sauvegarde.mjs`) ; non activé sur la démo en ligne (secret non créé, modifications non publiées) ; activé en production au déploiement chez la collectivité (`SAUVEGARDE_CLE`, `SAUVEGARDE_CHIFFREMENT=obligatoire`).
 3. Aller-retour réel de la connexion par GitHub (OAuth de test) à vérifier.
-4. Pas d'envoi de courriels, pas d'IA.
+4. Pas d'envoi automatique de courriels, pas d'IA. Les demandes reçues par courriel sont enregistrées par le support dans l'outil.
 
 ## Documentation
 
@@ -89,6 +91,17 @@ Déployé sur la démo en ligne, sans coût (voir « Démo en ligne »). Restent
 ## Bibliothèques embarquées
 
 supabase-js (client), pdf.js 3.11 (lecture des PDF), pdfmake (export PDF), docx (export Word), SheetJS (tableurs), JSZip (archives). Toutes sous licence libre ; versions dans `package-lock.json`.
+
+## Ajouts du 24 novembre 2026
+
+| Fichier | Contenu |
+|---|---|
+| `js/calcul.js` (`controleBordereau`, `negociationAutorisee`), `js/documents.js`, `js/ecrans/offres.js` | Détection des incohérences : ligne de bordereau sans prix ou sans quantité, montant de ligne faux, ligne absente, quantité modifiée, plusieurs SIREN dans les déclarations, pli enregistré après la date limite, montant absent. |
+| `js/ecrans/analyse.js` | Plusieurs contributeurs : note consolidée affichée (moyenne des contributions validées), détail du calcul et auteur de chaque contribution. |
+| `js/ecrans/offres.js`, `js/donnees.js`, `js/ecrans/rapport.js` | Négociation : tours, montant avant et après chaque tour, écart, décision ; refus en appel d'offres. |
+| `js/ecrans/support.js`, `config.js` | Support : P1 pris en charge en 1 heure ; canaux portail, courriel et téléphone d'astreinte affichés à tous les agents ; enregistrement des demandes reçues par courriel ou téléphone. |
+| `tests/chiffrement-sauvegarde.mjs`, `tests/essai-chiffrement.mjs`, `tests/sauvegarde.mjs`, `tests/restauration.mjs`, `.github/workflows/sauvegarde.yml` | Chiffrement des sauvegardes (AES-256-GCM, clé `SAUVEGARDE_CLE`), obligatoire en production ; restauration d'une archive chiffrée ; contrôle seul (`--controle-seul`). |
+| `tests/scenario-analyse.mjs` | Scénario de vérification des ajouts (captures 88 à 96). |
 
 ## Ajouts du 18 novembre 2026 (chantier mémoire, gratuit et local)
 

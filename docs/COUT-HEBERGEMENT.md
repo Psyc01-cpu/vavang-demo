@@ -107,7 +107,7 @@ Pour une intercommunalité et ce type de données (marchés publics, sans donné
 | Sauvegardes conservées 12 mois hors du fournisseur principal | Stockage objet multi-zone Scaleway, 300 Go | 4,82 €/mois. Pour B1, la copie doit aller chez un autre fournisseur : prix **à vérifier**, ordre de grandeur comparable. | scaleway.com/en/pricing/storage |
 | Tâche de sauvegarde (scénario A) | Instance DEV1-S + IPv4 + disque système | 6,55 € + 3,65 € = 10,20 €/mois, plus une provision de 0,95 €/mois pour un disque bloc 5K de 10 Go (besoin réel **à vérifier**). | scaleway.com/en/pricing/virtual-instances, /network, /storage |
 | Test d'intrusion | Application web, 6 profils, API exposée, boîte grise | Ordres de grandeur 2026 (HT) : application simple à 1 rôle 4 000 à 6 000 € ; application métier à 2-3 rôles 6 000 à 10 000 € ; application avec API REST exposée 8 000 à 12 000 € (6 à 8 jours) ; test annuel suivant, architecture inchangée, 5 000 à 7 000 €. Taux journalier 900 à 1 200 € (non qualifié), 1 200 à 1 500 € (PASSI). **Budget retenu : 10 000 € avant ouverture, 7 000 € par an ensuite** (hypothèses : vavang a 6 profils et expose l'API Supabase). Source commerciale, à confirmer par devis. | kolonell.com (blog d'un prestataire, 01/10/2026) |
-| Maintenance et MCO | voir § 6 | heures × **taux à fixer** | estimation de l'entreprise.ai |
+| Maintenance et MCO | voir § 6 | heures × **taux à fixer** | estimation de L'entreprise.ai |
 
 L'outil UptimeRobot est américain. La supervision actuelle par GitHub Actions peut rester en complément gratuit.
 

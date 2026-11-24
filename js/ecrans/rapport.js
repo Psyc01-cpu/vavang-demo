@@ -29,7 +29,7 @@
       return o.candidat + (o.ecartee ? ' — offre écartée par décision : ' + (o.ecartee_motif || '') : '') + '\n' + lignes.join('\n');
     }).join('\n\n');
     const signal = d.indices.filter(i => i.signalements.length).map(i => i.candidat + ' : ' + i.signalements.map(s => s.texte).join(' ')).join('\n') || 'Aucun signalement au-delà du seuil paramétré.';
-    const dem = demandes.map(x => (d.offres.find(o => o.id === x.offre_id) || {}).candidat + ' — ' + E.L.demande[x.type] + ' du ' + U.date(x.date_envoi) + ' : ' + x.objet + (x.reponse ? ' Réponse du ' + U.date(x.date_reponse) + ' : ' + x.reponse : ' Sans réponse à ce jour.') + (x.decision ? ' Décision : ' + x.decision + ' (' + x.decision_par_nom + ').' : '')).join('\n') || 'Aucune demande adressée aux candidats.';
+    const dem = demandes.map(x => (d.offres.find(o => o.id === x.offre_id) || {}).candidat + ' — ' + E.L.demande[x.type] + (x.type === 'negociation' && x.tour ? ' (tour ' + x.tour + ')' : '') + ' du ' + U.date(x.date_envoi) + ' : ' + x.objet + (x.reponse ? ' Réponse du ' + U.date(x.date_reponse) + ' : ' + x.reponse + (x.type === 'negociation' && x.montant_propose != null && x.montant_propose !== '' ? ' Montant proposé : ' + U.euros(x.montant_propose) + ' HT (avant ce tour : ' + U.euros(x.montant_initial) + ' HT).' : '') : ' Sans réponse à ce jour.') + (x.decision ? ' Décision : ' + x.decision + ' (' + x.decision_par_nom + ').' : '')).join('\n') || 'Aucune demande adressée aux candidats.';
     const premier = d.calcul.lignes.find(l => l.rang === 1);
     return {
       sections: [

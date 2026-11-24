@@ -1,4 +1,4 @@
-/* Articles des onglets de la page d'accueil (rubriques), écrits dans le ton du blog de l'entreprise.ai :
+/* Articles des onglets de la page d'accueil (rubriques), écrits dans le ton du blog de L'entreprise.ai :
    court, direct, le bénéfice avant la fonction. Contenu de démonstration, modifiable par l'administrateur. */
 (function () {
   'use strict';

@@ -35,7 +35,7 @@
       h('div.cote', h('h1', { html: 'Gestion des marchés publics<br><i>côté acheteur</i>' }),
         h('p', 'Du recensement du besoin à l\'évaluation du titulaire : préparation, dossier de consultation, analyse des offres, suivi d\'exécution.'),
         h('p', 'Chaque note, chaque classement et chaque décision reste validé par un agent habilité. Toutes les actions sont tracées.'),
-        h('p', { style: { marginTop: '28px', fontSize: '.8rem' } }, 'Une solution de l\'entreprise.ai — Saint-Paul, La Réunion')),
+        h('p', { style: { marginTop: '28px', fontSize: '.8rem' } }, 'Une solution de L\'entreprise.ai — Saint-Paul, La Réunion')),
       h('div.forme', h('h2', { style: { marginBottom: '14px' } }, 'Connexion'), f, demo,
         D.mode === 'local' ? h('p.aide', { style: { marginTop: '12px' } }, 'Mode démonstration locale : les données restent dans ce navigateur.') : null)));
   };

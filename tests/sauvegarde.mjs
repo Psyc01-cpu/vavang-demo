@@ -12,9 +12,13 @@
 //   CHROME           chemin de Chrome (défaut : Chrome Windows, sinon google-chrome)
 //   CHROME_ARGS      arguments supplémentaires, séparés par « ; » (ex. « --host-resolver-rules=MAP vavang.localhost 127.0.0.1 »)
 //   VAVANG_ADMIN, VAVANG_MDP, VAVANG_TOTP   compte administrateur (défaut : compte de démonstration public)
+//   SAUVEGARDE_CLE   phrase de passe (32 caractères au moins) : si elle est fournie, le dossier est chiffré en AES-256-GCM
+//                    (tests/chiffrement-sauvegarde.mjs) dans <nom>.vvs, puis le dossier en clair est supprimé
+//   SAUVEGARDE_CHIFFREMENT=obligatoire   refuse de sauvegarder sans SAUVEGARDE_CLE (instance de production)
 // Le script s'arrête en erreur (code 1) au moindre écart : il n'écrit jamais une sauvegarde partielle sans le dire.
 import puppeteer from 'puppeteer-core';
 import fs from 'node:fs'; import path from 'node:path'; import crypto from 'node:crypto';
+import { chiffrerDossier, exigerCle } from './chiffrement-sauvegarde.mjs';
 
 export const URL_DEMO = 'https://psyc01-cpu.github.io/vavang-demo/';
 export const sha256 = donnees => crypto.createHash('sha256').update(donnees).digest('hex');
@@ -92,6 +96,8 @@ export function client(c) {
 
 /* ---------- Sauvegarde ---------- */
 async function sauvegarder(sortie) {
+  // Production : pas de sauvegarde en clair. La clé est contrôlée avant toute connexion.
+  if (process.env.SAUVEGARDE_CHIFFREMENT === 'obligatoire' || process.env.SAUVEGARDE_CLE) exigerCle();
   const t0 = maintenant(), duree = {};
   const c = await connecter(); duree.connexion_s = secondes(maintenant() - t0);
   const api = client(c);
@@ -129,6 +135,11 @@ async function sauvegarder(sortie) {
 
     const bilan = { dossier, fichier: fichierJson, date: s.date, tables: Object.keys(comptes).length, lignes: s.lignes, fichiers: (s.fichiers || []).length,
       octets_fichiers: (s.fichiers || []).reduce((a, f) => a + Number(f.taille || 0), 0), sha256_json: sha256(texte), durees: duree };
+    if (process.env.SAUVEGARDE_CLE) {
+      const t2 = maintenant();
+      bilan.chiffrement = await chiffrerDossier(dossier, process.env.SAUVEGARDE_CLE, { supprimerClair: true });
+      duree.chiffrement_s = secondes(maintenant() - t2);
+    }
     console.log(JSON.stringify(bilan, null, 1));
     if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, 'dossier=' + dossier + '\nnom=' + nom + '\n');
     return bilan;

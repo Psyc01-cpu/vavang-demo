@@ -8,7 +8,7 @@
     { id: 'u-presc', email: 'prescripteur@demo.example', nom: 'Sacha Leroy', role: 'prescripteur', service: 'Direction de l\'environnement', mot_de_passe: MDP },
     { id: 'u-valid', email: 'valideur@demo.example', nom: 'Dominique Vidal', role: 'valideur', service: 'Direction de la commande publique', mot_de_passe: MDP },
     { id: 'u-lect', email: 'lecteur@demo.example', nom: 'Claude Besson', role: 'lecteur', service: 'Contrôle de gestion', mot_de_passe: MDP },
-    { id: 'u-support', email: 'support@demo.example', nom: 'Équipe support', role: 'support', service: 'l\'entreprise.ai (éditeur)', mot_de_passe: MDP }];
+    { id: 'u-support', email: 'support@demo.example', nom: 'Équipe support', role: 'support', service: 'L\'entreprise.ai (éditeur)', mot_de_passe: MDP }];
 
   // Une demande d'assistance de démonstration, résolue et en attente de validation par la collectivité.
   function ticketsDemo() {

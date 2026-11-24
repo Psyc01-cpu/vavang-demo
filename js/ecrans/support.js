@@ -14,6 +14,17 @@
   E.delaiSupport = delaiTexte;
   // Demandes déposées au guichet (sans compte) : coordonnées de rappel dans « demandeur », échéances recalculées si le serveur ne les a pas posées.
   const duGuichet = t => t.origine === 'guichet';
+  const ORIGINES = { guichet: ['Guichet', 'alerte'], courriel: ['Courriel', 'info'], telephone: ['Téléphone', 'danger'] };
+  const badgeOrigine = t => ORIGINES[t.origine] ? [U.badge(ORIGINES[t.origine][0], ORIGINES[t.origine][1]), ' '] : null;
+  const SUP = () => (window.CONFIG && CONFIG.support) || {};
+  // Les trois canaux de déclaration (CCTP 3.3.4) : portail, courriel, téléphone pour les incidents critiques.
+  E.canauxSupport = () => {
+    const s = SUP();
+    return U.carte('Comment déclarer une demande', [U.tableau([{ titre: 'Canal', valeur: x => h('b', x[0]) }, { titre: 'Pour qui, pour quoi', valeur: x => x[1] }, { titre: 'Coordonnées', valeur: x => x[2] }], [
+      ['Portail (cet écran)', 'Tous les agents, toutes les demandes (P1 à P4). Numéro et horodatage immédiats, suivi des délais.', '« Nouvelle demande »'],
+      ['Courriel', 'Tous les agents, toutes les demandes. Le support enregistre chaque courriel dans cet outil, avec l\'heure de réception : les délais courent depuis la réception. Le numéro de la demande est renvoyé par retour de courriel.', s.courrielDemandes ? h('a', { href: 'mailto:' + s.courrielDemandes }, s.courrielDemandes) : 'Adresse communiquée au lancement'],
+      ['Téléphone d\'astreinte', 'Incidents critiques (P1), 24 h/24 et 7 j/7 : prise en charge en 1 heure. La demande est enregistrée dans cet outil pendant l\'appel.', s.telephoneAstreinte ? h('a', { href: 'tel:' + String(s.telephoneAstreinte).replace(/[^0-9+]/g, '') }, s.telephoneAstreinte) : 'Numéro communiqué à la collectivité au lancement']])]);
+  };
   const completer = t => { if (t && !t.echeances && t.criticite && t.date_creation) t.echeances = Calcul.echeancesSupport(t.criticite, t.date_creation); if (t && !t.echeances) t.echeances = {}; return t; };
   const libG = (liste, cle) => ((D.GUICHET && D.GUICHET[liste] || []).find(x => x[0] === cle) || [])[1] || cle || '—';
   const telLien = tel => tel ? h('a', { href: 'tel:' + String(tel).replace(/[^0-9+]/g, '') }, tel) : '—';
@@ -51,19 +62,48 @@
       await E.notifierDroit('support.traiter', 'Nouvelle demande ' + (enLigne && t.numero ? t.numero + ' ' : '') + v.criticite + ' : ' + v.objet, '/support/' + t.id);
       setTimeout(() => U.aller('/support/' + t.id), 30);
     }, { large: true, libelle: 'Envoyer la demande' });
+    // Demande reçue par courriel ou par téléphone : enregistrée par le support, délais comptés depuis la réception.
+    const enregistrerRecue = () => {
+      const local = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      U.editer('Enregistrer une demande reçue par courriel ou par téléphone', [
+        { nom: 'origine', libelle: 'Canal', type: 'choix', requis: true, vide: false, options: [['courriel', 'Courriel'], ['telephone', 'Téléphone (astreinte)']] },
+        { nom: 'recue', libelle: 'Date et heure de réception', type: 'dateheure', requis: true, defaut: local, aide: 'Les délais contractuels courent depuis la réception, pas depuis l\'enregistrement.' },
+        { nom: 'contact_nom', libelle: 'Nom du demandeur', requis: true }, { nom: 'contact_coordonnee', libelle: 'Adresse courriel ou numéro de téléphone du demandeur', requis: true },
+        { nom: 'service', libelle: 'Service du demandeur' },
+        { nom: 'objet', libelle: 'Objet', requis: true, large: true },
+        { nom: 'criticite', libelle: 'Criticité', type: 'choix', requis: true, vide: false, options: CRIT, defaut: 'P3' },
+        { nom: 'description', libelle: 'Contenu du courriel ou résumé de l\'appel', type: 'long', requis: true, lignes: 5 }], {}, async v => {
+        const recue = new Date(v.recue); if (isNaN(recue)) throw new Error('Date et heure de réception invalides.');
+        if (recue.getTime() > Date.now() + 60000) throw new Error('La réception ne peut pas être datée dans le futur.');
+        const enLigne = D.mode === 'supabase', an = new Date().getFullYear();
+        const n = enLigne ? 0 : tous.filter(t => String(t.numero).startsWith('T-' + an)).length + 1;
+        // Rattachement au compte de l'agent quand l'adresse correspond : il suit alors sa demande et en valide la clôture.
+        let agent = null; try { agent = (await D.lister('profils')).find(p => p.email && p.email.toLowerCase() === String(v.contact_coordonnee).trim().toLowerCase()) || null; } catch (e) { agent = null; }
+        const date = recue.toISOString(), canal = v.origine === 'courriel' ? 'courriel' : 'téléphone';
+        const ligne = Object.assign({}, enLigne ? {} : { numero: 'T-' + an + '-' + String(n).padStart(4, '0') }, { origine: v.origine, date_creation: date, date_reception: date, enregistree_le: D.maintenant(), enregistree_par: D.utilisateur.nom,
+          demandeur_id: agent ? agent.id : null, demandeur_nom: agent ? agent.nom : v.contact_nom, service: v.service || (agent && agent.service) || '', demandeur: { nom: v.contact_nom, coordonnee: v.contact_coordonnee },
+          objet: v.objet, criticite: v.criticite, description: v.description, statut: 'nouveau', echeances: Calcul.echeancesSupport(v.criticite, date), pieces_jointes: [],
+          historique: [{ date, auteur: v.contact_nom, type: 'Réception par ' + canal, texte: 'Demande reçue par ' + canal + ' (' + v.criticite + ').' }, { date: D.maintenant(), auteur: D.utilisateur.nom + ' (support)', type: 'Enregistrement', texte: 'Demande enregistrée dans l\'outil à partir du ' + canal + '.' }] });
+        let t = await D.creer('tickets', ligne, { action: 'Enregistrement d\'une demande reçue par ' + canal, libelle: v.objet });
+        if (enLigne) { const t2 = await D.lire('tickets', t.id); if (t2) t = t2; }
+        if (agent) await E.notifier([agent.id], 'Votre demande reçue par ' + canal + ' est enregistrée' + (t.numero ? ' sous le numéro ' + t.numero : '') + ' : ' + v.objet, '/support/' + t.id);
+        setTimeout(() => U.aller('/support/' + t.id), 30);
+      }, { large: true, libelle: 'Enregistrer la demande' });
+    };
     const enRetard = t => ETAPES.some(e => etatDelai(t, e[0], e[2]).ton === 'danger');
-    return h('div', U.titrePage('Demandes d\'assistance', voitTout() ? 'Toutes les demandes de la collectivité.' : 'Vos demandes au support.', D.peut('support.declarer') ? [U.bouton('Nouvelle demande', nouveau, 'accent')] : null),
+    return h('div', U.titrePage('Demandes d\'assistance', voitTout() ? 'Toutes les demandes de la collectivité.' : 'Vos demandes au support.', [D.peut('support.declarer') ? U.bouton('Nouvelle demande', nouveau, 'accent') : null, D.peut('support.traiter') ? U.bouton('Enregistrer une demande reçue par courriel ou téléphone', enregistrerRecue, 'secondaire') : null]),
       h('div.indicateurs',
         h('div.indicateur', h('b', liste.filter(t => t.statut !== 'clos').length), h('span', 'demandes ouvertes')),
         h('div.indicateur.accent', h('b', liste.filter(t => t.statut !== 'clos' && ['P1', 'P2'].includes(t.criticite)).length), h('span', 'ouvertes en P1 ou P2')),
         h('div.indicateur', h('b', liste.filter(t => t.statut === 'resolu').length), h('span', 'à valider par la collectivité')),
         h('div.indicateur', h('b', liste.filter(enRetard).length), h('span', 'avec un délai dépassé'))),
       U.carte(null, U.tableau([{ titre: 'Numéro', classe: 'etroit', valeur: t => h('b', t.numero) }, { titre: 'Criticité', classe: 'etroit', valeur: t => U.badge(t.criticite, { P1: 'danger', P2: 'alerte', P3: 'info', P4: 'neutre' }[t.criticite]) },
-        { titre: 'Objet', valeur: t => [duGuichet(t) ? [U.badge('Guichet', 'alerte'), ' '] : null, t.objet, h('div.aide', t.demandeur_nom + (t.service ? ' · ' + t.service : '') + ' · ' + U.dateHeure(t.date_creation) + (duGuichet(t) && t.demandeur && t.demandeur.telephone ? ' · rappel au ' + t.demandeur.telephone : ''))] },
+        { titre: 'Objet', valeur: t => [badgeOrigine(t), t.objet, h('div.aide', t.demandeur_nom + (t.service ? ' · ' + t.service : '') + ' · ' + U.dateHeure(t.date_creation) + (duGuichet(t) && t.demandeur && t.demandeur.telephone ? ' · rappel au ' + t.demandeur.telephone : ''))] },
         { titre: 'Intervenant', valeur: t => t.intervenant_nom || '—' }, { titre: 'Statut', valeur: t => U.badge(STATUTS[t.statut][0], STATUTS[t.statut][1]) },
         { titre: 'Délais', valeur: t => enRetard(t) ? U.badge('Délai dépassé', 'danger') : U.badge('Dans les délais', 'ok') }], liste, { surClic: t => U.aller('/support/' + t.id), vide: 'Aucune demande.' })),
       U.carte('Délais de traitement contractuels', U.tableau([{ titre: 'Criticité', valeur: k => h('b', Calcul.DELAIS_SUPPORT[k].libelle) }, { titre: 'Définition', valeur: k => DEFINITIONS[k] }]
-        .concat(ETAPES.map(e => ({ titre: e[1], valeur: k => delaiTexte(Calcul.DELAIS_SUPPORT[k][e[0]]) }))), Object.keys(Calcul.DELAIS_SUPPORT)), [h('span.aide', 'Heures ouvrées : du lundi au vendredi, de 8 h à 17 h, heure de La Réunion (jours fériés non déduits par le calcul).')]));
+        .concat(ETAPES.map(e => ({ titre: e[1], valeur: k => delaiTexte(Calcul.DELAIS_SUPPORT[k][e[0]]) }))), Object.keys(Calcul.DELAIS_SUPPORT)), [h('span.aide', 'Heures ouvrées : du lundi au vendredi, de 8 h à 17 h, heure de La Réunion (jours fériés non déduits par le calcul).')]),
+      E.canauxSupport());
   };
   U.route('/support', E.tickets);
 
@@ -116,6 +156,9 @@
             ['Numéro à rappeler', support ? telLien(g.telephone) : (g.telephone || '—')], ['Courriel', g.courriel ? (support ? h('a', { href: 'mailto:' + g.courriel }, g.courriel) : g.courriel) : 'Non communiqué'],
             ['Créneau souhaité', libG('creneaux', (t.rappel || {}).creneau)], ['Rappels', r.length ? r.length + ' — dernier le ' + U.dateHeure(r[r.length - 1].date) + ' (' + ({ joint: 'joint', message: 'message laissé', injoignable: 'pas de réponse' }[r[r.length - 1].issue] || '') + ')' : 'Aucun rappel pour le moment']]),
           h('p', h('b', 'Commentaire : '), h('span', { style: { whiteSpace: 'pre-wrap' } }, t.description))]); })() : null,
+      ['courriel', 'telephone'].includes(t.origine) ? U.carte('Demande reçue par ' + (t.origine === 'courriel' ? 'courriel' : 'téléphone'), U.definition([
+        ['Canal', badgeOrigine(t)], ['Reçue le', U.dateHeure(t.date_reception || t.date_creation) + ' (départ des délais)'], ['Enregistrée', U.dateHeure(t.enregistree_le) + ' par ' + (t.enregistree_par || '—')],
+        ['Demandeur', (t.demandeur || {}).nom || t.demandeur_nom], ['Coordonnées', (t.demandeur || {}).coordonnee || '—'], ['Compte de l\'agent', t.demandeur_id ? 'Rattachée : l\'agent suit la demande et valide sa clôture' : 'Aucun compte correspondant : la clôture est validée par l\'administrateur de la collectivité']])) : null,
       h('div.grille2',
         U.carte('Demande', [U.definition([['Numéro', t.numero], ['Créée le', U.dateHeure(t.date_creation)], ['Demandeur', t.demandeur_nom], ['Service', t.service], ['Criticité', Calcul.DELAIS_SUPPORT[t.criticite].libelle], ['Intervenant', t.intervenant_nom || 'Non affecté'],
           ['Statut', STATUTS[t.statut][0]], t.clos_le ? ['Clôture', U.dateHeure(t.clos_le) + ' — ' + t.motif_cloture + ' (validée par ' + t.cloture_validee_par + ')'] : null]), h('p', { style: { whiteSpace: 'pre-wrap', marginTop: '10px' } }, t.description),

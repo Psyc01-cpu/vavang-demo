@@ -181,9 +181,13 @@
     const blocCritere = (o, cr) => {
       const contributions = d.notes.filter(n => n.offre_id === o.id && n.critere_id === cr.id);
       const mienne = contributions.find(n => n.analyste_id === D.utilisateur.id);
-      const validee = contributions.find(n => n.statut === 'validee');
+      const validees = contributions.filter(n => n.statut === 'validee'), validee = validees[0];
+      const moyenne = d.grille.consolidation === 'moyenne' && validees.length > 1;
       const parent = cr.parent_id ? d.criteres.find(x => x.id === cr.parent_id) : null;
-      return h('div.bloc-critere', h('header', h('h3', (parent ? parent.code + ' ' + parent.libelle + ' › ' : '') + cr.code + ' — ' + cr.libelle), h('span', U.badge(U.nombre(cr.ponderation) + ' pts', 'neutre'), ' ', validee ? U.badge('Note validée : ' + U.nombre(validee.note) + ' / ' + U.nombre(cr.bareme), 'ok') : U.badge('Aucune note validée', 'alerte'))),
+      const badgeNote = !validee ? U.badge('Aucune note validée', 'alerte')
+        : moyenne ? U.badge('Note consolidée : ' + U.nombre(Calcul.somme(validees.map(n => n.note)) / validees.length) + ' / ' + U.nombre(cr.bareme) + ' (moyenne de ' + validees.length + ' contributions validées)', 'ok')
+        : U.badge('Note validée : ' + U.nombre(validee.note) + ' / ' + U.nombre(cr.bareme), 'ok');
+      return h('div.bloc-critere', h('header', h('h3', (parent ? parent.code + ' ' + parent.libelle + ' › ' : '') + cr.code + ' — ' + cr.libelle), h('span', U.badge(U.nombre(cr.ponderation) + ' pts', 'neutre'), ' ', contributions.length > 1 ? [U.badge(contributions.length + ' contributions', 'info'), ' '] : null, badgeNote)),
         cr.description ? h('p.aide', 'Éléments d\'appréciation prévus : ' + cr.description) : null,
         contributions.filter(n => !(saisir && n === mienne && ['brouillon', 'a_revoir'].includes(n.statut))).map(n => blocContribution(n, o, cr)),
         saisir && (!mienne || ['brouillon', 'a_revoir'].includes(mienne.statut)) ? [mienne && mienne.commentaire_valideur ? h('div.note-info.alerte', 'À revoir — commentaire du valideur : ' + mienne.commentaire_valideur) : null, formulaireNote(o, cr, mienne)] : null,
@@ -234,10 +238,12 @@
   E.detailCalculs = function (d) {
     const fs = ordonner(d.criteres).filter(x => !d.criteres.some(y => y.parent_id === x.id)); const r = [];
     const prixValides = d.offres.filter(o => !o.ecartee && o.montant_valide).map(o => Number(o.montant_ht));
-    for (const l of d.calcul.lignes) for (const x of fs) { const det = l.detail[x.id]; const n = d.notes.find(n => n.offre_id === l.offre_id && n.critere_id === x.id && n.statut === 'validee');
-      r.push([l.candidat, x.code + ' ' + x.libelle, x.type === 'prix' ? 'Montant validé : ' + U.euros(det.brute) : (det.brute == null ? '—' : U.nombre(det.brute) + ' / ' + U.nombre(x.bareme)),
-        x.type === 'prix' ? (det.points == null ? det.motif : Calcul.FORMULES[d.grille.formule_prix].libelle + ' ; prix le plus bas validé : ' + U.euros(Math.min.apply(null, prixValides))) : (det.points == null ? det.motif : U.nombre(det.brute) + ' ÷ ' + U.nombre(x.bareme) + ' × ' + U.nombre(x.ponderation)),
-        det.points == null ? '—' : U.nombre(det.points, d.grille.arrondi_decimales), x.type === 'prix' ? 'Montant validé par ' + ((d.offres.find(o => o.id === l.offre_id) || {}).montant_valide_par_nom || '—') : (n ? 'Saisie : ' + n.analyste_nom + ' · validée : ' + n.validee_par_nom + ', ' + U.dateHeure(n.validee_le) : '—')]); }
+    for (const l of d.calcul.lignes) for (const x of fs) { const det = l.detail[x.id]; const vs = d.notes.filter(n => n.offre_id === l.offre_id && n.critere_id === x.id && n.statut === 'validee'); const n = vs[0];
+      const moy = d.grille.consolidation === 'moyenne' && vs.length > 1;
+      r.push([l.candidat, x.code + ' ' + x.libelle, x.type === 'prix' ? 'Montant validé : ' + U.euros(det.brute) : (det.brute == null ? '—' : U.nombre(det.brute) + ' / ' + U.nombre(x.bareme) + (moy ? ' (moyenne de ' + vs.map(v => U.nombre(v.note)).join(' ; ') + ')' : '')),
+        x.type === 'prix' ? (det.points == null ? det.motif : Calcul.FORMULES[d.grille.formule_prix].libelle + ' ; prix le plus bas validé : ' + U.euros(Math.min.apply(null, prixValides))) : (det.points == null ? det.motif : (moy ? '(' + vs.map(v => U.nombre(v.note)).join(' + ') + ') ÷ ' + vs.length + ' = ' + U.nombre(det.brute) + ' ; ' : '') + U.nombre(det.brute) + ' ÷ ' + U.nombre(x.bareme) + ' × ' + U.nombre(x.ponderation)),
+        det.points == null ? '—' : U.nombre(det.points, d.grille.arrondi_decimales), x.type === 'prix' ? 'Montant validé par ' + ((d.offres.find(o => o.id === l.offre_id) || {}).montant_valide_par_nom || '—')
+          : (moy ? vs.map(v => 'Saisie : ' + v.analyste_nom + ' · validée : ' + v.validee_par_nom + ', ' + U.dateHeure(v.validee_le)).join(' | ') : n ? 'Saisie : ' + n.analyste_nom + ' · validée : ' + n.validee_par_nom + ', ' + U.dateHeure(n.validee_le) : '—')]); }
     return { entetes: ['Candidat', 'Critère', 'Valeur validée', 'Calcul', 'Points', 'Intervention humaine'], lignes: r };
   };
   E.importerCriteresRc = async function (fichier, d, c) {

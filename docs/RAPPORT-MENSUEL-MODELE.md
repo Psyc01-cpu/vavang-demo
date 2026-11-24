@@ -6,7 +6,7 @@
 
 **Logiciel** : vavang — gestion des marchés publics côté acheteur
 **Collectivité** : [nom de la collectivité]
-**Éditeur** : l'entreprise.ai
+**Éditeur** : L'entreprise.ai
 **Période** : du [01/MM/AAAA] au [JJ/MM/AAAA]
 **Rédigé le** : [JJ/MM/AAAA] — **par** : [fonction du rédacteur]
 **Version en service à la fin du mois** : [x.y.z]
